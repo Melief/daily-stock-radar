@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch the ordinary Finviz screener page and save its HTML for inspection."""
+"""Fetch the ordinary Finviz screener page and extract ticker symbols."""
 import re
 import sys
 from html.parser import HTMLParser
@@ -34,14 +34,15 @@ class TickerLinkParser(HTMLParser):
         href = dict(attrs).get("href", "")
         params = parse_qs(urlparse(href).query)
         ticker = params.get("t", [""])[0].strip().upper()
-        if ("quote.ashx" in href or "stock.ashx" in href) and re.fullmatch(r"[A-Z][A-Z0-9.\\-]{0,9}", ticker):
+        # Current Finviz HTML uses links such as stock?t=FFIV, not quote.ashx.
+        if re.search(r"(?:^|/)stock$", urlparse(href).path) and re.fullmatch(r"[A-Z][A-Z0-9.-]{0,9}", ticker):
             if ticker not in self.seen:
                 self.seen.add(ticker)
                 self.tickers.append(ticker)
 
 
 def main():
-    print("TEST: Fetch ordinary Finviz screener page and save HTML for inspection.")
+    print("TEST: Fetch the regular Finviz screener page and extract tickers.")
     try:
         _, _, _, config = fetch(CONFIG_URL)
         screener_url = config.strip()
@@ -63,17 +64,15 @@ def main():
 
     parser = TickerLinkParser()
     parser.feed(body)
-    if parser.tickers:
-        print(f"SUCCESS: Extracted {len(parser.tickers)} tickers: {', '.join(parser.tickers)}")
-        return 0
+    if not parser.tickers:
+        print("FAIL: Page was retrieved, but no ticker symbols were extracted.")
+        print("This may indicate a Finviz page-structure change or a blocked/incomplete response.")
+        return 1
 
-    print("No ticker links matched the expected format; inspecting alternative markers:")
-    for pattern in [r"quote[.]ashx", r"/quote/", r'"ticker"', r'"symbol"', r"data-symbol"]:
-        matches = list(re.finditer(pattern, body, flags=re.IGNORECASE))
-        snippets = [body[max(0, m.start()-80):m.end()+140].replace("\\n", " ") for m in matches[:3]]
-        print(f"{pattern}: {len(matches)} match(es); examples: {snippets}")
-    print("FAIL: HTML was saved as an artifact; inspect it to find the actual ticker structure.")
-    return 1
+    print(f"SUCCESS: Extracted {len(parser.tickers)} unique ticker(s) from the screener:")
+    print(", ".join(parser.tickers))
+    print("These are the tickers currently returned by the Finviz filter, not the full GitHub watchlist.")
+    return 0
 
 
 if __name__ == "__main__":

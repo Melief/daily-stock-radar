@@ -1,0 +1,1 @@
+https://finviz.com/screener?v=151&f=cap_midover%2Cfa_debteq_u1%2Cfa_opermargin_pos%2Cfa_roe_o10%2Cfa_salesqoq_pos%2Csh_avgvol_o500%2Csh_instown_o10%2Csh_relvol_o0.75%2Cta_alltime_b0to10h%2Cta_perf2_26w30o%2Cta_sma20_pa%2Cta_sma50_pa&ft=2&o=sma20&c=0%2C1%2C6%2C42%2C43%2C44%2C45%2C46%2C52%2C53%2C64%2C3%2C2%2C4%2C5&preset=s151690702

@@ -25,5 +25,15 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Test retrieval and extraction of Finviz tickers
+      - name: Fetch Finviz screener HTML
         run: python scripts/test_finviz.py
+        continue-on-error: true
+
+      - name: Upload fetched HTML for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finviz-screener-html
+          path: finviz_screener.html
+          if-no-files-found: warn
+          retention-days: 3

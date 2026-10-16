@@ -70,11 +70,11 @@ def main():
 
     # Show evidence about embedded data and ticker-like strings, without assuming matches are valid tickers.
     patterns = [
-        r'quote\\.ashx\\?t=[^"\\'<> ]+',
-        r'/quote/[^"\\'<> ]+',
-        r'"ticker"\\s*:\\s*"[^"]+"',
-        r'"symbol"\\s*:\\s*"[^"]+"',
-        r'data-symbol=["\\']([^"\\']+)',
+        r"quote\\.ashx\\?t=([^\\"'<> ]+)",
+        r"/quote/([^\\"'<> ]+)",
+        r'"ticker"\\s*:\\s*"([^"]+)"',
+        r'"symbol"\\s*:\\s*"([^"]+)"',
+        r"data-symbol=[\\"']([^\\"']+)",
     ]
     print("No ticker links matched the expected format.")
     for pattern in patterns:

@@ -2,6 +2,12 @@ name: Test Finviz ticker retrieval
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/test_finviz.py"
+      - ".github/workflows/test-finviz.yml"
 
 permissions:
   contents: read

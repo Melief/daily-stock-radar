@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Test whether GitHub Actions can retrieve Finviz screener data as CSV."""
-import csv
-import io
+"""Test whether GitHub Actions can read ticker symbols from the regular Finviz screener page."""
+import re
 import sys
+from html.parser import HTMLParser
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from urllib.parse import parse_qs, urlparse
 from urllib.request import Request, urlopen
 
 CONFIG_URL = "https://raw.githubusercontent.com/Melief/daily-stock-radar/main/finviz_url.txt"
@@ -20,7 +20,7 @@ def fetch(url):
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/129.0.0.0 Safari/537.36"
             ),
-            "Accept": "text/csv,text/plain,text/html,*/*",
+            "Accept": "text/html,application/xhtml+xml,*/*",
         },
     )
     with urlopen(request, timeout=TIMEOUT_SECONDS) as response:
@@ -29,35 +29,51 @@ def fetch(url):
         return response.status, response.geturl(), response.headers.get("Content-Type", ""), body.decode(charset, errors="replace")
 
 
+class TickerLinkParser(HTMLParser):
+    """Collect ticker symbols from Finviz quote links in the screener HTML."""
+
+    def __init__(self):
+        super().__init__()
+        self.tickers = []
+        self.seen = set()
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() != "a":
+            return
+        attrs = dict(attrs)
+        href = attrs.get("href", "")
+        if "quote.ashx" not in href and "stock.ashx" not in href:
+            return
+        params = parse_qs(urlparse(href).query)
+        ticker = params.get("t", [""])[0].strip().upper()
+        if re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,9}", ticker) and ticker not in self.seen:
+            self.seen.add(ticker)
+            self.tickers.append(ticker)
+
+
 def main():
-    print("TEST: Can GitHub Actions retrieve Finviz screener data via CSV export?")
+    print("TEST: Can GitHub Actions read tickers from the regular Finviz screener page?")
     try:
-        status, _, _, config = fetch(CONFIG_URL)
+        _, _, _, config = fetch(CONFIG_URL)
     except Exception as exc:
         print(f"FAIL: Could not read GitHub configuration: {exc}")
         return 1
 
     screener_url = config.strip()
     parsed = urlparse(screener_url)
-    if not screener_url.startswith("https://finviz.com/") or not parsed.query:
+    if parsed.scheme != "https" or parsed.netloc not in ("finviz.com", "www.finviz.com") or not parsed.query:
         print("FAIL: finviz_url.txt does not contain a valid Finviz screener URL.")
         return 1
 
-    # Preserve the screener's filters/view/sort, but use Finviz's CSV export endpoint.
-    params = [(k, v) for k, v in parse_qsl(parsed.query, keep_blank_values=True) if k != "preset"]
-    export_url = urlunparse(("https", "finviz.com", "/export.ashx", "", urlencode(params), ""))
-    print("Requesting Finviz CSV export endpoint...")
-    print(f"URL: {export_url}")
-
+    print("Requesting the regular screener page (not the CSV export endpoint)...")
+    print(f"URL: {screener_url}")
     try:
-        status, final_url, content_type, body = fetch(export_url)
+        status, final_url, content_type, body = fetch(screener_url)
     except HTTPError as exc:
-        print(f"FAIL: Export endpoint returned HTTP {exc.code}.")
-        if exc.code in (401, 403, 429):
-            print("This may require authentication or the request may be blocked/rate-limited.")
+        print(f"FAIL: Screener page returned HTTP {exc.code}.")
         return 1
     except (URLError, TimeoutError) as exc:
-        print(f"FAIL: Export request failed: {exc}")
+        print(f"FAIL: Screener request failed: {exc}")
         return 1
 
     print(f"HTTP status: {status}")
@@ -65,48 +81,33 @@ def main():
     print(f"Final URL: {final_url}")
     print(f"Response length: {len(body):,} characters")
 
-    if "<html" in body[:1000].lower() or "cloudflare" in body[:5000].lower():
-        print("FAIL: The export endpoint returned HTML, not CSV (possibly login or anti-bot page).")
-        print("Response preview:")
-        print(body[:400].replace("\n", " "))
+    lowered = body[:12000].lower()
+    if "cloudflare" in lowered or "verify you are human" in lowered or "captcha" in lowered:
+        print("FAIL: Finviz returned an anti-bot/challenge page.")
+        print("Response preview: " + body[:350].replace("\n", " "))
+        return 1
+    if "finviz elite" in body[:5000].lower() and "screener" not in body[:5000].lower():
+        print("FAIL: Finviz redirected the request to an Elite/login page.")
+        print("Response preview: " + body[:350].replace("\n", " "))
+        return 1
+    if "<html" not in body[:2000].lower():
+        print("FAIL: Response does not look like an HTML page.")
+        print("Response preview: " + body[:350].replace("\n", " "))
         return 1
 
-    try:
-        rows = list(csv.reader(io.StringIO(body)))
-    except Exception as exc:
-        print(f"FAIL: Could not parse response as CSV: {exc}")
+    parser = TickerLinkParser()
+    parser.feed(body)
+    if not parser.tickers:
+        print("FAIL: Finviz returned HTML, but no ticker links could be extracted.")
+        print("The page may require JavaScript, authentication, or a different HTML structure.")
+        print("Response preview: " + body[:500].replace("\n", " "))
         return 1
 
-    if len(rows) < 2:
-        print("FAIL: Response looks like CSV but contains no data rows.")
-        print("Response preview:")
-        print(body[:400].replace("\n", " "))
-        return 1
-
-    header = [cell.strip().strip('"').lower() for cell in rows[0]]
-    ticker_index = next((i for i, name in enumerate(header) if name in ("ticker", "symbol")), None)
-    if ticker_index is None:
-        print("FAIL: CSV has no Ticker/Symbol column.")
-        print("CSV header: " + ", ".join(rows[0]))
-        print("Response preview: " + body[:300].replace("\n", " "))
-        return 1
-
-    tickers = []
-    for row in rows[1:]:
-        if ticker_index < len(row):
-            ticker = row[ticker_index].strip().strip('"')
-            if ticker and ticker not in tickers:
-                tickers.append(ticker)
-
-    if not tickers:
-        print("FAIL: CSV header was found, but no ticker values were present.")
-        return 1
-
-    print(f"SUCCESS: Read {len(tickers)} ticker(s) from CSV:")
-    print(", ".join(tickers[:30]))
-    if len(tickers) > 30:
+    print(f"SUCCESS: Extracted {len(parser.tickers)} unique ticker(s) from the regular screener HTML:")
+    print(", ".join(parser.tickers[:50]))
+    if len(parser.tickers) > 50:
         print("...")
-    print("This confirms CSV retrieval only; it does not validate quote freshness.")
+    print("This confirms HTML/ticker access only; it does not validate quote freshness.")
     return 0
 
 

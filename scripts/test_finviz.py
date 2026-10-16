@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Test and save the regular Finviz screener HTML for ticker extraction."""
+"""Fetch the ordinary Finviz screener page and save its HTML for inspection."""
 import re
 import sys
 from html.parser import HTMLParser
@@ -31,8 +31,7 @@ class TickerLinkParser(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag.lower() != "a":
             return
-        attrs = dict(attrs)
-        href = attrs.get("href", "")
+        href = dict(attrs).get("href", "")
         params = parse_qs(urlparse(href).query)
         ticker = params.get("t", [""])[0].strip().upper()
         if ("quote.ashx" in href or "stock.ashx" in href) and re.fullmatch(r"[A-Z][A-Z0-9.\\-]{0,9}", ticker):
@@ -42,7 +41,7 @@ class TickerLinkParser(HTMLParser):
 
 
 def main():
-    print("TEST: Fetch ordinary Finviz screener page and inspect its HTML.")
+    print("TEST: Fetch ordinary Finviz screener page and save HTML for inspection.")
     try:
         _, _, _, config = fetch(CONFIG_URL)
         screener_url = config.strip()
@@ -57,7 +56,7 @@ def main():
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         f.write(body)
-    print(f"Saved response to {OUTPUT_FILE} for artifact upload.")
+    print(f"Saved response to {OUTPUT_FILE}.")
     print(f"HTTP status: {status}; Content-Type: {content_type}")
     print(f"Final URL: {final_url}")
     print(f"Response length: {len(body):,} characters")
@@ -68,19 +67,12 @@ def main():
         print(f"SUCCESS: Extracted {len(parser.tickers)} tickers: {', '.join(parser.tickers)}")
         return 0
 
-    # Show evidence about embedded data and ticker-like strings, without assuming matches are valid tickers.
-    patterns = [
-        r"quote\\.ashx\\?t=([^\\"'<> ]+)",
-        r"/quote/([^\\"'<> ]+)",
-        r'"ticker"\\s*:\\s*"([^"]+)"',
-        r'"symbol"\\s*:\\s*"([^"]+)"',
-        r"data-symbol=[\\"']([^\\"']+)",
-    ]
-    print("No ticker links matched the expected format.")
-    for pattern in patterns:
-        matches = re.findall(pattern, body, flags=re.IGNORECASE)
-        print(f"Pattern {pattern}: {len(matches)} match(es); examples: {matches[:8]}")
-    print("FAIL: Inspect the saved HTML artifact to determine whether tickers are embedded elsewhere.")
+    print("No ticker links matched the expected format; inspecting alternative markers:")
+    for pattern in [r"quote[.]ashx", r"/quote/", r'"ticker"', r'"symbol"', r"data-symbol"]:
+        matches = list(re.finditer(pattern, body, flags=re.IGNORECASE))
+        snippets = [body[max(0, m.start()-80):m.end()+140].replace("\\n", " ") for m in matches[:3]]
+        print(f"{pattern}: {len(matches)} match(es); examples: {snippets}")
+    print("FAIL: HTML was saved as an artifact; inspect it to find the actual ticker structure.")
     return 1
 
 

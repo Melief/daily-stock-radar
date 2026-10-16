@@ -32,7 +32,7 @@ def fetch(url):
 def main():
     print("TEST: Can GitHub Actions retrieve Finviz screener data via CSV export?")
     try:
-        status, _, config = fetch(CONFIG_URL)
+        status, _, _, config = fetch(CONFIG_URL)
     except Exception as exc:
         print(f"FAIL: Could not read GitHub configuration: {exc}")
         return 1

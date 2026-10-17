@@ -50,24 +50,30 @@ class TickerLinkParser(HTMLParser):
 
 
 def get_daily_bars(ticker):
-    # Stooq daily CSV avoids Yahoo Finance's frequent HTTP 429 rate limits in hosted runners.
-    symbol = ticker.lower().replace(".", "-") + ".us"
-    url = f"https://stooq.com/q/d/l/?s={quote(symbol)}&i=d"
-    body = fetch(url)
-    if not body.strip() or body.lstrip().lower().startswith("no data"):
-        raise ValueError(f"No daily data returned by Stooq for {ticker}")
-    rows = list(csv.DictReader(body.splitlines()))
+    # Nasdaq's public historical endpoint supplies daily OHLCV without Yahoo's 429 limits.
+    url = f"https://api.nasdaq.com/api/quote/{quote(ticker)}/historical?assetclass=stocks&limit=10"
+    req = Request(url, headers={
+        "User-Agent": USER_AGENT,
+        "Accept": "application/json, text/plain, */*",
+        "Origin": "https://www.nasdaq.com",
+        "Referer": f"https://www.nasdaq.com/market-activity/stocks/{ticker.lower()}/historical",
+    })
+    with urlopen(req, timeout=TIMEOUT_SECONDS) as response:
+        payload = json.loads(response.read().decode("utf-8", errors="replace"))
+    data = payload.get("data") or {}
+    table = data.get("tradesTable") or {}
+    rows = table.get("rows") or []
     bars = []
-    for row in rows[-10:]:
+    for row in reversed(rows):
         try:
-            open_price = float(row["Open"])
-            close_price = float(row["Close"])
-            volume = float(row["Volume"])
-        except (KeyError, TypeError, ValueError):
+            open_price = float(row["open"].replace("$", "").replace(",", ""))
+            close_price = float(row["close"].replace("$", "").replace(",", ""))
+            volume = float(row["volume"].replace(",", ""))
+        except (KeyError, TypeError, ValueError, AttributeError):
             continue
         bars.append({"open": open_price, "close": close_price, "volume": volume})
     if not bars:
-        raise ValueError(f"No usable daily OHLCV data returned by Stooq for {ticker}; response starts: {body[:120]!r}")
+        raise ValueError(f"No usable daily OHLCV data returned by Nasdaq for {ticker}")
     return bars
 
 def vpa_signal(bars):

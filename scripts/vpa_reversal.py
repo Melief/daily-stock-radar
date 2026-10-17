@@ -43,7 +43,7 @@ class TickerLinkParser(HTMLParser):
         href = dict(attrs).get("href", "")
         parsed = urlparse(href)
         ticker = parse_qs(parsed.query).get("t", [""])[0].strip().upper()
-        if re.search(r"(?:^|/)stock$", parsed.path) and re.fullmatch(r"[A-Z][A-Z0-9.-]{0,9}", ticker):
+        if re.search(r"(?:^|/)(?:stock|quote)$", parsed.path) and re.fullmatch(r"[A-Z][A-Z0-9.-]{0,9}", ticker):
             if ticker not in self.seen:
                 self.seen.add(ticker)
                 self.tickers.append(ticker)

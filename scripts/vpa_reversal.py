@@ -1,35 +1,49 @@
 #!/usr/bin/env python3
-"""Flag daily VPA reversal setups among tickers returned by the Finviz screener.
-
-Signal on the latest available daily bar:
-- At least three immediately preceding red candles.
-- Each red candle closes below the prior candle's close.
-- Volume on the latest red candle is below volume on the first candle in the run.
-- Trigger candle is green and its volume exceeds the latest red candle's volume.
-"""
+"""Check current Finviz tickers for a daily VPA reversal setup."""
 import csv
+import io
 import json
 import re
 import sys
 import time
-from datetime import datetime, timezone
 from html.parser import HTMLParser
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, quote, urlparse
 from urllib.request import Request, urlopen
 
 CONFIG_URL = "https://raw.githubusercontent.com/Melief/daily-stock-radar/main/finviz_url.txt"
-TIMEOUT_SECONDS = 20
+TIMEOUT_SECONDS = 25
 MIN_RED_BARS = 3
 OUTPUT_CSV = "vpa_reversal.csv"
+MAX_RETRIES = 4
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/129.0.0.0 Safari/537.36"
 
 
 def fetch(url):
-    req = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/json,*/*"})
-    with urlopen(req, timeout=TIMEOUT_SECONDS) as response:
-        charset = response.headers.get_content_charset() or "utf-8"
-        return response.read().decode(charset, errors="replace")
+    """Fetch with exponential backoff for rate limits and temporary server errors."""
+    last_error = None
+    for attempt in range(MAX_RETRIES):
+        req = Request(url, headers={
+            "User-Agent": USER_AGENT,
+            "Accept": "text/html,application/json,text/csv,*/*",
+        })
+        try:
+            with urlopen(req, timeout=TIMEOUT_SECONDS) as response:
+                charset = response.headers.get_content_charset() or "utf-8"
+                return response.read().decode(charset, errors="replace")
+        except HTTPError as exc:
+            last_error = exc
+            if exc.code not in (429, 500, 502, 503, 504):
+                raise
+            retry_after = exc.headers.get("Retry-After")
+            wait = min(60, int(retry_after)) if retry_after and retry_after.isdigit() else 2 ** (attempt + 1)
+        except (URLError, TimeoutError) as exc:
+            last_error = exc
+            wait = 2 ** (attempt + 1)
+        if attempt < MAX_RETRIES - 1:
+            print(f"Temporary request error ({last_error}); retrying in {wait}s...", file=sys.stderr)
+            time.sleep(wait)
+    raise RuntimeError(f"Request failed after {MAX_RETRIES} attempts: {last_error}")
 
 
 class TickerLinkParser(HTMLParser):
@@ -49,63 +63,85 @@ class TickerLinkParser(HTMLParser):
                 self.tickers.append(ticker)
 
 
-def get_daily_bars(ticker):
-    # Yahoo's chart endpoint provides daily OHLCV; try both public chart hosts.
-    symbol = ticker.replace(".", "-")
-    last_error = None
-    for host in ("query1.finance.yahoo.com", "query2.finance.yahoo.com"):
-        url = f"https://{host}/v8/finance/chart/{quote(symbol)}?range=10d&interval=1d&events=history"
+def get_stooq_bars(ticker):
+    """Stooq CSV is the primary source; only daily open, close and volume are needed."""
+    symbol = ticker.lower().replace(".", "-") + ".us"
+    url = f"https://stooq.com/q/d/l/?s={quote(symbol)}&i=d"
+    content = fetch(url)
+    reader = csv.DictReader(io.StringIO(content))
+    bars = []
+    for row in reader:
         try:
-            payload = json.loads(fetch(url))
-            chart = payload.get("chart", {})
-            if chart.get("error") or not chart.get("result"):
-                raise ValueError(f"No chart data returned by {host} for {ticker}")
-            result = chart["result"][0]
-            quote_data = result["indicators"]["quote"][0]
-            bars = []
-            timestamps = result.get("timestamp", [])
-            for i, _ in enumerate(timestamps):
-                opens = quote_data.get("open", [])
-                closes = quote_data.get("close", [])
-                volumes = quote_data.get("volume", [])
-                if i < len(opens) and i < len(closes) and i < len(volumes):
-                    if opens[i] is not None and closes[i] is not None and volumes[i] is not None:
-                        bars.append({"open": opens[i], "close": closes[i], "volume": volumes[i]})
-            if bars:
-                return bars
-            raise ValueError(f"No usable daily OHLCV bars returned by {host} for {ticker}")
-        except (HTTPError, URLError, TimeoutError, ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-            last_error = exc
-    raise ValueError(f"Could not retrieve daily OHLCV for {ticker}: {last_error}")
+            open_price = float(row["Open"])
+            close_price = float(row["Close"])
+            volume = float(row["Volume"])
+            if open_price > 0 and close_price > 0 and volume >= 0:
+                bars.append({"open": open_price, "close": close_price, "volume": volume})
+        except (KeyError, TypeError, ValueError):
+            continue
+    if not bars:
+        raise ValueError(f"Stooq returned no usable daily OHLCV for {ticker}")
+    return bars[-10:]
+
+
+def get_yahoo_bars(ticker):
+    """Yahoo fallback, with a single host to avoid doubling requests during a rate limit."""
+    symbol = ticker.replace(".", "-")
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{quote(symbol)}?range=10d&interval=1d&events=history"
+    payload = json.loads(fetch(url))
+    chart = payload.get("chart", {})
+    if chart.get("error") or not chart.get("result"):
+        raise ValueError(f"No Yahoo chart data for {ticker}: {chart.get('error')}")
+    result = chart["result"][0]
+    quote_data = result["indicators"]["quote"][0]
+    bars = []
+    opens = quote_data.get("open", [])
+    closes = quote_data.get("close", [])
+    volumes = quote_data.get("volume", [])
+    for i in range(len(result.get("timestamp", []))):
+        if i < len(opens) and i < len(closes) and i < len(volumes):
+            if opens[i] is not None and closes[i] is not None and volumes[i] is not None:
+                bars.append({"open": opens[i], "close": closes[i], "volume": volumes[i]})
+    if not bars:
+        raise ValueError(f"No usable Yahoo daily OHLCV for {ticker}")
+    return bars
+
+
+def get_daily_bars(ticker):
+    errors = []
+    for source in (get_stooq_bars, get_yahoo_bars):
+        try:
+            return source(ticker)
+        except (HTTPError, URLError, TimeoutError, RuntimeError, ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+            errors.append(f"{source.__name__}: {exc}")
+            print(f"{ticker}: {source.__name__} failed: {exc}", file=sys.stderr)
+    raise ValueError(" | ".join(errors))
+
 
 def vpa_signal(bars):
-    # Last bar is the trigger; the preceding bars must form a run of lower-closing red candles.
+    # Latest bar is the trigger; the preceding bars must be descending red candles.
     if len(bars) < MIN_RED_BARS + 1:
         return False, "Insufficient daily history"
     trigger = bars[-1]
-    last_red = bars[-2]
-    if not (trigger["close"] > trigger["open"] and trigger["volume"] > last_red["volume"]):
+    if not (trigger["close"] > trigger["open"] and trigger["volume"] > bars[-2]["volume"]):
         return False, "No green high-volume trigger"
 
     run_start = len(bars) - 2
-    # Extend backwards over red candles whose closes descend consecutively.
     while run_start > 0:
-        current = bars[run_start]
-        previous = bars[run_start - 1]
+        current, previous = bars[run_start], bars[run_start - 1]
         if current["close"] < current["open"] and current["close"] < previous["close"]:
             run_start -= 1
         else:
             break
 
-    # Include the first red candle in the sequence; each subsequent red candle must close lower.
     red_bars = bars[run_start:-1]
     if len(red_bars) < MIN_RED_BARS:
         return False, "Fewer than 3 qualifying red candles"
-    if not all(b["close"] < b["open"] for b in red_bars):
+    if not all(bar["close"] < bar["open"] for bar in red_bars):
         return False, "Red-candle sequence interrupted"
     if not all(red_bars[i]["close"] < red_bars[i - 1]["close"] for i in range(1, len(red_bars))):
         return False, "Closes did not decline consecutively"
-    if not (red_bars[-1]["volume"] < red_bars[0]["volume"]):
+    if red_bars[-1]["volume"] >= red_bars[0]["volume"]:
         return False, "Volume did not contract across red sequence"
     return True, f"{len(red_bars)} red candles; volume contraction and green trigger confirmed"
 
@@ -118,7 +154,7 @@ def main():
         if parsed.scheme != "https" or parsed.netloc not in ("finviz.com", "www.finviz.com"):
             raise ValueError("Invalid Finviz URL in finviz_url.txt")
         html = fetch(screener_url)
-    except (HTTPError, URLError, TimeoutError, ValueError) as exc:
+    except (HTTPError, URLError, TimeoutError, RuntimeError, ValueError) as exc:
         print(f"ERROR fetching Finviz screener: {exc}", file=sys.stderr)
         return 1
 
@@ -130,17 +166,18 @@ def main():
         return 1
 
     rows = []
+    print(f"Found {len(tickers)} Finviz tickers. Checking daily bars (Stooq first, Yahoo fallback)...")
     for index, ticker in enumerate(tickers):
         try:
             bars = get_daily_bars(ticker)
             signal, note = vpa_signal(bars)
             rows.append({"Ticker": ticker, "VPA Reversal": "JA" if signal else "NEE", "Toelichting": note})
             print(f"{ticker}: {'JA' if signal else 'NEE'} — {note}")
-        except (HTTPError, URLError, TimeoutError, ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+        except (HTTPError, URLError, TimeoutError, RuntimeError, ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
             rows.append({"Ticker": ticker, "VPA Reversal": "ONBEKEND", "Toelichting": f"Datafout: {exc}"})
             print(f"{ticker}: ONBEKEND — {exc}")
         if index < len(tickers) - 1:
-            time.sleep(0.75)
+            time.sleep(1.25)
 
     with open(OUTPUT_CSV, "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=["Ticker", "VPA Reversal", "Toelichting"])
@@ -151,7 +188,7 @@ def main():
     unknown = sum(row["VPA Reversal"] == "ONBEKEND" for row in rows)
     print(f"\nDone: {len(rows)} tickers checked; {yes} VPA signal(s); {unknown} unknown result(s).")
     print(f"Results written to {OUTPUT_CSV}.")
-    return 0 if unknown == 0 else 0
+    return 0
 
 
 if __name__ == "__main__":

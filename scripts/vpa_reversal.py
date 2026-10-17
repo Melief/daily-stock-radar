@@ -50,23 +50,25 @@ class TickerLinkParser(HTMLParser):
 
 
 def get_daily_bars(ticker):
-    # Yahoo chart symbols use hyphens for share classes such as BRK.B.
-    symbol = ticker.replace(".", "-")
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{quote(symbol)}?range=10d&interval=1d&events=history"
-    payload = json.loads(fetch(url))
-    chart = payload.get("chart", {})
-    if chart.get("error") or not chart.get("result"):
-        raise ValueError(f"No chart data returned for {ticker}")
-    result = chart["result"][0]
-    quote_data = result["indicators"]["quote"][0]
+    # Stooq daily CSV avoids Yahoo Finance's frequent HTTP 429 rate limits in hosted runners.
+    symbol = ticker.lower().replace(".", "-") + ".us"
+    url = f"https://stooq.com/q/d/l/?s={quote(symbol)}&i=d"
+    body = fetch(url)
+    if not body.strip() or body.lstrip().lower().startswith("no data"):
+        raise ValueError(f"No daily data returned by Stooq for {ticker}")
+    rows = list(csv.DictReader(body.splitlines()))
     bars = []
-    for i, timestamp in enumerate(result.get("timestamp", [])):
-        values = {key: quote_data.get(key, [None] * len(result.get("timestamp", [])))[i]
-                  for key in ("open", "close", "volume")}
-        if all(values[key] is not None for key in ("open", "close", "volume")):
-            bars.append(values)
+    for row in rows[-10:]:
+        try:
+            open_price = float(row["Open"])
+            close_price = float(row["Close"])
+            volume = float(row["Volume"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        bars.append({"open": open_price, "close": close_price, "volume": volume})
+    if not bars:
+        raise ValueError(f"No usable daily OHLCV data returned by Stooq for {ticker}")
     return bars
-
 
 def vpa_signal(bars):
     # Last bar is the trigger; the preceding bars must form a run of lower-closing red candles.

@@ -26,7 +26,7 @@ class RateLimitError(RuntimeError):
 
 
 def fetch(url):
-    """Fetch with exponential backoff for rate limits and temporary server errors."""
+    """Fetch with cautious backoff for rate limits and temporary server errors."""
     last_error = None
     for attempt in range(MAX_RETRIES):
         req = Request(url, headers={
@@ -40,10 +40,13 @@ def fetch(url):
         except HTTPError as exc:
             last_error = exc
             if exc.code == 429:
-                if attempt >= 1:
-                    raise RateLimitError(f"HTTP 429 persisted after a delayed retry: {url}") from exc
+                if attempt >= 2:
+                    raise RateLimitError(f"HTTP 429 persisted after two delayed retries: {url}") from exc
                 retry_after = exc.headers.get("Retry-After")
-                wait = min(180, int(retry_after)) if retry_after and retry_after.isdigit() else random.uniform(45, 75)
+                if retry_after and retry_after.isdigit():
+                    wait = min(300, int(retry_after))
+                else:
+                    wait = random.uniform(75, 120) if attempt == 0 else random.uniform(150, 240)
                 print(f"HTTP 429; pausing {wait:.0f}s before one retry...", file=sys.stderr)
                 time.sleep(wait)
                 continue
@@ -191,7 +194,7 @@ def main():
         return 1
 
     rows = []
-    print(f"Found {len(tickers)} Finviz tickers. Checking daily bars (Stooq first, Yahoo fallback)...")
+    print(f"Found {len(tickers)} Finviz tickers. Checking daily bars (Yahoo first with cautious backoff; Stooq fallback)...")
     for index, ticker in enumerate(tickers):
         try:
             bars = get_daily_bars(ticker)
@@ -211,7 +214,7 @@ def main():
                 print("Rate limit detected; stopping further ticker requests to avoid hammering providers.")
                 break
         if index < len(tickers) - 1:
-            pause = random.uniform(5, 12)
+            pause = random.uniform(20, 35)
             print(f"Pausing {pause:.1f}s before next ticker.")
             time.sleep(pause)
 

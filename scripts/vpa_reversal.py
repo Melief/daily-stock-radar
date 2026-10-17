@@ -4,6 +4,7 @@ import csv
 import io
 import json
 import re
+import random
 import sys
 import time
 from html.parser import HTMLParser
@@ -16,7 +17,12 @@ TIMEOUT_SECONDS = 25
 MIN_RED_BARS = 3
 OUTPUT_CSV = "vpa_reversal.csv"
 MAX_RETRIES = 4
+YAHOO_RATE_LIMITED = False
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/129.0.0.0 Safari/537.36"
+
+
+class RateLimitError(RuntimeError):
+    """Raised when a provider keeps rate-limiting requests after one delayed retry."""
 
 
 def fetch(url):
@@ -33,10 +39,17 @@ def fetch(url):
                 return response.read().decode(charset, errors="replace")
         except HTTPError as exc:
             last_error = exc
-            if exc.code not in (429, 500, 502, 503, 504):
+            if exc.code == 429:
+                if attempt >= 1:
+                    raise RateLimitError(f"HTTP 429 persisted after a delayed retry: {url}") from exc
+                retry_after = exc.headers.get("Retry-After")
+                wait = min(180, int(retry_after)) if retry_after and retry_after.isdigit() else random.uniform(45, 75)
+                print(f"HTTP 429; pausing {wait:.0f}s before one retry...", file=sys.stderr)
+                time.sleep(wait)
+                continue
+            if exc.code not in (500, 502, 503, 504):
                 raise
-            retry_after = exc.headers.get("Retry-After")
-            wait = min(60, int(retry_after)) if retry_after and retry_after.isdigit() else 2 ** (attempt + 1)
+            wait = 2 ** (attempt + 1)
         except (URLError, TimeoutError) as exc:
             last_error = exc
             wait = 2 ** (attempt + 1)
@@ -85,7 +98,7 @@ def get_stooq_bars(ticker):
 
 
 def get_yahoo_bars(ticker):
-    """Yahoo fallback, with a single host to avoid doubling requests during a rate limit."""
+    """Primary source for daily OHLCV; make only one delayed retry after HTTP 429."""
     symbol = ticker.replace(".", "-")
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{quote(symbol)}?range=10d&interval=1d&events=history"
     payload = json.loads(fetch(url))
@@ -108,13 +121,25 @@ def get_yahoo_bars(ticker):
 
 
 def get_daily_bars(ticker):
+    global YAHOO_RATE_LIMITED
     errors = []
-    for source in (get_stooq_bars, get_yahoo_bars):
+    # Yahoo first. If it rate-limits, try Stooq once for this ticker, then stop
+    # the run from sending repeated requests to either provider.
+    for source in (get_yahoo_bars, get_stooq_bars):
         try:
             return source(ticker)
+        except RateLimitError as exc:
+            errors.append(f"{source.__name__}: {exc}")
+            print(f"{ticker}: {source.__name__} rate-limited: {exc}", file=sys.stderr)
+            if source is get_yahoo_bars:
+                YAHOO_RATE_LIMITED = True
+                continue
+            raise RateLimitError("Provider rate limit reached; stopping further ticker requests. " + " | ".join(errors))
         except (HTTPError, URLError, TimeoutError, RuntimeError, ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
             errors.append(f"{source.__name__}: {exc}")
             print(f"{ticker}: {source.__name__} failed: {exc}", file=sys.stderr)
+    if YAHOO_RATE_LIMITED:
+        raise RateLimitError("Yahoo rate limit reached; stopping further ticker requests. " + " | ".join(errors))
     raise ValueError(" | ".join(errors))
 
 
@@ -176,8 +201,19 @@ def main():
         except (HTTPError, URLError, TimeoutError, RuntimeError, ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
             rows.append({"Ticker": ticker, "VPA Reversal": "ONBEKEND", "Toelichting": f"Datafout: {exc}"})
             print(f"{ticker}: ONBEKEND — {exc}")
-        if index < len(tickers) - 1:
-            time.sleep(1.25)
+            if isinstance(exc, RateLimitError):
+                for remaining_ticker in tickers[index + 1:]:
+                    rows.append({
+                        "Ticker": remaining_ticker,
+                        "VPA Reversal": "ONBEKEND",
+                        "Toelichting": "Overgeslagen: databron gaf Too Many Requests; geen verdere verzoeken verstuurd",
+                    })
+                print("Rate limit detected; stopping further ticker requests to avoid hammering providers.")
+                break
+        if index < len(tickers) - 1 and not YAHOO_RATE_LIMITED:
+            pause = random.uniform(5, 12)
+            print(f"Pausing {pause:.1f}s before next ticker.")
+            time.sleep(pause)
 
     with open(OUTPUT_CSV, "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=["Ticker", "VPA Reversal", "Toelichting"])

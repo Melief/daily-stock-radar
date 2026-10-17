@@ -123,9 +123,9 @@ def get_yahoo_bars(ticker):
 def get_daily_bars(ticker):
     global YAHOO_RATE_LIMITED
     errors = []
-    # Yahoo first. If it rate-limits, try Stooq once for this ticker, then stop
-    # the run from sending repeated requests to either provider.
-    for source in (get_yahoo_bars, get_stooq_bars):
+    # Yahoo first. Once Yahoo rate-limits, keep it disabled for the rest of this run.
+    sources = (get_stooq_bars,) if YAHOO_RATE_LIMITED else (get_yahoo_bars, get_stooq_bars)
+    for source in sources:
         try:
             return source(ticker)
         except RateLimitError as exc:
@@ -210,7 +210,7 @@ def main():
                     })
                 print("Rate limit detected; stopping further ticker requests to avoid hammering providers.")
                 break
-        if index < len(tickers) - 1 and not YAHOO_RATE_LIMITED:
+        if index < len(tickers) - 1:
             pause = random.uniform(5, 12)
             print(f"Pausing {pause:.1f}s before next ticker.")
             time.sleep(pause)

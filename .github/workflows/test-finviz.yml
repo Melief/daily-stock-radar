@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - "scripts/test_finviz.py"
+      - "scripts/vpa_reversal.py"
       - ".github/workflows/test-finviz.yml"
 
 permissions:
@@ -17,7 +18,7 @@ permissions:
 jobs:
   test-finviz:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -30,6 +31,19 @@ jobs:
       - name: Fetch Finviz screener HTML
         run: python scripts/test_finviz.py
         continue-on-error: true
+
+      - name: Run VPA reversal check on current Finviz tickers
+        run: python scripts/vpa_reversal.py
+        continue-on-error: true
+
+      - name: Upload VPA results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vpa-reversal-results
+          path: vpa_reversal.csv
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Upload fetched HTML for inspection
         if: always()

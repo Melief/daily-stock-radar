@@ -67,7 +67,7 @@ def get_daily_bars(ticker):
             continue
         bars.append({"open": open_price, "close": close_price, "volume": volume})
     if not bars:
-        raise ValueError(f"No usable daily OHLCV data returned by Stooq for {ticker}")
+        raise ValueError(f"No usable daily OHLCV data returned by Stooq for {ticker}; response starts: {body[:120]!r}")
     return bars
 
 def vpa_signal(bars):

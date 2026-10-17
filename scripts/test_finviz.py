@@ -35,7 +35,7 @@ class TickerLinkParser(HTMLParser):
         params = parse_qs(urlparse(href).query)
         ticker = params.get("t", [""])[0].strip().upper()
         # Current Finviz HTML uses links such as stock?t=FFIV, not quote.ashx.
-        if re.search(r"(?:^|/)stock$", urlparse(href).path) and re.fullmatch(r"[A-Z][A-Z0-9.-]{0,9}", ticker):
+        if re.search(r"(?:^|/)(?:stock|quote)$", urlparse(href).path) and re.fullmatch(r"[A-Z][A-Z0-9.-]{0,9}", ticker):
             if ticker not in self.seen:
                 self.seen.add(ticker)
                 self.tickers.append(ticker)

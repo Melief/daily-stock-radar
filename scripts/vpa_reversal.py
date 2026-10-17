@@ -50,31 +50,33 @@ class TickerLinkParser(HTMLParser):
 
 
 def get_daily_bars(ticker):
-    # Nasdaq's public historical endpoint supplies daily OHLCV without Yahoo's 429 limits.
-    url = f"https://api.nasdaq.com/api/quote/{quote(ticker)}/historical?assetclass=stocks&limit=10"
-    req = Request(url, headers={
-        "User-Agent": USER_AGENT,
-        "Accept": "application/json, text/plain, */*",
-        "Origin": "https://www.nasdaq.com",
-        "Referer": f"https://www.nasdaq.com/market-activity/stocks/{ticker.lower()}/historical",
-    })
-    with urlopen(req, timeout=TIMEOUT_SECONDS) as response:
-        payload = json.loads(response.read().decode("utf-8", errors="replace"))
-    data = payload.get("data") or {}
-    table = data.get("tradesTable") or {}
-    rows = table.get("rows") or []
-    bars = []
-    for row in reversed(rows):
+    # Yahoo's chart endpoint provides daily OHLCV; try both public chart hosts.
+    symbol = ticker.replace(".", "-")
+    last_error = None
+    for host in ("query1.finance.yahoo.com", "query2.finance.yahoo.com"):
+        url = f"https://{host}/v8/finance/chart/{quote(symbol)}?range=10d&interval=1d&events=history"
         try:
-            open_price = float(row["open"].replace("$", "").replace(",", ""))
-            close_price = float(row["close"].replace("$", "").replace(",", ""))
-            volume = float(row["volume"].replace(",", ""))
-        except (KeyError, TypeError, ValueError, AttributeError):
-            continue
-        bars.append({"open": open_price, "close": close_price, "volume": volume})
-    if not bars:
-        raise ValueError(f"No usable daily OHLCV data returned by Nasdaq for {ticker}")
-    return bars
+            payload = json.loads(fetch(url))
+            chart = payload.get("chart", {})
+            if chart.get("error") or not chart.get("result"):
+                raise ValueError(f"No chart data returned by {host} for {ticker}")
+            result = chart["result"][0]
+            quote_data = result["indicators"]["quote"][0]
+            bars = []
+            timestamps = result.get("timestamp", [])
+            for i, _ in enumerate(timestamps):
+                opens = quote_data.get("open", [])
+                closes = quote_data.get("close", [])
+                volumes = quote_data.get("volume", [])
+                if i < len(opens) and i < len(closes) and i < len(volumes):
+                    if opens[i] is not None and closes[i] is not None and volumes[i] is not None:
+                        bars.append({"open": opens[i], "close": closes[i], "volume": volumes[i]})
+            if bars:
+                return bars
+            raise ValueError(f"No usable daily OHLCV bars returned by {host} for {ticker}")
+        except (HTTPError, URLError, TimeoutError, ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+            last_error = exc
+    raise ValueError(f"Could not retrieve daily OHLCV for {ticker}: {last_error}")
 
 def vpa_signal(bars):
     # Last bar is the trigger; the preceding bars must form a run of lower-closing red candles.
@@ -138,7 +140,7 @@ def main():
             rows.append({"Ticker": ticker, "VPA Reversal": "ONBEKEND", "Toelichting": f"Datafout: {exc}"})
             print(f"{ticker}: ONBEKEND — {exc}")
         if index < len(tickers) - 1:
-            time.sleep(0.25)
+            time.sleep(0.75)
 
     with open(OUTPUT_CSV, "w", newline="", encoding="utf-8-sig") as file:
         writer = csv.DictWriter(file, fieldnames=["Ticker", "VPA Reversal", "Toelichting"])

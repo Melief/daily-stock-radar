@@ -124,26 +124,8 @@ def get_yahoo_bars(ticker):
 
 
 def get_daily_bars(ticker):
-    global YAHOO_RATE_LIMITED
-    errors = []
-    # Stooq first to minimize Yahoo requests. Once Yahoo rate-limits, keep it disabled for this run.
-    sources = (get_stooq_bars,) if YAHOO_RATE_LIMITED else (get_stooq_bars, get_yahoo_bars)
-    for source in sources:
-        try:
-            return source(ticker)
-        except RateLimitError as exc:
-            errors.append(f"{source.__name__}: {exc}")
-            print(f"{ticker}: {source.__name__} rate-limited: {exc}", file=sys.stderr)
-            if source is get_yahoo_bars:
-                YAHOO_RATE_LIMITED = True
-                continue
-            raise RateLimitError("Provider rate limit reached; stopping further ticker requests. " + " | ".join(errors))
-        except (HTTPError, URLError, TimeoutError, RuntimeError, ValueError, KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-            errors.append(f"{source.__name__}: {exc}")
-            print(f"{ticker}: {source.__name__} failed: {exc}", file=sys.stderr)
-    if YAHOO_RATE_LIMITED:
-        raise RateLimitError("Yahoo rate limit reached; stopping further ticker requests. " + " | ".join(errors))
-    raise ValueError(" | ".join(errors))
+    """Use Stooq only; a ticker without usable data is skipped rather than falling back to Yahoo."""
+    return get_stooq_bars(ticker)
 
 
 def vpa_signal(bars):
@@ -194,7 +176,7 @@ def main():
         return 1
 
     rows = []
-    print(f"Found {len(tickers)} Finviz tickers. Checking daily bars (Stooq first; Yahoo fallback with cautious backoff)...")
+    print(f"Found {len(tickers)} Finviz tickers. Checking daily bars from Stooq; unavailable tickers will be marked ONBEKEND and skipped.")
     for index, ticker in enumerate(tickers):
         try:
             bars = get_daily_bars(ticker)

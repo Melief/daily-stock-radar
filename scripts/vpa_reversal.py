@@ -80,7 +80,7 @@ class TickerLinkParser(HTMLParser):
 
 
 def get_stooq_bars(ticker):
-    """Stooq CSV is the primary source; only daily open, close and volume are needed."""
+    """Try Stooq first to reduce Yahoo requests; only daily open, close and volume are needed."""
     symbol = ticker.lower().replace(".", "-") + ".us"
     url = f"https://stooq.com/q/d/l/?s={quote(symbol)}&i=d"
     content = fetch(url)
@@ -101,7 +101,7 @@ def get_stooq_bars(ticker):
 
 
 def get_yahoo_bars(ticker):
-    """Primary source for daily OHLCV; make only one delayed retry after HTTP 429."""
+    """Fallback source for daily OHLCV; use cautious backoff after HTTP 429."""
     symbol = ticker.replace(".", "-")
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{quote(symbol)}?range=10d&interval=1d&events=history"
     payload = json.loads(fetch(url))
@@ -126,8 +126,8 @@ def get_yahoo_bars(ticker):
 def get_daily_bars(ticker):
     global YAHOO_RATE_LIMITED
     errors = []
-    # Yahoo first. Once Yahoo rate-limits, keep it disabled for the rest of this run.
-    sources = (get_stooq_bars,) if YAHOO_RATE_LIMITED else (get_yahoo_bars, get_stooq_bars)
+    # Stooq first to minimize Yahoo requests. Once Yahoo rate-limits, keep it disabled for this run.
+    sources = (get_stooq_bars,) if YAHOO_RATE_LIMITED else (get_stooq_bars, get_yahoo_bars)
     for source in sources:
         try:
             return source(ticker)
@@ -194,7 +194,7 @@ def main():
         return 1
 
     rows = []
-    print(f"Found {len(tickers)} Finviz tickers. Checking daily bars (Yahoo first with cautious backoff; Stooq fallback)...")
+    print(f"Found {len(tickers)} Finviz tickers. Checking daily bars (Stooq first; Yahoo fallback with cautious backoff)...")
     for index, ticker in enumerate(tickers):
         try:
             bars = get_daily_bars(ticker)

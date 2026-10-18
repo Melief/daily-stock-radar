@@ -1,0 +1,53 @@
+name: Top 10 Return Tracker
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1-5"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: top10-return-tracker
+  cancel-in-progress: false
+
+jobs:
+  track-top10:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch current Finviz screener tickers
+        run: python scripts/test_finviz.py
+
+      - name: Compare current Top 10 with previous snapshot
+        run: python scripts/top10_tracker.py
+
+      - name: Save validated snapshot for next run
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/top10_previous.csv
+          if ! git diff --cached --quiet; then
+            git commit -m "Update Top 10 return snapshot"
+            git push
+          else
+            echo "Top 10 membership and returns unchanged; no snapshot commit needed."
+          fi
+
+      - name: Upload Top 10 status CSV
+        uses: actions/upload-artifact@v4
+        with:
+          name: top10-status
+          path: top10_status.csv
+          if-no-files-found: error
+          retention-days: 30

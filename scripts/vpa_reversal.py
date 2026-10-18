@@ -3,6 +3,7 @@
 import csv
 import io
 import json
+import os
 import re
 import random
 import sys
@@ -41,7 +42,8 @@ def fetch(url):
             last_error = exc
             if exc.code == 429:
                 if attempt >= 2:
-                    raise RateLimitError(f"HTTP 429 persisted after two delayed retries: {url}") from exc
+                    safe_url = "Twelve Data" if "api.twelvedata.com" in url else url
+                    raise RateLimitError(f"HTTP 429 persisted after two delayed retries: {safe_url}") from exc
                 retry_after = exc.headers.get("Retry-After")
                 if retry_after and retry_after.isdigit():
                     wait = min(300, int(retry_after))
@@ -51,6 +53,8 @@ def fetch(url):
                 time.sleep(wait)
                 continue
             if exc.code not in (500, 502, 503, 504):
+                if "api.twelvedata.com" in url:
+                    raise RuntimeError(f"Twelve Data HTTP error {exc.code}; check API key and plan.") from exc
                 raise
             wait = 2 ** (attempt + 1)
         except (URLError, TimeoutError) as exc:
@@ -123,9 +127,40 @@ def get_yahoo_bars(ticker):
     return bars
 
 
+def get_twelve_data_bars(ticker):
+    """Fetch daily OHLCV from Twelve Data without exposing the API key in logs."""
+    api_key = os.environ.get("TWELVE_DATA_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("TWELVE_DATA_API_KEY ontbreekt in GitHub Actions Secrets.")
+
+    url = (
+        "https://api.twelvedata.com/time_series"
+        f"?symbol={quote(ticker)}&interval=1day&outputsize=10&apikey={quote(api_key)}"
+    )
+    payload = json.loads(fetch(url))
+    if payload.get("status") == "error" or "values" not in payload:
+        message = payload.get("message", "geen bruikbare koersdata")
+        code = payload.get("code", "onbekend")
+        raise ValueError(f"Twelve Data fout voor {ticker} (code {code}): {message}")
+
+    bars = []
+    for item in reversed(payload["values"]):
+        try:
+            open_price = float(item["open"])
+            close_price = float(item["close"])
+            volume = float(item["volume"])
+            if open_price > 0 and close_price > 0 and volume >= 0:
+                bars.append({"open": open_price, "close": close_price, "volume": volume})
+        except (KeyError, TypeError, ValueError):
+            continue
+    if not bars:
+        raise ValueError(f"Twelve Data gaf geen bruikbare dagelijkse OHLCV voor {ticker}")
+    return bars[-10:]
+
+
 def get_daily_bars(ticker):
-    """Use Yahoo Finance for daily OHLCV."""
-    return get_yahoo_bars(ticker)
+    """Use Twelve Data for daily OHLCV."""
+    return get_twelve_data_bars(ticker)
 
 
 def vpa_signal(bars):
@@ -176,7 +211,7 @@ def main():
         return 1
 
     rows = []
-    print(f"Found {len(tickers)} Finviz tickers. Checking daily bars from Yahoo Finance; unavailable tickers will be marked ONBEKEND and skipped.")
+    print(f"Found {len(tickers)} Finviz tickers. Checking daily bars from Twelve Data; unavailable tickers will be marked ONBEKEND and skipped.")
     for index, ticker in enumerate(tickers):
         try:
             bars = get_daily_bars(ticker)

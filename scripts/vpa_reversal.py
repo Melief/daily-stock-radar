@@ -124,8 +124,8 @@ def get_yahoo_bars(ticker):
 
 
 def get_daily_bars(ticker):
-    """Use Stooq only; a ticker without usable data is skipped rather than falling back to Yahoo."""
-    return get_stooq_bars(ticker)
+    """Use Yahoo Finance for daily OHLCV."""
+    return get_yahoo_bars(ticker)
 
 
 def vpa_signal(bars):
@@ -176,7 +176,7 @@ def main():
         return 1
 
     rows = []
-    print(f"Found {len(tickers)} Finviz tickers. Checking daily bars from Stooq; unavailable tickers will be marked ONBEKEND and skipped.")
+    print(f"Found {len(tickers)} Finviz tickers. Checking daily bars from Yahoo Finance; unavailable tickers will be marked ONBEKEND and skipped.")
     for index, ticker in enumerate(tickers):
         try:
             bars = get_daily_bars(ticker)

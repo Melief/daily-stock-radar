@@ -34,6 +34,8 @@ jobs:
 
       - name: Run VPA reversal check on current Finviz tickers
         run: python scripts/vpa_reversal.py
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
         continue-on-error: true
 
       - name: Upload VPA results

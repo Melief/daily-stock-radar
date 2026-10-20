@@ -12,7 +12,7 @@ on:
       - ".github/workflows/test-finviz.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test-finviz:
@@ -27,10 +27,22 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Fetch Finviz CSV and create ticker list
+      - name: Fetch Finviz tickers and create CSV
         run: python scripts/test_finviz.py
 
-      - name: Upload ticker CSV
+      - name: Commit updated ticker CSV to GitHub
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add finviz_tickers.csv
+          if git diff --cached --quiet; then
+            echo "Ticker CSV is unchanged; no commit needed."
+          else
+            git commit -m "Update Finviz ticker CSV"
+            git push
+          fi
+
+      - name: Upload ticker CSV artifact
         uses: actions/upload-artifact@v4
         with:
           name: finviz-tickers-csv

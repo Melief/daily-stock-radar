@@ -9,7 +9,6 @@ on:
       - main
     paths:
       - "scripts/test_finviz.py"
-      - "scripts/vpa_reversal.py"
       - ".github/workflows/test-finviz.yml"
 
 permissions:
@@ -31,21 +30,6 @@ jobs:
       - name: Fetch Finviz screener HTML
         run: python scripts/test_finviz.py
         continue-on-error: true
-
-      - name: Run VPA reversal check on current Finviz tickers
-        run: python scripts/vpa_reversal.py
-        env:
-          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
-        continue-on-error: true
-
-      - name: Upload VPA results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: vpa-reversal-results
-          path: vpa_reversal.csv
-          if-no-files-found: warn
-          retention-days: 7
 
       - name: Upload fetched HTML for inspection
         if: always()

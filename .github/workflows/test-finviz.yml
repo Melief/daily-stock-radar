@@ -27,15 +27,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Fetch Finviz screener HTML
+      - name: Fetch Finviz CSV and create ticker list
         run: python scripts/test_finviz.py
-        continue-on-error: true
 
-      - name: Upload fetched HTML for inspection
-        if: always()
+      - name: Upload ticker CSV
         uses: actions/upload-artifact@v4
         with:
-          name: finviz-screener-html
-          path: finviz_screener.html
-          if-no-files-found: warn
-          retention-days: 3
+          name: finviz-tickers-csv
+          path: finviz_tickers.csv
+          if-no-files-found: error
+          retention-days: 7

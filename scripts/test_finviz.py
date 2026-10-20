@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
-"""Fetch the Finviz screener CSV and save its current ticker list."""
+"""Fetch the Finviz screener page and write the current tickers to CSV."""
 import csv
-import io
+import re
 import sys
+import time
+from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
-CONFIG_URL = "https://raw.githubusercontent.com/Melief/daily-stock-radar/main/finviz_url.txt"
-TIMEOUT_SECONDS = 25
-OUTPUT_FILE = "finviz_tickers.csv"
+CONFIG_FILE = Path("finviz_url.txt")
+OUTPUT_FILE = Path("finviz_tickers.csv")
+TIMEOUT_SECONDS = 30
+MAX_ATTEMPTS = 3
+TICKER_RE = re.compile(r"""(?:quote\.ashx\?t=|/stock\?t=|stock\?t=)([A-Z][A-Z0-9.\-]*)""", re.IGNORECASE)
 
 
 def fetch(url):
     request = Request(url, headers={
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
-        "Accept": "text/csv,text/plain,*/*",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "en-US,en;q=0.9",
     })
     with urlopen(request, timeout=TIMEOUT_SECONDS) as response:
         body = response.read()
@@ -24,70 +29,52 @@ def fetch(url):
 
 
 def main():
-    print("TEST: Fetch the current Finviz screener as CSV and create a ticker CSV.")
-    try:
-        _, _, _, config = fetch(CONFIG_URL)
-        screener_url = config.strip()
-        parsed = urlparse(screener_url)
-        if parsed.scheme != "https" or parsed.netloc not in ("finviz.com", "www.finviz.com") or not parsed.query:
-            print("FAIL: Invalid Finviz screener URL in finviz_url.txt.")
-            return 1
-
-        # Keep the screener filters and sorting, but use Finviz's CSV export endpoint.
-        params = [(key, value) for key, value in parse_qsl(parsed.query, keep_blank_values=True) if key != "preset"]
-        export_url = urlunparse(("https", "finviz.com", "/export.ashx", "", urlencode(params), ""))
-        status, final_url, content_type, body = fetch(export_url)
-    except HTTPError as exc:
-        print(f"FAIL: Finviz CSV export returned HTTP {exc.code}.")
-        return 1
-    except (OSError, URLError, TimeoutError, ValueError) as exc:
-        print(f"FAIL: Could not retrieve Finviz CSV: {exc}")
+    print("Fetching Finviz screener URL from finviz_url.txt.")
+    if not CONFIG_FILE.exists():
+        print("FAIL: finviz_url.txt is missing.")
         return 1
 
-    print(f"HTTP status: {status}; Content-Type: {content_type}")
-    print(f"Final URL: {final_url}; response length: {len(body):,} characters")
-
-    if "<html" in body[:1000].lower() or "cloudflare" in body[:5000].lower():
-        print("FAIL: Finviz returned HTML rather than CSV.")
-        print(body[:300].replace("\n", " "))
+    screener_url = CONFIG_FILE.read_text(encoding="utf-8").strip()
+    parsed = urlparse(screener_url)
+    if parsed.scheme != "https" or parsed.netloc.lower() not in ("finviz.com", "www.finviz.com") or not parsed.query:
+        print("FAIL: finviz_url.txt does not contain a valid Finviz screener URL.")
         return 1
 
-    try:
-        rows = list(csv.reader(io.StringIO(body)))
-    except csv.Error as exc:
-        print(f"FAIL: Could not parse CSV: {exc}")
-        return 1
+    body = ""
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            status, final_url, content_type, body = fetch(screener_url)
+            print(f"Attempt {attempt}: HTTP {status}; Content-Type: {content_type}; final URL: {final_url}; size: {len(body):,} characters.")
+            if status == 200 and len(body) > 1000 and "finviz" in body[:10000].lower():
+                break
+            raise ValueError("Response does not look like a Finviz screener page.")
+        except (HTTPError, URLError, TimeoutError, OSError, ValueError) as exc:
+            print(f"Attempt {attempt} failed: {exc}")
+            if attempt == MAX_ATTEMPTS:
+                print("FAIL: Could not retrieve a valid Finviz screener page.")
+                return 1
+            time.sleep(attempt * 2)
 
-    if len(rows) < 2:
-        print("FAIL: CSV contains no data rows.")
-        print(body[:300].replace("\n", " "))
-        return 1
-
-    headers = [cell.strip().strip('"').lower() for cell in rows[0]]
-    ticker_index = next((i for i, name in enumerate(headers) if name in ("ticker", "symbol")), None)
-    if ticker_index is None:
-        print("FAIL: No Ticker/Symbol column in CSV. Header: " + ", ".join(rows[0]))
-        return 1
-
+    matches = TICKER_RE.findall(body)
     tickers = []
     seen = set()
-    for row in rows[1:]:
-        if ticker_index < len(row):
-            ticker = row[ticker_index].strip().strip('"').upper()
-            if ticker and ticker not in seen:
-                seen.add(ticker)
-                tickers.append(ticker)
+    for match in matches:
+        ticker = match.upper()
+        if ticker not in seen:
+            seen.add(ticker)
+            tickers.append(ticker)
 
     if not tickers:
-        print("FAIL: CSV contains no ticker values.")
+        print("FAIL: No tickers were found in the Finviz response; CSV was not changed.")
+        print("Response preview: " + body[:250].replace("\\n", " "))
         return 1
 
-    with open(OUTPUT_FILE, "w", newline="", encoding="utf-8") as output:
+    with OUTPUT_FILE.open("w", newline="", encoding="utf-8") as output:
         writer = csv.writer(output)
         writer.writerow(["Ticker"])
         writer.writerows([[ticker] for ticker in tickers])
 
-    print(f"SUCCESS: Created {OUTPUT_FILE} with {len(tickers)} unique ticker(s):")
+    print(f"SUCCESS: Wrote {len(tickers)} unique tickers to {OUTPUT_FILE}:")
     print(", ".join(tickers))
     return 0
 

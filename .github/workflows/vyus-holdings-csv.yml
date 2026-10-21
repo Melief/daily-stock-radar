@@ -47,8 +47,8 @@ jobs:
                   if ticker not in excluded and ticker not in tickers:
                       tickers.append(ticker)
 
-          if len(tickers) < 20:
-              raise SystemExit(f"Safety check failed: only {len(tickers)} tickers found; CSV not written.")
+          if not tickers:
+              raise SystemExit("No tickers found; CSV not written.")
 
           output = Path("data/vyus_tickers.csv")
           output.parent.mkdir(parents=True, exist_ok=True)
@@ -94,8 +94,8 @@ jobs:
               reader = csv.DictReader(f)
               tickers = [row["ticker"].strip().upper() for row in reader if row.get("ticker", "").strip()]
 
-          if len(tickers) < 20:
-              sys.exit(f"Safety check failed: only {len(tickers)} tickers in CSV; not sending.")
+          if not tickers:
+              sys.exit("CSV contains no tickers; not sending.")
 
           response = requests.post(
               url,

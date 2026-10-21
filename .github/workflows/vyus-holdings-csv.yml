@@ -72,3 +72,48 @@ jobs:
             git commit -m "Update VYUS holdings tickers CSV"
             git push
           fi
+
+      - name: Send tickers to Google Sheets
+        env:
+          VYUS_GS_WEBAPP_URL: ${{ vars.VYUS_GS_WEBAPP_URL }}
+          VYUS_GS_SECRET: ${{ secrets.VYUS_GS_SECRET }}
+        run: |
+          python - <<'PY'
+          import csv
+          import json
+          import os
+          import sys
+          import requests
+
+          url = os.environ.get("VYUS_GS_WEBAPP_URL", "").strip()
+          secret = os.environ.get("VYUS_GS_SECRET", "").strip()
+          if not url or not secret:
+              sys.exit("Missing GitHub variable VYUS_GS_WEBAPP_URL or secret VYUS_GS_SECRET.")
+
+          with open("data/vyus_tickers.csv", newline="", encoding="utf-8") as f:
+              reader = csv.DictReader(f)
+              tickers = [row["ticker"].strip().upper() for row in reader if row.get("ticker", "").strip()]
+
+          if len(tickers) < 20:
+              sys.exit(f"Safety check failed: only {len(tickers)} tickers in CSV; not sending.")
+
+          response = requests.post(
+              url,
+              json={"secret": secret, "tickers": tickers},
+              timeout=30,
+              allow_redirects=True,
+          )
+          print(f"Google Apps Script HTTP status: {response.status_code}")
+          response.raise_for_status()
+
+          try:
+              result = response.json()
+          except ValueError:
+              result = None
+
+          if isinstance(result, dict) and (result.get("success") is False or result.get("ok") is False or result.get("error")):
+              sys.exit("Google Apps Script rejected the request: " + json.dumps(result, ensure_ascii=False))
+
+          print(f"Response: {response.text[:1000]}")
+          print(f"Sent {len(tickers)} tickers to the Google Sheets web app.")
+          PY

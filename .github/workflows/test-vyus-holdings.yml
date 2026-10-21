@@ -14,10 +14,11 @@ jobs:
       - name: Install test dependencies
         run: python -m pip install requests beautifulsoup4
 
-      - name: Fetch and diagnose StockAnalysis holdings page
+      - name: Fetch page and extract stock ticker links
         run: |
           python - <<'PY'
           import re
+          import sys
           import requests
           from bs4 import BeautifulSoup
 
@@ -26,6 +27,7 @@ jobs:
               "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36",
               "Accept-Language": "en-US,en;q=0.9"
           }
+
           response = requests.get(url, headers=headers, timeout=25)
           print(f"HTTP status: {response.status_code}")
           print(f"Downloaded bytes: {len(response.content)}")
@@ -34,25 +36,22 @@ jobs:
           soup = BeautifulSoup(response.text, "html.parser")
           print(f"Page title: {soup.title.get_text(' ', strip=True) if soup.title else '(no title)'}")
 
-          print("\\n--- Links containing quote, stock, or holding ---")
-          shown = 0
+          # Holdings use paths such as /stocks/team/, not /quote/.../.
+          tickers = []
           for a in soup.find_all("a", href=True):
-              href = a["href"]
-              label = a.get_text(" ", strip=True)
-              if any(word in href.lower() for word in ("quote", "stock", "holding")):
-                  print(f"{label[:70]!r} -> {href[:180]}")
-                  shown += 1
-                  if shown >= 60:
-                      break
-          print(f"Displayed links: {shown}")
+              href = a["href"].split("?")[0].split("#")[0]
+              match = re.fullmatch(r"/stocks/([a-zA-Z][a-zA-Z0-9.-]*)/?", href)
+              if match:
+                  ticker = match.group(1).upper()
+                  if ticker not in tickers:
+                      tickers.append(ticker)
 
-          print("\\n--- Relevant embedded-data markers ---")
-          html = response.text
-          for term in ("__NEXT_DATA__", "holdings", "AAPL", "MSFT", "symbol", "ticker"):
-              positions = [m.start() for m in re.finditer(re.escape(term), html, re.I)]
-              print(f"{term}: {len(positions)} occurrence(s)")
-              for pos in positions[:2]:
-                  print(re.sub(r"\\s+", " ", html[max(0, pos-100):pos+220])[:320])
+          print(f"Unique stock tickers found: {len(tickers)}")
+          print("Tickers:", ", ".join(tickers) if tickers else "(none)")
 
-          print("\\nDIAGNOSTIC RESULT: page retrieval succeeded. No files or Google Sheets were changed.")
+          if len(tickers) >= 20:
+              print("RESULT: ticker extraction works. This is a test only; no files or Google Sheets were changed.")
+          else:
+              print("RESULT: too few stock links found; inspect page structure.")
+              sys.exit(1)
           PY

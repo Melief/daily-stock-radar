@@ -1,0 +1,74 @@
+name: VYUS holdings to CSV
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vyus-to-csv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: python -m pip install requests beautifulsoup4
+
+      - name: Fetch holdings and write CSV
+        run: |
+          python - <<'PY'
+          import csv
+          import re
+          import requests
+          from bs4 import BeautifulSoup
+          from pathlib import Path
+
+          url = "https://stockanalysis.com/quote/etr/VYUS/holdings/"
+          headers = {
+              "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36",
+              "Accept-Language": "en-US,en;q=0.9"
+          }
+
+          response = requests.get(url, headers=headers, timeout=25)
+          print(f"HTTP status: {response.status_code}")
+          response.raise_for_status()
+
+          soup = BeautifulSoup(response.text, "html.parser")
+          excluded = {"SCREENER", "COMPARE", "EARNINGS-CALENDAR", "INDUSTRY"}
+          tickers = []
+          for a in soup.find_all("a", href=True):
+              href = a["href"].split("?")[0].split("#")[0]
+              match = re.fullmatch(r"/stocks/([a-zA-Z][a-zA-Z0-9.-]*)/?", href)
+              if match:
+                  ticker = match.group(1).upper()
+                  if ticker not in excluded and ticker not in tickers:
+                      tickers.append(ticker)
+
+          if len(tickers) < 20:
+              raise SystemExit(f"Safety check failed: only {len(tickers)} tickers found; CSV not written.")
+
+          output = Path("data/vyus_tickers.csv")
+          output.parent.mkdir(parents=True, exist_ok=True)
+          with output.open("w", newline="", encoding="utf-8") as f:
+              writer = csv.writer(f)
+              writer.writerow(["ticker"])
+              writer.writerows([[ticker] for ticker in tickers])
+
+          print(f"Wrote {len(tickers)} unique tickers to {output}")
+          print(", ".join(tickers))
+          PY
+
+      - name: Commit updated CSV if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/vyus_tickers.csv
+          if git diff --cached --quiet; then
+            echo "CSV is unchanged; no commit needed."
+          else
+            git commit -m "Update VYUS holdings tickers CSV"
+            git push
+          fi

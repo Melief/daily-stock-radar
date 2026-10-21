@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Install test dependencies
+        run: python -m pip install requests beautifulsoup4
+
       - name: Fetch StockAnalysis holdings page and inspect ticker data
         run: |
           python - <<'PY'
@@ -37,17 +40,15 @@ jobs:
           soup = BeautifulSoup(response.text, "html.parser")
           print(f"Page title: {soup.title.get_text(' ', strip=True) if soup.title else '(no title)'}")
 
-          # StockAnalysis commonly exposes holdings as links to individual quote pages.
           tickers = []
           for a in soup.select('a[href*="/quote/"]'):
               href = a.get("href", "")
-              match = re.search(r"/quote/[^/]+/([A-Z][A-Z0-9.\-]{0,14})/?$", href)
+              match = re.search(r"/quote/[^/]+/([A-Z][A-Z0-9.\\-]{0,14})/?$", href)
               if match:
                   ticker = match.group(1)
                   if ticker not in tickers:
                       tickers.append(ticker)
 
-          # Report the result only; this test deliberately does not write files or touch Sheets.
           print(f"Unique ticker-like symbols found in quote links: {len(tickers)}")
           print("Sample symbols:", ", ".join(tickers[:30]) if tickers else "(none)")
           if response.status_code == 200 and len(tickers) >= 20:

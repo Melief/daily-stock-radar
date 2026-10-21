@@ -1,0 +1,58 @@
+name: Test VYUS holdings page
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-vyus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fetch StockAnalysis holdings page and inspect ticker data
+        run: |
+          python - <<'PY'
+          import re
+          import sys
+          import requests
+          from bs4 import BeautifulSoup
+
+          url = "https://stockanalysis.com/quote/etr/VYUS/holdings/"
+          headers = {
+              "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36",
+              "Accept-Language": "en-US,en;q=0.9"
+          }
+
+          try:
+              response = requests.get(url, headers=headers, timeout=25)
+              print(f"HTTP status: {response.status_code}")
+              print(f"Downloaded bytes: {len(response.content)}")
+              response.raise_for_status()
+          except Exception as exc:
+              print(f"FETCH FAILED: {type(exc).__name__}: {exc}")
+              sys.exit(1)
+
+          soup = BeautifulSoup(response.text, "html.parser")
+          print(f"Page title: {soup.title.get_text(' ', strip=True) if soup.title else '(no title)'}")
+
+          # StockAnalysis commonly exposes holdings as links to individual quote pages.
+          tickers = []
+          for a in soup.select('a[href*="/quote/"]'):
+              href = a.get("href", "")
+              match = re.search(r"/quote/[^/]+/([A-Z][A-Z0-9.\-]{0,14})/?$", href)
+              if match:
+                  ticker = match.group(1)
+                  if ticker not in tickers:
+                      tickers.append(ticker)
+
+          # Report the result only; this test deliberately does not write files or touch Sheets.
+          print(f"Unique ticker-like symbols found in quote links: {len(tickers)}")
+          print("Sample symbols:", ", ".join(tickers[:30]) if tickers else "(none)")
+          if response.status_code == 200 and len(tickers) >= 20:
+              print("RESULT: page fetched and ticker links detected; extraction looks promising.")
+          else:
+              print("RESULT: inspect status/title/sample above; the page may block automation or use a different HTML structure.")
+              sys.exit(1)
+          PY

@@ -3,7 +3,8 @@ name: Test Finviz ticker retrieval
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 6 * * *"
+    # GitHub cron uses UTC. 21:00 UTC is 22:00 CET in winter and 23:00 CEST in summer.
+    - cron: "0 21 * * *"
   push:
     branches:
       - main

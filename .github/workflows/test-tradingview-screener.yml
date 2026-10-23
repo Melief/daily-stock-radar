@@ -2,6 +2,10 @@ name: Test TradingView screener ticker retrieval
 
 on:
   workflow_dispatch:
+  schedule:
+    # Beide UTC-tijden gebruiken; de lokale-tijdcheck voorkomt de dubbele run.
+    - cron: '45 19 * * 1-5'
+    - cron: '45 20 * * 1-5'
 
 permissions:
   contents: write
@@ -14,7 +18,25 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Check Amsterdam schedule time
+        id: schedule
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          HOUR=$(TZ=Europe/Amsterdam date +%H)
+          if [ "$HOUR" = "21" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Running at the intended Amsterdam local hour."
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping this UTC schedule; Amsterdam local hour is $HOUR."
+          fi
+
       - name: Diagnose TradingView HTML
+        if: steps.schedule.outputs.run == 'true'
         shell: bash
         run: |
           set -uo pipefail
@@ -55,11 +77,13 @@ jobs:
           EOF
 
       - name: Install browser for rendered screener test
+        if: steps.schedule.outputs.run == 'true'
         run: |
           python -m pip install --quiet playwright
           python -m playwright install --with-deps chromium
 
       - name: Test rendered screener and capture scanner requests
+        if: steps.schedule.outputs.run == 'true'
         shell: bash
         run: |
           mkdir -p tv-diagnostic
@@ -113,15 +137,26 @@ jobs:
                                       import csv
                                       csv_path = Path("data/tradingview_screener_tickers.csv")
                                       csv_path.parent.mkdir(parents=True, exist_ok=True)
-                                      with csv_path.open("w", newline="", encoding="utf-8-sig") as f:
-                                          writer = csv.writer(f)
+                                      with csv_path.open("w", newline="", encoding="utf-8-sig") as csv_file:
+                                          writer = csv.writer(csv_file)
                                           writer.writerow(["ticker", "exchange", "symbol", "description"])
                                           for row in rows:
                                               if not isinstance(row, dict):
                                                   continue
                                               full_symbol = row.get("s", "")
-                                              details = (row.get("d") or [{}])[0]
-                                              writer.writerow([details.get("name", full_symbol.split(":")[-1]), details.get("exchange", full_symbol.split(":")[0] if ":" in full_symbol else ""), full_symbol, details.get("description", "")])
+                                              ticker = full_symbol.split(":")[-1]
+                                              exchange = full_symbol.split(":")[0] if ":" in full_symbol else ""
+                                              values = row.get("d") or []
+                                              if isinstance(values, dict):
+                                                  description = values.get("description") or values.get("name") or values.get("short_name") or ""
+                                                  ticker = values.get("name") or ticker
+                                                  exchange = values.get("exchange") or exchange
+                                              elif isinstance(values, list):
+                                                  # TradingView's scanner commonly returns column values as a list.
+                                                  description = next((str(v) for v in values if isinstance(v, str) and v.strip() and v.strip().upper() not in {ticker.upper(), exchange.upper(), full_symbol.upper()} and not v.strip().upper() in {"NASDAQ", "NYSE", "AMEX", "ARCA", "BATS", "USA", "US"}), "")
+                                              else:
+                                                  description = ""
+                                              writer.writerow([ticker, exchange, full_symbol, description])
                                       print("CSV written:", csv_path, "rows:", len(rows))
                           except (json.JSONDecodeError, AttributeError, TypeError):
                               pass
@@ -135,7 +170,7 @@ jobs:
           python tv-diagnostic/render_test.py
 
       - name: Commit CSV to repository
-        if: success()
+        if: success() && steps.schedule.outputs.run == 'true'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -149,7 +184,7 @@ jobs:
           fi
 
       - name: Upload diagnostic files
-        if: always()
+        if: always() && steps.schedule.outputs.run == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: tradingview-screener-diagnostic

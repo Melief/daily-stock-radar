@@ -11,35 +11,45 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Fetch TradingView screener page
+      - name: Diagnose TradingView URLs
+        shell: bash
         run: |
-          set -euo pipefail
-          URL='https://www.tradingview.com/screener/ksXnFyDM/'
-          STATUS=$(curl -L -sS -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/128.0.0.0 Safari/537.36' \
-            -o tradingview-screener.html -w '%{http_code}' "$URL")
-          echo "HTTP status: $STATUS"
-          echo "Downloaded bytes: $(wc -c < tradingview-screener.html)"
-          echo "Ticker-like tokens in raw HTML (diagnostic only):"
-          python - <<'PY'
-          import re
+          set -uo pipefail
+          mkdir -p tv-diagnostic
+          while IFS='|' read -r LABEL URL; do
+            echo "===== $LABEL ====="
+            STATUS=$(curl -L -sS --max-time 45 \
+              -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/128.0.0.0 Safari/537.36' \
+              -o "tv-diagnostic/$LABEL.html" \
+              -w '%{http_code}' "$URL" || true)
+            FINAL_URL=$(curl -L -sS --max-time 45 -o /dev/null \
+              -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/128.0.0.0 Safari/537.36' \
+              -w '%{url_effective}' "$URL" || true)
+            echo "HTTP status: ${STATUS:-curl-error}"
+            echo "Final URL: $FINAL_URL"
+            echo "Downloaded bytes: $(wc -c < "tv-diagnostic/$LABEL.html" 2>/dev/null || echo 0)"
+            python - "$LABEL" <<'PY'
+          import re, sys
           from pathlib import Path
-
-          html = Path("tradingview-screener.html").read_text(errors="replace")
-          # Diagnostic only: matches uppercase stock-like strings; not yet a verified ticker list.
-          matches = sorted(set(re.findall(r'(?<![A-Za-z0-9_])(?:NASDAQ|NYSE|AMEX|ARCA|BATS):[A-Z][A-Z0-9.\-]{0,14}', html)))
-          print(f"Exchange-qualified ticker-like strings found: {len(matches)}")
-          for item in matches[:100]:
-              print(item)
-          if len(html) < 1000:
-              raise SystemExit("Response is unexpectedly short; likely blocked or redirected.")
+          label = sys.argv[1]
+          html = Path(f"tv-diagnostic/{label}.html").read_text(errors="replace")
+          title = re.search(r"<title[^>]*>(.*?)</title>", html, re.I | re.S)
+          print("Page title:", re.sub(r"\\s+", " ", title.group(1)).strip()[:200] if title else "(no title)")
+          for term in ("ksXnFyDM", "screenerData", "symbols", "404", "not found", "sign in"):
+              print(f"Contains {term!r}:", term.lower() in html.lower())
+          matches = sorted(set(re.findall(r'(?<![A-Za-z0-9_])(?:NASDAQ|NYSE|AMEX|ARCA|BATS):[A-Z][A-Z0-9.\\-]{0,14}', html)))
+          print("Exchange-qualified ticker-like strings:", ", ".join(matches[:50]) or "(none)")
           PY
-          test "$STATUS" = "200"
+          done <<'EOF'
+          saved_screener|https://www.tradingview.com/screener/ksXnFyDM/
+          screener_root|https://www.tradingview.com/screener/
+          EOF
 
-      - name: Upload raw HTML for inspection
+      - name: Upload diagnostic HTML
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tradingview-screener-html-test
-          path: tradingview-screener.html
+          name: tradingview-screener-diagnostic
+          path: tv-diagnostic/
           if-no-files-found: warn
           retention-days: 7

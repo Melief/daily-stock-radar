@@ -4,13 +4,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test-tradingview-screener:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Diagnose TradingView HTML
         shell: bash
         run: |
@@ -106,6 +109,20 @@ jobs:
                               if symbols:
                                   print("SCANNER SYMBOLS:", ", ".join(symbols))
                                   Path(f"tv-diagnostic/scanner-symbols-{i+1}.txt").write_text("\\n".join(symbols) + "\\n", encoding="utf-8")
+                                  if "/global/scan" in r.url:
+                                      import csv
+                                      csv_path = Path("data/tradingview_screener_tickers.csv")
+                                      csv_path.parent.mkdir(parents=True, exist_ok=True)
+                                      with csv_path.open("w", newline="", encoding="utf-8-sig") as f:
+                                          writer = csv.writer(f)
+                                          writer.writerow(["ticker", "exchange", "symbol", "description"])
+                                          for row in rows:
+                                              if not isinstance(row, dict):
+                                                  continue
+                                              full_symbol = row.get("s", "")
+                                              details = (row.get("d") or [{}])[0]
+                                              writer.writerow([details.get("name", full_symbol.split(":")[-1]), details.get("exchange", full_symbol.split(":")[0] if ":" in full_symbol else ""), full_symbol, details.get("description", "")])
+                                      print("CSV written:", csv_path, "rows:", len(rows))
                           except (json.JSONDecodeError, AttributeError, TypeError):
                               pass
                       except Exception as e:
@@ -116,6 +133,20 @@ jobs:
                   browser.close()
           PY
           python tv-diagnostic/render_test.py
+
+      - name: Commit CSV to repository
+        if: success()
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/tradingview_screener_tickers.csv
+          if git diff --cached --quiet; then
+            echo "CSV unchanged; no commit needed."
+          else
+            git commit -m "Update TradingView screener ticker CSV"
+            git push
+          fi
 
       - name: Upload diagnostic files
         if: always()

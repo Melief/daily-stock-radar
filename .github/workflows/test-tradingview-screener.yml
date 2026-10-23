@@ -135,11 +135,14 @@ jobs:
                                   Path(f"tv-diagnostic/scanner-symbols-{i+1}.txt").write_text("\\n".join(symbols) + "\\n", encoding="utf-8")
                                   if "/global/scan" in r.url:
                                       import csv
+                                      from datetime import datetime
+                                      from zoneinfo import ZoneInfo
+                                      retrieved_at = datetime.now(ZoneInfo("Europe/Amsterdam")).isoformat(timespec="seconds")
                                       csv_path = Path("data/tradingview_screener_tickers.csv")
                                       csv_path.parent.mkdir(parents=True, exist_ok=True)
                                       with csv_path.open("w", newline="", encoding="utf-8-sig") as csv_file:
                                           writer = csv.writer(csv_file)
-                                          writer.writerow(["ticker", "exchange", "symbol", "description"])
+                                          writer.writerow(["ticker", "exchange", "symbol", "description", "retrieved_at"])
                                           for row in rows:
                                               if not isinstance(row, dict):
                                                   continue
@@ -156,7 +159,7 @@ jobs:
                                                   description = next((str(v) for v in values if isinstance(v, str) and v.strip() and v.strip().upper() not in {ticker.upper(), exchange.upper(), full_symbol.upper()} and not v.strip().upper() in {"NASDAQ", "NYSE", "AMEX", "ARCA", "BATS", "USA", "US"}), "")
                                               else:
                                                   description = ""
-                                              writer.writerow([ticker, exchange, full_symbol, description])
+                                              writer.writerow([ticker, exchange, full_symbol, description, retrieved_at])
                                       print("CSV written:", csv_path, "rows:", len(rows))
                           except (json.JSONDecodeError, AttributeError, TypeError):
                               pass

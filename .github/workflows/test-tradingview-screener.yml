@@ -1,0 +1,45 @@
+name: Test TradingView screener ticker retrieval
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-tradingview-screener:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch TradingView screener page
+        run: |
+          set -euo pipefail
+          URL='https://www.tradingview.com/screener/ksXnFyDM/'
+          STATUS=$(curl -L -sS -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/128.0.0.0 Safari/537.36' \
+            -o tradingview-screener.html -w '%{http_code}' "$URL")
+          echo "HTTP status: $STATUS"
+          echo "Downloaded bytes: $(wc -c < tradingview-screener.html)"
+          echo "Ticker-like tokens in raw HTML (diagnostic only):"
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          html = Path("tradingview-screener.html").read_text(errors="replace")
+          # Diagnostic only: matches uppercase stock-like strings; not yet a verified ticker list.
+          matches = sorted(set(re.findall(r'(?<![A-Za-z0-9_])(?:NASDAQ|NYSE|AMEX|ARCA|BATS):[A-Z][A-Z0-9.\-]{0,14}', html)))
+          print(f"Exchange-qualified ticker-like strings found: {len(matches)}")
+          for item in matches[:100]:
+              print(item)
+          if len(html) < 1000:
+              raise SystemExit("Response is unexpectedly short; likely blocked or redirected.")
+          PY
+          test "$STATUS" = "200"
+
+      - name: Upload raw HTML for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tradingview-screener-html-test
+          path: tradingview-screener.html
+          if-no-files-found: warn
+          retention-days: 7

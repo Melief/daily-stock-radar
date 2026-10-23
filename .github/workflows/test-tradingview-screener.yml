@@ -35,13 +35,13 @@ jobs:
           html = Path(f"tv-diagnostic/{label}.html").read_text(errors="replace")
           title = re.search(r"<title[^>]*>(.*?)</title>", html, re.I | re.S)
           print("Page title:", re.sub(r"\s+", " ", title.group(1)).strip()[:200] if title else "(no title)")
-          for term in ("ksXnFyDM", "screenerData", "symbols", "404", "not found", "sign in"):
+          for term in ("JPfZmDr6", "screenerData", "symbols", "404", "not found", "sign in"):
               print(f"Contains {term!r}:", term.lower() in html.lower())
           matches = sorted(set(re.findall(r'(?<![A-Za-z0-9_])(?:NASDAQ|NYSE|AMEX|ARCA|BATS):[A-Z][A-Z0-9.-]{0,14}', html)))
           print("Exchange-qualified ticker-like strings:", ", ".join(matches[:50]) or "(none)")
           PY
           done <<'EOF'
-          saved_screener|https://www.tradingview.com/screener/ksXnFyDM/
+          saved_screener|https://www.tradingview.com/screener/JPfZmDr6/
           screener_root|https://www.tradingview.com/screener/
           EOF
 

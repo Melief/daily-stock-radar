@@ -4,6 +4,12 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "50 */2 * * *"
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/sync_finviz_to_sheets.py"
+      - ".github/workflows/sync-finviz-to-sheets.yml"
 
 permissions:
   contents: read

@@ -1,53 +1,17 @@
-
 #!/usr/bin/env python3
-"""Sync Finviz screener tickers to Google Sheets."""
+"""Sync the latest Finviz ticker CSV to Google Sheets."""
 
+import csv
 import json
 import os
 import re
 import sys
-from html.parser import HTMLParser
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qs, urlparse
 from urllib.request import Request, urlopen
 
 TIMEOUT = 30
-
-
-def fetch(url):
-    request = Request(url, headers={
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "text/html,application/xhtml+xml,*/*",
-    })
-    with urlopen(request, timeout=TIMEOUT) as response:
-        charset = response.headers.get_content_charset() or "utf-8"
-        return response.status, response.geturl(), response.read().decode(
-            charset, errors="replace"
-        )
-
-
-class TickerParser(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.tickers = []
-        self.seen = set()
-
-    def handle_starttag(self, tag, attrs):
-        if tag.lower() != "a":
-            return
-
-        href = dict(attrs).get("href", "")
-        parsed = urlparse(href)
-        ticker = parse_qs(parsed.query).get("t", [""])[0].strip().upper()
-
-        if (
-            re.search(r"(?:^|/)(?:stock|quote)$", parsed.path)
-            and re.fullmatch(r"[A-Z][A-Z0-9.-]{0,9}", ticker)
-            and ticker not in self.seen
-        ):
-            self.seen.add(ticker)
-            self.tickers.append(ticker)
+CSV_FILE = Path("finviz_tickers.csv")
 
 
 def main():
@@ -64,35 +28,34 @@ def main():
         print("ERROR: The GS_SECRET secret is missing.")
         return 1
 
-    try:
-        finviz_url = Path("finviz_url.txt").read_text(
-            encoding="utf-8"
-        ).strip()
-
-        parsed_url = urlparse(finviz_url)
-        if parsed_url.scheme != "https" or parsed_url.netloc not in (
-            "finviz.com", "www.finviz.com"
-        ):
-            print("ERROR: Invalid URL in finviz_url.txt.")
-            return 1
-
-        status, final_url, html = fetch(finviz_url)
-
-    except (OSError, HTTPError, URLError, TimeoutError, ValueError) as exc:
-        print(f"ERROR: Could not retrieve Finviz: {exc}")
+    if not CSV_FILE.exists():
+        print(f"ERROR: {CSV_FILE} is missing. Google Sheets was not changed.")
         return 1
 
-    parser = TickerParser()
-    parser.feed(html)
+    tickers = []
+    seen = set()
+    try:
+        with CSV_FILE.open("r", newline="", encoding="utf-8-sig") as file:
+            reader = csv.DictReader(file)
+            if not reader.fieldnames or "Ticker" not in reader.fieldnames:
+                print("ERROR: finviz_tickers.csv must have a 'Ticker' column.")
+                return 1
+            for row in reader:
+                ticker = (row.get("Ticker") or "").strip().upper()
+                if re.fullmatch(r"[A-Z][A-Z0-9.-]{0,9}", ticker) and ticker not in seen:
+                    seen.add(ticker)
+                    tickers.append(ticker)
+    except (OSError, csv.Error) as exc:
+        print(f"ERROR: Could not read {CSV_FILE}: {exc}")
+        return 1
 
-    if not parser.tickers:
-        print("ERROR: No tickers found. Google Sheets was not changed.")
-        print(f"HTTP status: {status}; HTML length: {len(html)}")
+    if not tickers:
+        print("ERROR: No valid tickers in CSV. Google Sheets was not changed.")
         return 1
 
     payload = json.dumps({
         "secret": secret,
-        "tickers": parser.tickers,
+        "tickers": tickers,
     }).encode("utf-8")
 
     request = Request(
@@ -113,8 +76,8 @@ def main():
         print(f"ERROR: Apps Script response: {result[:300]}")
         return 1
 
-    print(f"SUCCESS: Sent {len(parser.tickers)} tickers to Google Sheets.")
-    print(", ".join(parser.tickers))
+    print(f"SUCCESS: Sent {len(tickers)} tickers from {CSV_FILE} to Google Sheets.")
+    print(", ".join(tickers))
     return 0
 
 

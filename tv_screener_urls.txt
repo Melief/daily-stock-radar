@@ -1,2 +1,3 @@
-Follow Thrue
-https://www.tradingview.com/screener/ksXnFyDM/
+# Naam|TradingView screener-URL
+Simpel Monsters|https://www.tradingview.com/screener/JPfZmDr6/
+Follow Thrue|https://www.tradingview.com/screener/ksXnFyDM/

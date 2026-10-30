@@ -1,9 +1,9 @@
-name: Test TradingView screener ticker retrieval
+name: Update TradingView screener tickers
 
 on:
   workflow_dispatch:
   schedule:
-    # Beide UTC-tijden gebruiken; de lokale-tijdcheck voorkomt de dubbele run.
+    # 21:45 Amsterdam; twee UTC-momenten met lokale-tijdcheck voor zomer/wintertijd.
     - cron: '45 19 * * 1-5'
     - cron: '45 20 * * 1-5'
 
@@ -11,9 +11,9 @@ permissions:
   contents: write
 
 jobs:
-  test-tradingview-screener:
+  update-tradingview-tickers:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -27,170 +27,34 @@ jobs:
             exit 0
           fi
           HOUR=$(TZ=Europe/Amsterdam date +%H)
-          if [ "$HOUR" = "21" ]; then
+          MINUTE=$(TZ=Europe/Amsterdam date +%M)
+          if [ "$HOUR" = "21" ] && [ "$MINUTE" -ge 40 ] && [ "$MINUTE" -le 59 ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
-            echo "Running at the intended Amsterdam local hour."
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping this UTC schedule; Amsterdam local hour is $HOUR."
+            echo "Skipping duplicate UTC schedule."
           fi
 
-      - name: Diagnose TradingView HTML
-        if: steps.schedule.outputs.run == 'true'
-        shell: bash
-        run: |
-          set -uo pipefail
-          mkdir -p tv-diagnostic
-          while IFS='|' read -r LABEL URL; do
-            echo "===== $LABEL ====="
-            STATUS=$(curl -L -sS --max-time 45 \
-              -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/128.0.0.0 Safari/537.36' \
-              -o "tv-diagnostic/$LABEL.html" \
-              -w '%{http_code}' "$URL" || true)
-            echo "HTTP status: ${STATUS:-curl-error}"
-            echo "Downloaded bytes: $(wc -c < "tv-diagnostic/$LABEL.html" 2>/dev/null || echo 0)"
-            python - "$LABEL" <<'PY'
-          import json, re, sys
-          from pathlib import Path
-          label = sys.argv[1]
-          html = Path(f"tv-diagnostic/{label}.html").read_text(errors="replace")
-          title = re.search(r"<title[^>]*>(.*?)</title>", html, re.I | re.S)
-          print("Page title:", re.sub(r"\\s+", " ", title.group(1)).strip()[:200] if title else "(no title)")
-          m = re.search(r"window\.initData\.screen_data\s*=\s*(\{.*?\})\s*;", html, re.S)
-          if m:
-              data = json.loads(m.group(1))
-              print("Saved screen config found: yes")
-              print("Screen title:", data.get("title"))
-              print("Filter count:", len(data.get("filters", [])))
-              print("Sort column:", (data.get("sort_column") or {}).get("id"))
-              print("Shared:", data.get("is_shared"))
-          else:
-              print("Saved screen config found: no")
-              for term in ("screen_data", "filters", "JPfZmDr6"):
-                  positions = [x.start() for x in re.finditer(re.escape(term), html, re.I)][:3]
-                  print(f"HTML occurrences for {term}:", len(list(re.finditer(re.escape(term), html, re.I))))
-                  for pos in positions:
-                      print("HTML snippet:", html[max(0, pos-180):pos+500].replace("\\n", " ")[:700])
-          PY
-          done <<'EOF'
-          saved_screener|https://www.tradingview.com/screener/JPfZmDr6/
-          EOF
-
-      - name: Install browser for rendered screener test
+      - name: Install Python dependencies
         if: steps.schedule.outputs.run == 'true'
         run: |
           python -m pip install --quiet playwright
           python -m playwright install --with-deps chromium
 
-      - name: Test rendered screener and capture scanner requests
+      - name: Retrieve both TradingView screeners
         if: steps.schedule.outputs.run == 'true'
-        shell: bash
-        run: |
-          mkdir -p tv-diagnostic
-          cat > tv-diagnostic/render_test.py <<'PY'
-          import re, json
-          from pathlib import Path
-          from playwright.sync_api import sync_playwright
+        run: python scripts/update_tradingview_screeners.py
 
-          url = "https://www.tradingview.com/screener/JPfZmDr6/"
-          responses = []
-          requests = []
-
-          with sync_playwright() as p:
-              browser = p.chromium.launch(headless=True)
-              page = browser.new_page(viewport={"width": 1600, "height": 1000})
-              page.on("response", lambda r: responses.append(r))
-              page.on("request", lambda q: requests.append(q) if ("scanner" in q.url.lower() or "/scan" in q.url.lower()) else None)
-              try:
-                  response = page.goto(url, wait_until="domcontentloaded", timeout=90000)
-                  print("Browser HTTP status:", response.status if response else "no response")
-                  page.wait_for_timeout(15000)
-                  print("Rendered page title:", page.title())
-                  html = page.content()
-                  Path("tv-diagnostic/rendered.html").write_text(html, encoding="utf-8")
-                  body = page.locator("body").inner_text(timeout=15000)
-                  Path("tv-diagnostic/rendered.txt").write_text(body, encoding="utf-8")
-                  print("Rendered body excerpt:")
-                  print(body[:6000].replace("\\n", " | "))
-                  print("Possible ticker tokens:", ", ".join(sorted(set(re.findall(r"\\b[A-Z]{1,6}(?:[.-][A-Z]{1,3})?\\b", body)))[:100]))
-                  relevant = [r for r in responses if "scanner" in r.url.lower() or "/scan" in r.url.lower()]
-                  print("Scanner-like responses:", len(relevant))
-                  print("Scanner request details:")
-                  for q in requests[:20]:
-                      print(f"REQUEST: method={q.method} url={q.url[:500]}")
-                      if q.post_data:
-                          print("POST body:", q.post_data[:5000])
-                  for i, r in enumerate(relevant[:20]):
-                      print(f"RESPONSE {i+1}: status={r.status} type={r.headers.get('content-type','')} url={r.url[:500]}")
-                      try:
-                          text = r.text()
-                          Path(f"tv-diagnostic/scanner-response-{i+1}.txt").write_text(text, encoding="utf-8")
-                          print("Body excerpt:", text[:3000].replace("\\n", " "))
-                          try:
-                              payload = json.loads(text)
-                              rows = payload.get("data", [])
-                              symbols = [row.get("s", "") for row in rows if isinstance(row, dict)]
-                              if symbols:
-                                  print("SCANNER SYMBOLS:", ", ".join(symbols))
-                                  Path(f"tv-diagnostic/scanner-symbols-{i+1}.txt").write_text("\\n".join(symbols) + "\\n", encoding="utf-8")
-                                  if "/global/scan" in r.url:
-                                      import csv
-                                      from datetime import datetime
-                                      from zoneinfo import ZoneInfo
-                                      retrieved_at = datetime.now(ZoneInfo("Europe/Amsterdam")).isoformat(timespec="seconds")
-                                      csv_path = Path("data/tradingview_screener_tickers.csv")
-                                      csv_path.parent.mkdir(parents=True, exist_ok=True)
-                                      with csv_path.open("w", newline="", encoding="utf-8-sig") as csv_file:
-                                          writer = csv.writer(csv_file)
-                                          writer.writerow(["ticker", "exchange", "symbol", "description", "retrieved_at"])
-                                          for row in rows:
-                                              if not isinstance(row, dict):
-                                                  continue
-                                              full_symbol = row.get("s", "")
-                                              ticker = full_symbol.split(":")[-1]
-                                              exchange = full_symbol.split(":")[0] if ":" in full_symbol else ""
-                                              values = row.get("d") or []
-                                              if isinstance(values, dict):
-                                                  description = values.get("description") or values.get("name") or values.get("short_name") or ""
-                                                  ticker = values.get("name") or ticker
-                                                  exchange = values.get("exchange") or exchange
-                                              elif isinstance(values, list):
-                                                  # TradingView's scanner commonly returns column values as a list.
-                                                  description = next((str(v) for v in values if isinstance(v, str) and v.strip() and v.strip().upper() not in {ticker.upper(), exchange.upper(), full_symbol.upper()} and not v.strip().upper() in {"NASDAQ", "NYSE", "AMEX", "ARCA", "BATS", "USA", "US"}), "")
-                                              else:
-                                                  description = ""
-                                              writer.writerow([ticker, exchange, full_symbol, description, retrieved_at])
-                                      print("CSV written:", csv_path, "rows:", len(rows))
-                          except (json.JSONDecodeError, AttributeError, TypeError):
-                              pass
-                      except Exception as e:
-                          print("Could not read response body:", str(e)[:200])
-              except Exception as e:
-                  print("BROWSER TEST ERROR:", repr(e))
-              finally:
-                  browser.close()
-          PY
-          python tv-diagnostic/render_test.py
-
-      - name: Commit CSV to repository
+      - name: Commit updated ticker lists
         if: success() && steps.schedule.outputs.run == 'true'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/tradingview_screener_tickers.csv
+          git config user.email "41898282+users.noreply.github.com"
+          git add data/simpel_monsters_tickers.csv data/follow_thrue_tickers.csv
           if git diff --cached --quiet; then
-            echo "CSV unchanged; no commit needed."
+            echo "Ticker lists unchanged; no commit needed."
           else
-            git commit -m "Update TradingView screener ticker CSV"
+            git commit -m "Update both TradingView screener ticker lists"
             git push
           fi
-
-      - name: Upload diagnostic files
-        if: always() && steps.schedule.outputs.run == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: tradingview-screener-diagnostic
-          path: tv-diagnostic/
-          if-no-files-found: warn
-          retention-days: 7

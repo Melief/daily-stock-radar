@@ -26,14 +26,14 @@ EXPECTED_COMPONENTS = 50
 
 # Yahoo Finance listing suffix -> Google Finance exchange prefix.
 MARKETS = {
-    "Netherlands": (".AS", "AMS"),
-    "Germany": (".DE", "ETR"),
-    "Spain": (".MC", "BME"),
-    "France": (".PA", "EPA"),
-    "Italy": (".MI", "BIT"),
-    "Belgium": (".BR", "EBR"),
-    "Finland": (".HE", "HEL"),
-    "Ireland": (".IR", "ISE"),
+    "Netherlands": (".AS", "AMS"), "NL": (".AS", "AMS"),
+    "Germany": (".DE", "ETR"), "DE": (".DE", "ETR"),
+    "Spain": (".MC", "BME"), "ES": (".MC", "BME"),
+    "France": (".PA", "EPA"), "FR": (".PA", "EPA"),
+    "Italy": (".MI", "BIT"), "IT": (".MI", "BIT"),
+    "Belgium": (".BR", "EBR"), "BE": (".BR", "EBR"),
+    "Finland": (".HE", "HEL"), "FI": (".HE", "HEL"),
+    "Ireland": (".IR", "ISE"), "IE": (".IR", "ISE"),
 }
 
 HEADERS = {
@@ -140,7 +140,7 @@ def find_ticker(session: requests.Session, company: str, country: str) -> tuple[
                 if q.get("quoteType") == "EQUITY"
                 and isinstance(q.get("symbol"), str)
                 and q["symbol"].upper().endswith(suffix)
-                and q.get("shortname") or q.get("longname")
+                and (q.get("shortname") or q.get("longname"))
             ]
 
             scored = []

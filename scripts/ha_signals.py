@@ -107,14 +107,16 @@ def calculate_signals(symbol: str) -> dict | None:
             sma20 = df["Close"].rolling(20).mean()
             sma50 = df["Close"].rolling(50).mean()
             latest = df.index[-1]
-            previous_close = float(df["Close"].iloc[-2])
-            latest_close = float(df["Close"].iloc[-1])
-            if latest_close > previous_close:
-                day_type = "UP"
-            elif latest_close < previous_close:
-                day_type = "DOWN"
+            # HA day type is determined only by the Heikin-Ashi candle:
+            # HA Close > HA Open = UP; HA Close < HA Open = DOWN.
+            latest_ha_open = float(ha_open.iloc[-1])
+            latest_ha_close = float(ha_close.iloc[-1])
+            if latest_ha_close > latest_ha_open:
+                ha_day_type = "UP"
+            elif latest_ha_close < latest_ha_open:
+                ha_day_type = "DOWN"
             else:
-                day_type = "FLAT"
+                ha_day_type = "FLAT"
 
             # One dynamic distance-to-low value:
             # during US regular trading hours use the latest intraday price and
@@ -157,7 +159,7 @@ def calculate_signals(symbol: str) -> dict | None:
                 "ticker": symbol,
                 "date": pd.Timestamp(latest).strftime("%Y-%m-%d"),
                 "close": round(float(df["Close"].iloc[-1]), 4),
-                "day_type": day_type,
+                "ha_day_type": ha_day_type,
                 "distance_from_low_pct": round(distance_from_low_pct, 2),
                 "sma20": round(float(sma20.iloc[-1]), 4),
                 "sma50": round(float(sma50.iloc[-1]), 4),
@@ -178,7 +180,7 @@ def calculate_signals(symbol: str) -> dict | None:
         "ticker": symbol,
         "date": "",
         "close": "",
-        "day_type": "",
+        "ha_day_type": "",
         "distance_from_low_pct": "",
         "sma20": "",
         "sma50": "",

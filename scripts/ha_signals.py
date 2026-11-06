@@ -126,23 +126,93 @@ def calculate_signals(symbol: str) -> dict | None:
             )
 
             # A tiny tolerance avoids false negatives from floating point arithmetic.
-            ha_open_equals_low = abs(float(ha_open.iloc[-1]) - float(ha_low.iloc[-1])) <= 1e-8
+            ha_open_equals_low = abs(latest_ha_open - distance_low) <= 1e-8
+            latest_ha_high = float(max(ha_df["High"].iloc[-1], latest_ha_open, latest_ha_close))
+            latest_ha_low = distance_low
+            latest_date = pd.Timestamp(latest).strftime("%Y-%m-%d")
+            latest_close = float(df["Close"].iloc[-1])
+
+            # During the US regular session, replace the latest daily candle with
+            # the developing session candle aggregated from 5-minute bars.
+            # Outside the session (or if intraday data is unavailable), retain
+            # the latest completed daily candle above.
+            try:
+                intra = yf.download(
+                    symbol, period="5d", interval="5m", auto_adjust=False,
+                    progress=False, threads=False, timeout=25
+                )
+                if intra is not None and not intra.empty:
+                    if isinstance(intra.columns, pd.MultiIndex):
+                        intra.columns = intra.columns.get_level_values(0)
+                    if all(c in intra.columns for c in required):
+                        idx = pd.DatetimeIndex(intra.index)
+                        if idx.tz is None:
+                            idx = idx.tz_localize("America/New_York")
+                        else:
+                            idx = idx.tz_convert("America/New_York")
+                        today_et = pd.Timestamp.now(tz="America/New_York").date()
+                        today_mask = [d == today_et for d in idx.date]
+                        today_bars = intra.loc[today_mask, required].dropna()
+                        prior_mask = [d < today_et for d in pd.to_datetime(df.index).date]
+                        prior_days = df.loc[prior_mask, required].dropna()
+                        if not today_bars.empty and len(prior_days) >= 55:
+                            prior_ha_df = prior_days.tail(HA_LOOKBACK)
+                            prior_ha_close = (
+                                prior_ha_df["Open"] + prior_ha_df["High"] +
+                                prior_ha_df["Low"] + prior_ha_df["Close"]
+                            ) / 4.0
+                            prior_ha_open = pd.Series(index=prior_ha_df.index, dtype="float64")
+                            prior_ha_open.iloc[0] = (
+                                prior_ha_df["Open"].iloc[0] + prior_ha_df["Close"].iloc[0]
+                            ) / 2.0
+                            for j in range(1, len(prior_ha_df)):
+                                prior_ha_open.iloc[j] = (
+                                    prior_ha_open.iloc[j - 1] + prior_ha_close.iloc[j - 1]
+                                ) / 2.0
+
+                            session_open = float(today_bars["Open"].iloc[0])
+                            session_high = float(today_bars["High"].max())
+                            session_low = float(today_bars["Low"].min())
+                            session_close = float(today_bars["Close"].iloc[-1])
+                            latest_ha_open = float(
+                                (prior_ha_open.iloc[-1] + prior_ha_close.iloc[-1]) / 2.0
+                            )
+                            latest_ha_close = (
+                                session_open + session_high + session_low + session_close
+                            ) / 4.0
+                            latest_ha_low = min(session_low, latest_ha_open, latest_ha_close)
+                            latest_ha_high = max(session_high, latest_ha_open, latest_ha_close)
+                            ha_day_type = (
+                                "UP" if latest_ha_close > latest_ha_open else
+                                "DOWN" if latest_ha_close < latest_ha_open else "FLAT"
+                            )
+                            distance_low = latest_ha_low
+                            distance_price = latest_ha_close
+                            distance_from_low_pct = (
+                                (distance_price - distance_low) / distance_low * 100.0
+                                if distance_low > 0 else float("nan")
+                            )
+                            ha_open_equals_low = abs(latest_ha_open - latest_ha_low) <= 1e-8
+                            latest_date = today_et.strftime("%Y-%m-%d")
+                            latest_close = session_close
+            except Exception as intraday_exc:
+                print(f"{symbol}: intraday niet beschikbaar, dagdata gebruikt: {intraday_exc}")
 
             return {
                 "ticker": symbol,
-                "date": pd.Timestamp(latest).strftime("%Y-%m-%d"),
-                "close": round(float(df["Close"].iloc[-1]), 4),
+                "date": latest_date,
+                "close": round(latest_close, 4),
                 "ha_day_type": ha_day_type,
                 "distance_from_low_pct": round(distance_from_low_pct, 1),
                 "sma20": round(float(sma20.iloc[-1]), 4),
                 "sma50": round(float(sma50.iloc[-1]), 4),
-                "ha_open": round(float(ha_open.iloc[-1]), 4),
-                "ha_high": round(float(max(float(ha_df["High"].iloc[-1]), ha_open.iloc[-1], ha_close.iloc[-1])), 4),
-                "ha_low": round(float(ha_low.iloc[-1]), 4),
-                "ha_close": round(float(ha_close.iloc[-1]), 4),
+                "ha_open": round(latest_ha_open, 4),
+                "ha_high": round(latest_ha_high, 4),
+                "ha_low": round(latest_ha_low, 4),
+                "ha_close": round(latest_ha_close, 4),
                 "ha_open_equals_low": bool(ha_open_equals_low),
-                "above_sma20": bool(df["Close"].iloc[-1] > sma20.iloc[-1]),
-                "above_sma50": bool(df["Close"].iloc[-1] > sma50.iloc[-1]),
+                "above_sma20": bool(latest_close > sma20.iloc[-1]),
+                "above_sma50": bool(latest_close > sma50.iloc[-1]),
                 "status": "OK",
             }
         except Exception as exc:

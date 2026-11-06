@@ -7,7 +7,7 @@ on:
     - cron: "15 4 * * 1-5"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: dsr-ha-signals
@@ -30,10 +30,14 @@ jobs:
         run: pip install -r requirements-dsr.txt
       - name: Calculate Heikin Ashi and SMA signals
         run: python scripts/ha_signals.py
-      - name: Publish signal file
-        uses: actions/upload-artifact@v4
-        with:
-          name: dsr-ha-signals
-          path: data/ha_signals.csv
-          if-no-files-found: error
-          retention-days: 30
+      - name: Commit updated signal file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/ha_signals.csv
+          if git diff --cached --quiet; then
+            echo "Geen wijzigingen in DSR-signalen."
+          else
+            git commit -m "Update daily DSR Heikin Ashi signals"
+            git push
+          fi

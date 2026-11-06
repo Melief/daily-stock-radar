@@ -55,7 +55,7 @@ def read_tickers(path: Path) -> list[str]:
     import re
     return [
         token.upper()
-        for token in re.split(r"[\\s,;]+", text)
+        for token in re.split(r"[\s,;]+", text)
         if token.strip() and token.strip().upper() not in {"TICKER", "SYMBOL"}
     ]
 

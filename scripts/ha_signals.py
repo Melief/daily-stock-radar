@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import csv
 import io
-import os
 import sys
 import time
 from pathlib import Path
@@ -40,9 +39,10 @@ def read_tickers(path: Path) -> list[str]:
     text = path.read_text(encoding="utf-8-sig").strip()
     if not text:
         return []
-    # CSV files may have a header; plain text files may contain one symbol per line.
-    try:
-        rows = list(csv.reader(io.StringIO(text)))
+
+    # The master ticker file is space-separated; CSV sources use the first column.
+    if path.suffix.lower() == ".csv":
+        rows = csv.reader(io.StringIO(text))
         values = []
         for row in rows:
             if not row:
@@ -51,9 +51,13 @@ def read_tickers(path: Path) -> list[str]:
             if value and value not in {"TICKER", "SYMBOL"}:
                 values.append(value)
         return values
-    except csv.Error:
-        return [line.strip().upper() for line in text.splitlines() if line.strip()]
 
+    import re
+    return [
+        token.upper()
+        for token in re.split(r"[\\s,;]+", text)
+        if token.strip() and token.strip().upper() not in {"TICKER", "SYMBOL"}
+    ]
 
 def ticker_universe() -> list[str]:
     symbols: set[str] = set()

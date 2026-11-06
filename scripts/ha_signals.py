@@ -18,9 +18,7 @@ import csv
 import io
 import sys
 import time
-from datetime import datetime, time as dt_time
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 import pandas as pd
 import yfinance as yf
@@ -118,35 +116,10 @@ def calculate_signals(symbol: str) -> dict | None:
             else:
                 ha_day_type = "FLAT"
 
-            # One dynamic distance-to-low value:
-            # during US regular trading hours use the latest intraday price and
-            # today's session low; otherwise use the latest completed daily close
-            # and that session's low.
-            market_now = datetime.now(ZoneInfo("America/New_York"))
-            distance_price = float(df["Close"].iloc[-1])
-            distance_low = float(df["Low"].iloc[-1])
-            if market_now.weekday() < 5 and dt_time(9, 30) <= market_now.time() < dt_time(16, 0):
-                intraday = yf.download(
-                    symbol, period="1d", interval="1m", auto_adjust=False,
-                    progress=False, threads=False, timeout=25
-                )
-                if intraday is not None and not intraday.empty:
-                    if isinstance(intraday.columns, pd.MultiIndex):
-                        intraday.columns = intraday.columns.get_level_values(0)
-                    intraday = intraday[["Low", "Close"]].dropna().copy()
-                    idx = pd.DatetimeIndex(intraday.index)
-                    if idx.tz is None:
-                        idx = idx.tz_localize("UTC")
-                    intraday.index = idx.tz_convert("America/New_York")
-                    session = intraday[intraday.index.date == market_now.date()]
-                    session = session[
-                        (session.index.time >= dt_time(9, 30)) &
-                        (session.index.time < dt_time(16, 0))
-                    ]
-                    if not session.empty:
-                        distance_price = float(session["Close"].iloc[-1])
-                        distance_low = float(session["Low"].min())
-
+            # HA-only distance from the latest Heikin-Ashi low:
+            # (HA Close - HA Low) / HA Low * 100.
+            distance_price = latest_ha_close
+            distance_low = float(ha_low.iloc[-1])
             distance_from_low_pct = (
                 (distance_price - distance_low) / distance_low * 100.0
                 if distance_low > 0 else float("nan")
@@ -160,7 +133,7 @@ def calculate_signals(symbol: str) -> dict | None:
                 "date": pd.Timestamp(latest).strftime("%Y-%m-%d"),
                 "close": round(float(df["Close"].iloc[-1]), 4),
                 "ha_day_type": ha_day_type,
-                "distance_from_low_pct": round(distance_from_low_pct, 2),
+                "distance_from_low_pct": round(distance_from_low_pct, 1),
                 "sma20": round(float(sma20.iloc[-1]), 4),
                 "sma50": round(float(sma50.iloc[-1]), 4),
                 "ha_open": round(float(ha_open.iloc[-1]), 4),

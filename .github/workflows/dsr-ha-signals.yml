@@ -3,7 +3,8 @@ name: DSR Heikin Ashi signals
 on:
   workflow_dispatch:
   schedule:
-    # 04:15 UTC, Monday-Friday: after the US session and resilient to DST changes.
+    # Intraday snapshots on US trading days, plus the final after-close run.
+    - cron: "0 16,18,20 * * 1-5"
     - cron: "15 4 * * 1-5"
 
 permissions:

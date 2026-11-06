@@ -1,0 +1,39 @@
+name: DSR Heikin Ashi signals
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 04:15 UTC, Monday-Friday: after the US session and resilient to DST changes.
+    - cron: "15 4 * * 1-5"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dsr-ha-signals
+  cancel-in-progress: false
+
+jobs:
+  calculate-ha:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dsr.txt
+      - name: Install dependencies
+        run: pip install -r requirements-dsr.txt
+      - name: Calculate Heikin Ashi and SMA signals
+        run: python scripts/ha_signals.py
+      - name: Publish signal file
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsr-ha-signals
+          path: data/ha_signals.csv
+          if-no-files-found: error
+          retention-days: 30

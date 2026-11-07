@@ -203,13 +203,18 @@ def calculate(ticker: str, sources: set[str]) -> dict:
         daily_volume = float(latest["Volume"])
         if is_intraday:
             daily_volume = float(latest["Volume"])
-        avg30 = float(completed["Volume"].tail(30).mean())
-        baseline = completed["Volume"].tail(30)
-        if len(baseline) >= 3:
-            v0, v1, v2 = map(float, baseline.iloc[-3:])
-            trend = "STIJGEND" if v0 < v1 < v2 else "DALEND" if v0 > v1 > v2 else "GEMENGD"
+        volume_history = completed["Volume"].tail(30) if is_intraday else completed["Volume"].iloc[:-1].tail(30)
+        avg30 = float(volume_history.mean()) if not volume_history.empty else float("nan")
+        if is_intraday:
+            # Current session volume is incomplete; do not mislabel it as a 3-day trend.
+            trend = "ONVOLLEDIG"
         else:
-            trend = "ONBEKEND"
+            last_three = completed["Volume"].tail(3)
+            if len(last_three) == 3:
+                v0, v1, v2 = map(float, last_three)
+                trend = "STIJGEND" if v0 < v1 < v2 else "DALEND" if v0 > v1 > v2 else "GEMENGD"
+            else:
+                trend = "ONBEKEND"
         volume_ratio = ((daily_volume / avg30) - 1.0) * 100.0 if avg30 > 0 else float("nan")
 
         requires_filter = bool(sources & SMA_FILTER_SOURCES)

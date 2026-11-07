@@ -129,6 +129,7 @@ def calculate_signals(symbol: str) -> dict | None:
             ha_open_equals_low = abs(latest_ha_open - distance_low) <= 1e-8
             latest_ha_high = float(max(ha_df["High"].iloc[-1], latest_ha_open, latest_ha_close))
             latest_ha_low = distance_low
+            ha_open_equals_high = abs(latest_ha_open - latest_ha_high) <= 1e-8
             latest_date = pd.Timestamp(latest).strftime("%Y-%m-%d")
             latest_close = float(df["Close"].iloc[-1])
 
@@ -193,6 +194,7 @@ def calculate_signals(symbol: str) -> dict | None:
                                 if distance_low > 0 else float("nan")
                             )
                             ha_open_equals_low = abs(latest_ha_open - latest_ha_low) <= 1e-8
+                            ha_open_equals_high = abs(latest_ha_open - latest_ha_high) <= 1e-8
                             latest_date = today_et.strftime("%Y-%m-%d")
                             latest_close = session_close
             except Exception as intraday_exc:
@@ -212,6 +214,8 @@ def calculate_signals(symbol: str) -> dict | None:
                 "ha_close": round(latest_ha_close, 4),
                 "ha_open_equals_low": bool(ha_open_equals_low),
                 "ha_strong_signal": bool(ha_open_equals_low and latest_ha_close > latest_ha_open),
+                "ha_open_equals_high": bool(ha_open_equals_high),
+                "ha_strong_down_signal": bool(ha_open_equals_high and latest_ha_close < latest_ha_open),
                 "above_sma20": bool(latest_close > sma20.iloc[-1]),
                 "above_sma50": bool(latest_close > sma50.iloc[-1]),
                 "status": "OK",
@@ -234,6 +238,8 @@ def calculate_signals(symbol: str) -> dict | None:
         "ha_close": "",
         "ha_open_equals_low": "",
         "ha_strong_signal": "",
+        "ha_open_equals_high": "",
+        "ha_strong_down_signal": "",
         "above_sma20": "",
         "above_sma50": "",
         "status": f"ONBEKEND: {last_error}",

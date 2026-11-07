@@ -1,0 +1,82 @@
+source,ticker,ha_row_present,ha_status
+Sector Top Tickers,ACN,True,OK
+Sector Top Tickers,ANF,True,OK
+Sector Top Tickers,BNO,True,OK
+Sector Top Tickers,CCI,True,OK
+Sector Top Tickers,CEG,True,OK
+Sector Top Tickers,COP,True,OK
+Sector Top Tickers,CSGP,True,OK
+Sector Top Tickers,CTVA,True,OK
+Sector Top Tickers,DHT,True,OK
+Sector Top Tickers,DINO,True,OK
+Sector Top Tickers,ECO,True,OK
+Sector Top Tickers,EQT,True,OK
+Sector Top Tickers,FIGS,True,OK
+Sector Top Tickers,FRO,True,OK
+Sector Top Tickers,HNGE,True,OK
+Sector Top Tickers,HPE,True,OK
+Sector Top Tickers,INSW,True,OK
+Sector Top Tickers,MCK,True,OK
+Sector Top Tickers,MPC,True,OK
+Sector Top Tickers,NXT,True,OK
+Sector Top Tickers,OSCR,True,OK
+Sector Top Tickers,OXY,True,OK
+Sector Top Tickers,P,True,OK
+Sector Top Tickers,PARR,True,OK
+Sector Top Tickers,PBF,True,OK
+Sector Top Tickers,PLTR,True,OK
+Sector Top Tickers,PSX,True,OK
+Sector Top Tickers,RELY,True,OK
+Sector Top Tickers,SBAC,True,OK
+Sector Top Tickers,TRMD,True,OK
+Sector Top Tickers,VLO,True,OK
+Sector Top Tickers,VST,True,OK
+Finviz,A,True,OK
+Finviz,CBC,True,OK
+Finviz,CTAS,True,OK
+Finviz,DGX,True,OK
+Finviz,EXEL,True,OK
+Finviz,HNGE,True,OK
+Finviz,KNSA,True,OK
+Finviz,LH,True,OK
+Finviz,SN,True,OK
+Finviz,TMO,True,OK
+Finviz,V,True,OK
+Finviz,VCTR,True,OK
+Finviz,VLTO,True,OK
+TradingView screener,ACN,True,OK
+TradingView screener,DOCU,True,OK
+TradingView screener,EPAM,True,OK
+TradingView screener,EXLS,True,OK
+TradingView screener,NOW,True,OK
+TradingView screener,PAYC,True,OK
+TradingView screener,QLYS,True,OK
+Simpel Monsters,FIGS,True,OK
+Follow Thrue,AVPT,True,OK
+Follow Thrue,MANH,True,OK
+Follow Thrue,SN,True,OK
+VYUS holdings,ADBE,True,OK
+VYUS holdings,CART,True,OK
+VYUS holdings,COKE,True,OK
+VYUS holdings,CRM,True,OK
+VYUS holdings,DELL,True,OK
+VYUS holdings,DOCU,True,OK
+VYUS holdings,EXPE,True,OK
+VYUS holdings,GDDY,True,OK
+VYUS holdings,GEN,True,OK
+VYUS holdings,HCA,True,OK
+VYUS holdings,HPQ,True,OK
+VYUS holdings,HUBS,True,OK
+VYUS holdings,INTU,True,OK
+VYUS holdings,IT,True,OK
+VYUS holdings,MTCH,True,OK
+VYUS holdings,PAYC,True,OK
+VYUS holdings,PTC,True,OK
+VYUS holdings,ROP,True,OK
+VYUS holdings,SWKS,True,OK
+VYUS holdings,TEAM,True,OK
+VYUS holdings,THC,True,OK
+VYUS holdings,UHS,True,OK
+VYUS holdings,WDAY,True,OK
+VYUS holdings,ZBRA,True,OK
+VYUS holdings,ZM,True,OK

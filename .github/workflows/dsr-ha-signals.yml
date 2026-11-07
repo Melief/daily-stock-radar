@@ -3,9 +3,9 @@ name: DSR Heikin Ashi signals
 on:
   workflow_dispatch:
   schedule:
-    # Hourly snapshots spanning the US regular session in both DST and standard time.
+    # Intraday snapshots during the US regular session (UTC; covers DST transition).
     - cron: "0 14-21 * * 1-5"
-    # Final daily snapshot after the US market close.
+    # Morning NL final snapshot using the latest completed US trading session.
     - cron: "15 4 * * 1-5"
 
 permissions:
@@ -18,7 +18,7 @@ concurrency:
 jobs:
   calculate-ha:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,19 +30,17 @@ jobs:
           cache-dependency-path: requirements-dsr.txt
       - name: Install dependencies
         run: pip install -r requirements-dsr.txt
-      - name: Calculate Heikin Ashi and SMA signals
+      - name: Calculate Heikin Ashi, SMA20/50 and volume checks
         run: python scripts/ha_signals.py
-      - name: Commit updated signal file
+      - name: Commit updated signal and source coverage files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/ha_signals.csv
+          git add data/ha_signals.csv data/ha_source_coverage.csv
           if git diff --cached --quiet; then
             echo "Geen wijzigingen in DSR-signalen."
           else
-            git commit -m "Update daily DSR Heikin Ashi signals"
-            # Andere workflows kunnen ondertussen main hebben bijgewerkt.
-            # Rebase eerst op de nieuwste remote-versie om non-fast-forward te voorkomen.
+            git commit -m "Update DSR Heikin Ashi and volume signals"
             git pull --rebase origin main
             git push
           fi

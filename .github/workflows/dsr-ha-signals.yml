@@ -41,5 +41,8 @@ jobs:
             echo "Geen wijzigingen in DSR-signalen."
           else
             git commit -m "Update daily DSR Heikin Ashi signals"
+            # Andere workflows kunnen ondertussen main hebben bijgewerkt.
+            # Rebase eerst op de nieuwste remote-versie om non-fast-forward te voorkomen.
+            git pull --rebase origin main
             git push
           fi

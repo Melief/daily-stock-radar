@@ -81,6 +81,8 @@ def make_ha(frame: pd.DataFrame):
 def unknown_row(ticker: str, sources: set[str], reason: str) -> dict:
     return {
         "ticker": ticker,
+        "sector": "",
+        "industry": "",
         "sources": ";".join(sorted(sources)),
         "date": "",
         "close": "",
@@ -182,6 +184,17 @@ def calculate(ticker: str, sources: set[str]) -> dict:
         if len(completed) < 50:
             raise ValueError("minder dan 50 afgeronde handelsdagen voor SMA50")
 
+        # Yahoo Finance company classification for the DSR display.
+        # Missing metadata remains blank; it must not be guessed.
+        try:
+            info = yf.Ticker(ticker).info or {}
+            sector = info.get("sector") or ""
+            industry = info.get("industry") or ""
+        except Exception as exc:
+            print(f"{ticker}: sector/industry niet beschikbaar ({exc})")
+            sector = ""
+            industry = ""
+
         # SMA20/SMA50 use the latest completed close, not an incomplete intraday close.
         sma20_series = completed["Close"].rolling(20).mean()
         sma50_series = completed["Close"].rolling(50).mean()
@@ -221,6 +234,8 @@ def calculate(ticker: str, sources: set[str]) -> dict:
         filter_pass = bool(above20 and above50) if requires_filter else "NVT"
         return {
             "ticker": ticker,
+            "sector": sector,
+            "industry": industry,
             "sources": ";".join(sorted(sources)),
             "date": pd.Timestamp(signal_frame.index[-1]).strftime("%Y-%m-%d"),
             "close": round(compare_close, 4),

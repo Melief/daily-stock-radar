@@ -1,21 +1,14 @@
 #!/usr/bin/env python3
-"""Build daily Heikin-Ashi and SMA signals for the DSR ticker universe.
+"""Daily DSR Heikin-Ashi, SMA20/50 and volume checks.
 
-Inputs:
-  tickers.txt
-  finviz_tickers.csv
-  data/vyus_tickers.csv
-Optional:
-  data/tradingview_tickers.csv (column: ticker, or one ticker per line)
-
-The latest returned daily bar is treated as the latest completed session. The
-workflow is scheduled after the US market close; weekends/holidays are handled
-by the data provider's last available bar.
+All configured DSR sources are unioned and deduplicated. Original source files
+remain untouched. Missing market data is recorded as ONBEKEND, never silently
+dropped. SMA200 is intentionally not calculated.
 """
 from __future__ import annotations
 
 import csv
-import io
+import re
 import sys
 import time
 from pathlib import Path
@@ -25,213 +18,74 @@ import yfinance as yf
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "ha_signals.csv"
-HA_LOOKBACK = 20
-DOWNLOAD_PERIOD = "3mo"
-OPTIONAL_SOURCES = [
-    ROOT / "tickers.txt",
-    ROOT / "finviz_tickers.csv",
-    ROOT / "data" / "vyus_tickers.csv",
-    ROOT / "data" / "tradingview_tickers.csv",
+COVERAGE_OUT = ROOT / "data" / "ha_source_coverage.csv"
+HISTORY_PERIOD = "1y"
+HA_LOOKBACK = 30
+
+# Canonical source list. Each source file is retained in its original format.
+SOURCES = [
+    ("Sector Top Tickers", ROOT / "tickers.txt", "text"),
+    ("Finviz", ROOT / "finviz_tickers.csv", "csv"),
+    ("TradingView screener", ROOT / "data" / "tradingview_screener_tickers.csv", "csv"),
+    ("Simpel Monsters", ROOT / "data" / "simpel_monsters_tickers.csv", "csv"),
+    ("Follow Thrue", ROOT / "data" / "follow_thrue_tickers.csv", "csv"),
+    ("VYUS holdings", ROOT / "data" / "vyus_tickers.csv", "csv"),
 ]
+# The existing DSR rule: these two sources must pass both moving averages.
+SMA_FILTER_SOURCES = {"Sector Top Tickers", "VYUS holdings"}
 
 
-def read_tickers(path: Path) -> list[str]:
+def read_source(path: Path, fmt: str) -> list[str]:
     if not path.exists():
+        raise FileNotFoundError(f"Verplicht bronbestand ontbreekt: {path.relative_to(ROOT)}")
+    content = path.read_text(encoding="utf-8-sig").strip()
+    if not content:
         return []
-    text = path.read_text(encoding="utf-8-sig").strip()
-    if not text:
-        return []
-
-    # The master ticker file is space-separated; CSV sources use the first column.
-    if path.suffix.lower() == ".csv":
-        rows = csv.reader(io.StringIO(text))
-        values = []
-        for row in rows:
-            if not row:
-                continue
-            value = row[0].strip().upper()
+    if fmt == "csv":
+        result = []
+        for row in csv.DictReader(content.splitlines()):
+            # All current DSR CSV exports use a Ticker column.
+            value = (row.get("ticker") or row.get("Ticker") or row.get("symbol") or "").strip().upper()
             if value and value not in {"TICKER", "SYMBOL"}:
-                values.append(value)
-        return values
-
-    import re
+                result.append(value)
+        return result
     return [
         token.upper()
-        for token in re.split(r"[\s,;]+", text)
+        for token in re.split(r"[\s,;]+", content)
         if token.strip() and token.strip().upper() not in {"TICKER", "SYMBOL"}
     ]
 
 
-def ticker_universe() -> list[str]:
-    symbols: set[str] = set()
-    for path in OPTIONAL_SOURCES:
-        symbols.update(read_tickers(path))
-    return sorted(s for s in symbols if s and s.isascii())
+def load_universe():
+    ticker_sources: dict[str, set[str]] = {}
+    source_counts: dict[str, int] = {}
+    for source_name, path, fmt in SOURCES:
+        tickers = read_source(path, fmt)
+        source_counts[source_name] = len(set(tickers))
+        for ticker in tickers:
+            ticker_sources.setdefault(ticker, set()).add(source_name)
+    return ticker_sources, source_counts
 
 
-def calculate_signals(symbol: str) -> dict | None:
-    # Three months provides enough history for SMA50; HA uses its latest 20 sessions.
-    last_error = None
-    for attempt in range(3):
-        try:
-            hist = yf.download(
-                symbol, period=DOWNLOAD_PERIOD, interval="1d", auto_adjust=False,
-                progress=False, threads=False, timeout=25
-            )
-            if hist is None or hist.empty:
-                raise ValueError("geen koershistorie ontvangen")
-            if isinstance(hist.columns, pd.MultiIndex):
-                hist.columns = hist.columns.get_level_values(0)
-            required = ["Open", "High", "Low", "Close"]
-            if not all(c in hist.columns for c in required):
-                raise ValueError("OHLC-kolommen ontbreken")
-            df = hist[required].dropna().copy()
-            if len(df) < 55:
-                raise ValueError(f"onvoldoende historie: {len(df)} handelsdagen")
+def make_ha(frame: pd.DataFrame):
+    ha_close = (frame["Open"] + frame["High"] + frame["Low"] + frame["Close"]) / 4.0
+    ha_open = pd.Series(index=frame.index, dtype="float64")
+    ha_open.iloc[0] = (float(frame["Open"].iloc[0]) + float(frame["Close"].iloc[0])) / 2.0
+    for i in range(1, len(frame)):
+        ha_open.iloc[i] = (ha_open.iloc[i - 1] + ha_close.iloc[i - 1]) / 2.0
+    ha_high = pd.concat([frame["High"], ha_open, ha_close], axis=1).max(axis=1)
+    ha_low = pd.concat([frame["Low"], ha_open, ha_close], axis=1).min(axis=1)
+    return ha_open, ha_high, ha_low, ha_close
 
-            # Calculate Heikin-Ashi over the latest 20 sessions.
-            # Starting at the first of these 20 sessions is sufficient for the
-            # current signal; the recursive initialization effect decays by 2^-19.
-            ha_df = df.tail(HA_LOOKBACK)
-            ha_close = (
-                ha_df["Open"] + ha_df["High"] + ha_df["Low"] + ha_df["Close"]
-            ) / 4.0
-            ha_open = pd.Series(index=ha_df.index, dtype="float64")
-            ha_open.iloc[0] = (ha_df["Open"].iloc[0] + ha_df["Close"].iloc[0]) / 2.0
-            for i in range(1, len(ha_df)):
-                ha_open.iloc[i] = (ha_open.iloc[i - 1] + ha_close.iloc[i - 1]) / 2.0
-            ha_low = pd.concat([ha_df["Low"], ha_open, ha_close], axis=1).min(axis=1)
 
-            sma20 = df["Close"].rolling(20).mean()
-            sma50 = df["Close"].rolling(50).mean()
-            latest = df.index[-1]
-            # HA day type is determined only by the Heikin-Ashi candle:
-            # HA Close > HA Open = UP; HA Close < HA Open = DOWN.
-            latest_ha_open = float(ha_open.iloc[-1])
-            latest_ha_close = float(ha_close.iloc[-1])
-            if latest_ha_close > latest_ha_open:
-                ha_day_type = "UP"
-            elif latest_ha_close < latest_ha_open:
-                ha_day_type = "DOWN"
-            else:
-                ha_day_type = "FLAT"
-
-            # HA-only distance from the latest Heikin-Ashi low:
-            # (HA Close - HA Low) / HA Low * 100.
-            distance_price = latest_ha_close
-            distance_low = float(ha_low.iloc[-1])
-            distance_from_low_pct = (
-                (distance_price - distance_low) / distance_low * 100.0
-                if distance_low > 0 else float("nan")
-            )
-
-            # A tiny tolerance avoids false negatives from floating point arithmetic.
-            ha_open_equals_low = abs(latest_ha_open - distance_low) <= 1e-8
-            latest_ha_high = float(max(ha_df["High"].iloc[-1], latest_ha_open, latest_ha_close))
-            latest_ha_low = distance_low
-            ha_open_equals_high = abs(latest_ha_open - latest_ha_high) <= 1e-8
-            latest_date = pd.Timestamp(latest).strftime("%Y-%m-%d")
-            latest_close = float(df["Close"].iloc[-1])
-
-            # During the US regular session, replace the latest daily candle with
-            # the developing session candle aggregated from 5-minute bars.
-            # Outside the session (or if intraday data is unavailable), retain
-            # the latest completed daily candle above.
-            try:
-                intra = yf.download(
-                    symbol, period="5d", interval="5m", auto_adjust=False,
-                    progress=False, threads=False, timeout=25
-                )
-                if intra is not None and not intra.empty:
-                    if isinstance(intra.columns, pd.MultiIndex):
-                        intra.columns = intra.columns.get_level_values(0)
-                    if all(c in intra.columns for c in required):
-                        idx = pd.DatetimeIndex(intra.index)
-                        if idx.tz is None:
-                            idx = idx.tz_localize("America/New_York")
-                        else:
-                            idx = idx.tz_convert("America/New_York")
-                        today_et = pd.Timestamp.now(tz="America/New_York").date()
-                        today_mask = [d == today_et for d in idx.date]
-                        today_bars = intra.loc[today_mask, required].dropna()
-                        prior_mask = [d < today_et for d in pd.to_datetime(df.index).date]
-                        prior_days = df.loc[prior_mask, required].dropna()
-                        if not today_bars.empty and len(prior_days) >= 55:
-                            prior_ha_df = prior_days.tail(HA_LOOKBACK)
-                            prior_ha_close = (
-                                prior_ha_df["Open"] + prior_ha_df["High"] +
-                                prior_ha_df["Low"] + prior_ha_df["Close"]
-                            ) / 4.0
-                            prior_ha_open = pd.Series(index=prior_ha_df.index, dtype="float64")
-                            prior_ha_open.iloc[0] = (
-                                prior_ha_df["Open"].iloc[0] + prior_ha_df["Close"].iloc[0]
-                            ) / 2.0
-                            for j in range(1, len(prior_ha_df)):
-                                prior_ha_open.iloc[j] = (
-                                    prior_ha_open.iloc[j - 1] + prior_ha_close.iloc[j - 1]
-                                ) / 2.0
-
-                            session_open = float(today_bars["Open"].iloc[0])
-                            session_high = float(today_bars["High"].max())
-                            session_low = float(today_bars["Low"].min())
-                            session_close = float(today_bars["Close"].iloc[-1])
-                            latest_ha_open = float(
-                                (prior_ha_open.iloc[-1] + prior_ha_close.iloc[-1]) / 2.0
-                            )
-                            latest_ha_close = (
-                                session_open + session_high + session_low + session_close
-                            ) / 4.0
-                            latest_ha_low = min(session_low, latest_ha_open, latest_ha_close)
-                            latest_ha_high = max(session_high, latest_ha_open, latest_ha_close)
-                            ha_day_type = (
-                                "UP" if latest_ha_close > latest_ha_open else
-                                "DOWN" if latest_ha_close < latest_ha_open else "FLAT"
-                            )
-                            distance_low = latest_ha_low
-                            distance_price = latest_ha_close
-                            distance_from_low_pct = (
-                                (distance_price - distance_low) / distance_low * 100.0
-                                if distance_low > 0 else float("nan")
-                            )
-                            ha_open_equals_low = abs(latest_ha_open - latest_ha_low) <= 1e-8
-                            ha_open_equals_high = abs(latest_ha_open - latest_ha_high) <= 1e-8
-                            latest_date = today_et.strftime("%Y-%m-%d")
-                            latest_close = session_close
-            except Exception as intraday_exc:
-                print(f"{symbol}: intraday niet beschikbaar, dagdata gebruikt: {intraday_exc}")
-
-            return {
-                "ticker": symbol,
-                "date": latest_date,
-                "close": round(latest_close, 4),
-                "ha_day_type": ha_day_type,
-                "distance_from_low_pct": round(distance_from_low_pct, 1),
-                "sma20": round(float(sma20.iloc[-1]), 4),
-                "sma50": round(float(sma50.iloc[-1]), 4),
-                "ha_open": round(latest_ha_open, 4),
-                "ha_high": round(latest_ha_high, 4),
-                "ha_low": round(latest_ha_low, 4),
-                "ha_close": round(latest_ha_close, 4),
-                "ha_open_equals_low": bool(ha_open_equals_low),
-                "ha_strong_signal": bool(ha_open_equals_low and latest_ha_close > latest_ha_open),
-                "ha_open_equals_high": bool(ha_open_equals_high),
-                "ha_strong_down_signal": bool(ha_open_equals_high and latest_ha_close < latest_ha_open),
-                "above_sma20": bool(latest_close > sma20.iloc[-1]),
-                "above_sma50": bool(latest_close > sma50.iloc[-1]),
-                "status": "OK",
-            }
-        except Exception as exc:
-            last_error = str(exc)
-            if attempt < 2:
-                time.sleep(2 ** attempt)
+def unknown_row(ticker: str, sources: set[str], reason: str) -> dict:
     return {
-        "ticker": symbol,
+        "ticker": ticker,
+        "sources": ";".join(sorted(sources)),
         "date": "",
         "close": "",
-        "ha_day_type": "",
+        "ha_day_type": "ONBEKEND",
         "distance_from_low_pct": "",
-        "sma20": "",
-        "sma50": "",
         "ha_open": "",
         "ha_high": "",
         "ha_low": "",
@@ -240,32 +94,208 @@ def calculate_signals(symbol: str) -> dict | None:
         "ha_strong_signal": "",
         "ha_open_equals_high": "",
         "ha_strong_down_signal": "",
+        "sma20": "",
+        "sma50": "",
         "above_sma20": "",
         "above_sma50": "",
-        "status": f"ONBEKEND: {last_error}",
+        "sma20_50_filter_required": bool(sources & SMA_FILTER_SOURCES),
+        "sma20_50_filter_pass": "ONBEKEND" if sources & SMA_FILTER_SOURCES else "NVT",
+        "daily_volume": "",
+        "average_volume_30d": "",
+        "volume_vs_30d_avg_pct": "",
+        "volume_trend_3d": "ONBEKEND",
+        "status": f"ONBEKEND: {reason}",
     }
 
 
+def calculate(ticker: str, sources: set[str]) -> dict:
+    try:
+        daily = yf.download(
+            ticker, period=HISTORY_PERIOD, interval="1d", auto_adjust=False,
+            progress=False, threads=False, timeout=25
+        )
+        if daily is None or daily.empty:
+            raise ValueError("geen dagkoersen ontvangen")
+        if isinstance(daily.columns, pd.MultiIndex):
+            daily.columns = daily.columns.get_level_values(0)
+        needed = ["Open", "High", "Low", "Close", "Volume"]
+        if not all(c in daily.columns for c in needed):
+            raise ValueError("OHLCV-kolommen ontbreken")
+        daily = daily[needed].dropna(subset=["Open", "High", "Low", "Close"])
+        daily = daily[daily["Volume"].notna()]
+        if len(daily) < 55:
+            raise ValueError(f"onvoldoende historie voor SMA50/volume: {len(daily)} handelsdagen")
+
+        # The current trading session is built from 5-minute bars when available.
+        # The SMA and 30-day volume baseline use completed daily sessions only.
+        try:
+            intra = yf.download(
+                ticker, period="5d", interval="5m", auto_adjust=False,
+                progress=False, threads=False, timeout=25
+            )
+            if intra is not None and not intra.empty:
+                if isinstance(intra.columns, pd.MultiIndex):
+                    intra.columns = intra.columns.get_level_values(0)
+                if all(c in intra.columns for c in needed):
+                    idx = pd.DatetimeIndex(intra.index)
+                    if idx.tz is None:
+                        idx = idx.tz_localize("America/New_York")
+                    else:
+                        idx = idx.tz_convert("America/New_York")
+                    today_et = pd.Timestamp.now(tz="America/New_York").date()
+                    mask = [d == today_et for d in idx.date]
+                    current = intra.loc[mask, needed].dropna(subset=["Open", "High", "Low", "Close"])
+                else:
+                    current = pd.DataFrame()
+            else:
+                current = pd.DataFrame()
+        except Exception as exc:
+            print(f"{ticker}: intradaydata niet beschikbaar; dagdata gebruikt ({exc})")
+            current = pd.DataFrame()
+
+        today_et = pd.Timestamp.now(tz="America/New_York").date()
+        daily_dates = pd.DatetimeIndex(daily.index)
+        if daily_dates.tz is not None:
+            daily_dates = daily_dates.tz_convert("America/New_York").tz_localize(None)
+        daily_dates_only = [d.date() for d in daily_dates]
+        has_today_daily = bool(daily_dates_only and daily_dates_only[-1] == today_et)
+
+        if not current.empty:
+            # Exclude a possibly partial daily bar for today; aggregate 5-minute bars instead.
+            completed = daily.iloc[:-1].copy() if has_today_daily else daily.copy()
+            session = pd.DataFrame([{
+                "Open": float(current["Open"].iloc[0]),
+                "High": float(current["High"].max()),
+                "Low": float(current["Low"].min()),
+                "Close": float(current["Close"].iloc[-1]),
+                "Volume": float(current["Volume"].sum()),
+            }], index=[pd.Timestamp(today_et)])
+            latest = session.iloc[0]
+            signal_frame = pd.concat([completed.tail(HA_LOOKBACK), session])
+            is_intraday = True
+        else:
+            completed = daily.copy()
+            latest = completed.iloc[-1]
+            signal_frame = completed.tail(HA_LOOKBACK)
+            is_intraday = False
+
+        if len(completed) < 50:
+            raise ValueError("minder dan 50 afgeronde handelsdagen voor SMA50")
+
+        # SMA20/SMA50 use the latest completed close, not an incomplete intraday close.
+        sma20_series = completed["Close"].rolling(20).mean()
+        sma50_series = completed["Close"].rolling(50).mean()
+        sma20 = float(sma20_series.iloc[-1])
+        sma50 = float(sma50_series.iloc[-1])
+        compare_close = float(latest["Close"])
+        above20 = compare_close > sma20
+        above50 = compare_close > sma50
+
+        ha_open, ha_high, ha_low, ha_close = make_ha(signal_frame)
+        ho, hh, hl, hc = map(float, (ha_open.iloc[-1], ha_high.iloc[-1], ha_low.iloc[-1], ha_close.iloc[-1]))
+        day_type = "UP" if hc > ho else "DOWN" if hc < ho else "FLAT"
+        distance = (hc - hl) / hl * 100.0 if hl > 0 else float("nan")
+        equal_low = abs(ho - hl) <= 1e-8
+        equal_high = abs(ho - hh) <= 1e-8
+
+        # Today's volume may be partial during market hours. Volume trend is based
+        # only on completed daily sessions to avoid comparing partial volume.
+        daily_volume = float(latest["Volume"])
+        if is_intraday:
+            daily_volume = float(latest["Volume"])
+        avg30 = float(completed["Volume"].tail(30).mean())
+        baseline = completed["Volume"].tail(30)
+        if len(baseline) >= 3:
+            v0, v1, v2 = map(float, baseline.iloc[-3:])
+            trend = "STIJGEND" if v0 < v1 < v2 else "DALEND" if v0 > v1 > v2 else "GEMENGD"
+        else:
+            trend = "ONBEKEND"
+        volume_ratio = ((daily_volume / avg30) - 1.0) * 100.0 if avg30 > 0 else float("nan")
+
+        requires_filter = bool(sources & SMA_FILTER_SOURCES)
+        filter_pass = bool(above20 and above50) if requires_filter else "NVT"
+        return {
+            "ticker": ticker,
+            "sources": ";".join(sorted(sources)),
+            "date": pd.Timestamp(signal_frame.index[-1]).strftime("%Y-%m-%d"),
+            "close": round(compare_close, 4),
+            "ha_day_type": day_type,
+            "distance_from_low_pct": round(distance, 1),
+            "ha_open": round(ho, 4),
+            "ha_high": round(hh, 4),
+            "ha_low": round(hl, 4),
+            "ha_close": round(hc, 4),
+            "ha_open_equals_low": bool(equal_low),
+            "ha_strong_signal": bool(equal_low and day_type == "UP"),
+            "ha_open_equals_high": bool(equal_high),
+            "ha_strong_down_signal": bool(equal_high and day_type == "DOWN"),
+            "sma20": round(sma20, 4),
+            "sma50": round(sma50, 4),
+            "above_sma20": bool(above20),
+            "above_sma50": bool(above50),
+            "sma20_50_filter_required": requires_filter,
+            "sma20_50_filter_pass": filter_pass,
+            "daily_volume": int(daily_volume),
+            "average_volume_30d": int(avg30),
+            "volume_vs_30d_avg_pct": round(volume_ratio, 1),
+            "volume_trend_3d": trend,
+            "status": "OK" if not is_intraday else "OK_INTRADAY",
+        }
+    except Exception as exc:
+        return unknown_row(ticker, sources, str(exc))
+
+
 def main() -> int:
-    tickers = ticker_universe()
-    if not tickers:
-        print("Geen tickers gevonden in de bronbestanden.", file=sys.stderr)
+    try:
+        ticker_sources, source_counts = load_universe()
+    except Exception as exc:
+        print(f"Broncontrole mislukt: {exc}", file=sys.stderr)
+        return 1
+    if not ticker_sources:
+        print("Geen tickers gevonden in DSR-bronbestanden.", file=sys.stderr)
         return 1
 
-    rows = []
-    for i, ticker in enumerate(tickers, 1):
-        print(f"[{i}/{len(tickers)}] {ticker}")
-        result = calculate_signals(ticker)
-        if result:
-            rows.append(result)
-        time.sleep(0.4)  # reduce the chance of provider throttling
+    print("Broncontrole:")
+    for name, count in source_counts.items():
+        print(f"  {name}: {count} unieke tickers")
+    print(f"Gecombineerd: {len(ticker_sources)} unieke tickers")
 
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(rows).to_csv(OUT, index=False)
-    ok = sum(row["status"] == "OK" for row in rows)
-    unknown = len(rows) - ok
-    print(f"Controle voltooid: {ok} tickers OK, {unknown} ONBEKEND. Bestand: {OUT}")
-    return 0 if ok else 1
+    rows = []
+    for i, ticker in enumerate(sorted(ticker_sources), 1):
+        print(f"[{i}/{len(ticker_sources)}] {ticker}")
+        rows.append(calculate(ticker, ticker_sources[ticker]))
+        time.sleep(0.35)
+
+    results = pd.DataFrame(rows)
+    results.to_csv(OUT, index=False)
+
+    # Explicit coverage audit: every ticker from every source must have a result row.
+    coverage_rows = []
+    result_tickers = set(results["ticker"].astype(str))
+    for source_name, _, _ in SOURCES:
+        source_tickers = [t for t, names in ticker_sources.items() if source_name in names]
+        for ticker in sorted(source_tickers):
+            match = results.loc[results["ticker"] == ticker]
+            status = match.iloc[0]["status"] if not match.empty else "ONTBREEKT"
+            coverage_rows.append({
+                "source": source_name,
+                "ticker": ticker,
+                "ha_row_present": ticker in result_tickers,
+                "ha_status": status,
+            })
+    pd.DataFrame(coverage_rows).to_csv(COVERAGE_OUT, index=False)
+
+    ok = int(results["status"].astype(str).str.startswith("OK").sum())
+    unknown = len(results) - ok
+    missing = len(ticker_sources) - len(result_tickers)
+    print(
+        f"Controle voltooid: {ok} tickers OK, {unknown} ONBEKEND, "
+        f"{missing} ontbrekende HA-rijen. Totaal {len(ticker_sources)} unieke tickers."
+    )
+    print(f"HA-uitvoer: {OUT}")
+    print(f"Broncontrole: {COVERAGE_OUT}")
+    # Unknown data is visible and does not invalidate coverage. Missing rows do.
+    return 1 if missing else 0
 
 
 if __name__ == "__main__":

@@ -1,15 +1,7 @@
-name: Sync Finviz tickers to Google Sheets
+name: Manual sync Finviz tickers to Google Sheets
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "50 */2 * * *"
-  push:
-    branches:
-      - main
-    paths:
-      - "scripts/sync_finviz_to_sheets.py"
-      - ".github/workflows/sync-finviz-to-sheets.yml"
 
 permissions:
   contents: read
@@ -18,7 +10,6 @@ jobs:
   sync-finviz:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

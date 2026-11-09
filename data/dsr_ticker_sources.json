@@ -1,46 +1,13 @@
 {
-  "description": "Canonical DSR ticker sources. Keep source files separate; HA workflow unions and deduplicates all tickers while retaining source membership.",
+  "description": "Canonical DSR ticker sources. The five ticker files are unioned and deduplicated while retaining source membership. finviz_url.txt is a control file, not a ticker source.",
+  "control_files": [{"name": "Finviz screener URL", "path": "finviz_url.txt", "format": "https_url"}],
   "sources": [
-    {
-      "name": "Sector Top Tickers",
-      "path": "tickers.txt",
-      "format": "whitespace"
-    },
-    {
-      "name": "Finviz",
-      "path": "finviz_tickers.csv",
-      "format": "csv"
-    },
-    {
-      "name": "TradingView screener",
-      "path": "data/tradingview_screener_tickers.csv",
-      "format": "csv"
-    },
-    {
-      "name": "Simpel Monsters",
-      "path": "data/simpel_monsters_tickers.csv",
-      "format": "csv"
-    },
-    {
-      "name": "Follow Thrue",
-      "path": "data/follow_thrue_tickers.csv",
-      "format": "csv"
-    },
-    {
-      "name": "VYUS holdings",
-      "path": "data/vyus_tickers.csv",
-      "format": "csv"
-    }
+    {"name": "Sector Top Tickers", "path": "tickers.txt", "format": "text"},
+    {"name": "Finviz", "path": "finviz_tickers.csv", "format": "csv"},
+    {"name": "Simpel Monsters", "path": "data/simpel_monsters_tickers.csv", "format": "csv"},
+    {"name": "Follow Thrue", "path": "data/follow_thrue_tickers.csv", "format": "csv"},
+    {"name": "VYUS holdings", "path": "data/vyus_tickers.csv", "format": "csv"}
   ],
-  "excluded_indicators": [
-    "SMA200"
-  ],
-  "included_indicators": [
-    "SMA20",
-    "SMA50",
-    "daily_volume",
-    "average_volume_30d",
-    "volume_trend_3d",
-    "Heikin-Ashi"
-  ]
+  "excluded_indicators": ["SMA200"],
+  "included_indicators": ["SMA20", "SMA50", "daily_volume", "average_volume_30d", "volume_trend_3d", "Heikin-Ashi"]
 }

@@ -54,7 +54,19 @@ jobs:
             echo "Ticker CSV is unchanged; no commit needed."
           else
             git commit -m "Update Finviz ticker CSV"
-            git push
+            # Other workflows may also update main; rebase before pushing.
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                echo "ERROR: Could not push ticker CSV after 3 attempts."
+                exit 1
+              fi
+              sleep 3
+            done
           fi
 
       - name: Sync latest GitHub ticker CSV to Google Sheets

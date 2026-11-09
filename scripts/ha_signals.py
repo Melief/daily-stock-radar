@@ -8,6 +8,7 @@ dropped. SMA200 is intentionally not calculated.
 from __future__ import annotations
 
 import csv
+import json
 import re
 import sys
 import time
@@ -19,6 +20,9 @@ import yfinance as yf
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "ha_signals.csv"
 COVERAGE_OUT = ROOT / "data" / "ha_source_coverage.csv"
+CONFIG = ROOT / "data" / "dsr_ticker_sources.json"
+FINVIZ_URL = ROOT / "finviz_url.txt"
+EXPECTED_SOURCE_PATHS = {"tickers.txt", "finviz_tickers.csv", "data/simpel_monsters_tickers.csv", "data/follow_thrue_tickers.csv", "data/vyus_tickers.csv"}
 HISTORY_PERIOD = "1y"
 HA_LOOKBACK = 30
 
@@ -39,23 +43,49 @@ def read_source(path: Path, fmt: str) -> list[str]:
         raise FileNotFoundError(f"Verplicht bronbestand ontbreekt: {path.relative_to(ROOT)}")
     content = path.read_text(encoding="utf-8-sig").strip()
     if not content:
-        return []
+        raise ValueError(f"Verplicht bronbestand is leeg: {path.relative_to(ROOT)}")
     if fmt == "csv":
+        reader = csv.DictReader(content.splitlines())
+        if not reader.fieldnames:
+            raise ValueError(f"CSV-header ontbreekt: {path.relative_to(ROOT)}")
+        fields = {name.strip().lower() for name in reader.fieldnames if name}
+        if not ({"ticker", "symbol"} & fields):
+            raise ValueError(f"CSV mist verplichte kolom Ticker/Symbol: {path.relative_to(ROOT)}")
         result = []
-        for row in csv.DictReader(content.splitlines()):
-            # All current DSR CSV exports use a Ticker column.
-            value = (row.get("ticker") or row.get("Ticker") or row.get("symbol") or "").strip().upper()
-            if value and value not in {"TICKER", "SYMBOL"}:
-                result.append(value)
+        for line_no, row in enumerate(reader, start=2):
+            value = (row.get("ticker") or row.get("Ticker") or row.get("symbol") or row.get("Symbol") or "").strip().upper()
+            if not value or not re.fullmatch(r"[A-Z][A-Z0-9.\\-]{0,9}", value):
+                raise ValueError(f"Ongeldige of lege ticker op regel {line_no}: {path.relative_to(ROOT)}")
+            result.append(value)
         return result
-    return [
-        token.upper()
-        for token in re.split(r"[\s,;]+", content)
-        if token.strip() and token.strip().upper() not in {"TICKER", "SYMBOL"}
-    ]
+    if fmt == "text":
+        result = [token.upper() for token in re.split(r"[\\s,;]+", content) if token.strip()]
+        invalid = [value for value in result if not re.fullmatch(r"[A-Z][A-Z0-9.\\-]{0,9}", value)]
+        if invalid:
+            raise ValueError(f"Ongeldige tickerwaarde(n) in {path.relative_to(ROOT)}: {invalid[:5]}")
+        return result
+    raise ValueError(f"Onbekend bronformaat '{fmt}' voor {path.relative_to(ROOT)}")
 
 
 def load_universe():
+    global SOURCES
+    if not CONFIG.exists():
+        raise FileNotFoundError("Verplichte configuratie ontbreekt: data/dsr_ticker_sources.json")
+    config = json.loads(CONFIG.read_text(encoding="utf-8"))
+    source_defs = config.get("sources")
+    if not isinstance(source_defs, list) or len(source_defs) != 5:
+        raise ValueError("Configuratie moet exact vijf tickerbronnen bevatten")
+    configured_paths = {item.get("path") for item in source_defs}
+    if configured_paths != EXPECTED_SOURCE_PATHS:
+        raise ValueError(f"Tickerbronnen wijken af van de vijf afgesproken bronnen: {sorted(configured_paths)}")
+    SOURCES = [(item["name"], ROOT / item["path"], item["format"]) for item in source_defs]
+    if not any(item.get("path") == "finviz_url.txt" for item in config.get("control_files", [])):
+        raise ValueError("finviz_url.txt ontbreekt als control_file in de configuratie")
+    if not FINVIZ_URL.exists():
+        raise FileNotFoundError("Verplicht controlebestand ontbreekt: finviz_url.txt")
+    url = FINVIZ_URL.read_text(encoding="utf-8").strip()
+    if not url.startswith("https://finviz.com/screener"):
+        raise ValueError("finviz_url.txt bevat geen geldige Finviz-screener-URL")
     ticker_sources: dict[str, set[str]] = {}
     source_counts: dict[str, int] = {}
     for source_name, path, fmt in SOURCES:
@@ -245,9 +275,9 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             "ha_low": round(hl, 4),
             "ha_close": round(hc, 4),
             "ha_open_equals_low": bool(equal_low),
-            "ha_strong_signal": bool(equal_low and day_type == "UP"),
+            "ha_strong_signal": bool(equal_low and day_type == "UP" and above20 and above50),
             "ha_open_equals_high": bool(equal_high),
-            "ha_strong_down_signal": bool(equal_high and day_type == "DOWN"),
+            "ha_strong_down_signal": bool(equal_high and day_type == "DOWN" and not above20 and not above50),
             "sma20": round(sma20, 4),
             "sma50": round(sma50, 4),
             "above_sma20": bool(above20),

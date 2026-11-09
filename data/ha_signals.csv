@@ -3,7 +3,6 @@ A,Healthcare,Diagnostics & Research,Finviz,2026-11-06,174.76,DOWN,1.3,175.4134,1
 ACN,Technology,Information Technology Services,Sector Top Tickers,2026-11-06,260.5,DOWN,1.4,262.495,262.495,255.41,258.915,False,False,True,True,242.9545,210.3174,True,True,True,True,4262700,7625966,-44.1,GEMENGD,OK
 ADBE,Technology,Software - Application,VYUS holdings,2026-11-06,239.3,DOWN,1.2,248.6813,248.6813,236.84,239.63,False,False,True,True,249.607,251.2432,False,False,True,False,3295500,4259256,-22.6,GEMENGD,OK
 ANF,Consumer Cyclical,Apparel Retail,Sector Top Tickers,2026-11-06,149.54,DOWN,2.7,164.2664,164.2664,148.73,152.7725,False,False,True,True,158.6965,147.4762,False,True,True,False,1061100,1170943,-9.4,GEMENGD,OK
-AVPT,Technology,Software - Infrastructure,Follow Thrue,2026-11-06,16.55,DOWN,3.6,16.6715,16.89,16.0,16.5825,False,False,False,False,15.9275,14.5402,True,True,False,NVT,3811900,3658766,4.2,STIJGEND,OK
 BNO,,,Sector Top Tickers,2026-11-06,62.22,DOWN,1.1,63.322,63.322,61.47,62.165,False,False,True,True,66.8755,62.6472,False,False,True,False,1381100,1924496,-28.2,DALEND,OK
 CART,Consumer Cyclical,Internet Retail,VYUS holdings,2026-11-06,58.12,DOWN,0.6,58.3298,58.3298,57.63,57.9475,False,False,True,True,54.5455,49.7798,True,True,True,True,3129500,6607023,-52.6,DALEND,OK
 CBC,Financial Services,Banks - Regional,Finviz,2026-11-06,37.75,UP,0.8,37.4436,37.86,37.24,37.5225,False,False,False,False,34.7945,33.1249,True,True,False,NVT,966800,944113,2.4,DALEND,OK
@@ -21,10 +20,11 @@ DHT,Energy,Oil & Gas Midstream,Sector Top Tickers,2026-11-06,20.68,DOWN,1.4,22.3
 DINO,Energy,Oil & Gas Refining & Marketing,Sector Top Tickers,2026-11-06,97.18,DOWN,1.9,106.1404,106.1404,96.07,97.87,False,False,True,True,117.5475,112.7776,False,False,True,False,2450300,2380886,2.9,GEMENGD,OK
 DOCU,Technology,Software - Application,VYUS holdings,2026-11-06,77.61,DOWN,1.7,80.65,80.65,75.931,77.234,False,False,True,True,79.603,72.6054,False,True,True,False,2215500,2569850,-13.8,GEMENGD,OK
 ECO,Industrials,Marine Shipping,Sector Top Tickers,2026-11-06,83.26,DOWN,2.1,87.3852,87.3852,81.33,83.0375,False,False,True,True,92.561,84.612,False,False,True,False,772900,873443,-11.5,DALEND,OK
+EPAM,Technology,Information Technology Services,Simpel Monsters,2026-11-06,159.31,UP,6.0,149.4926,161.81,149.4926,158.52,True,True,False,False,134.0665,121.851,True,True,False,NVT,3339800,1180133,183.0,GEMENGD,OK
 EQT,Energy,Oil & Gas E&P,Sector Top Tickers,2026-11-06,49.4,DOWN,1.8,53.0601,53.0601,49.38,50.275,False,False,True,True,53.9825,53.0062,False,False,True,False,7717800,8690280,-11.2,GEMENGD,OK
 EXEL,Healthcare,Biotechnology,Finviz,2026-11-06,69.57,DOWN,1.5,71.196,71.196,68.01,69.0625,False,False,True,True,65.6335,60.9216,True,True,False,NVT,2003600,2566506,-21.9,GEMENGD,OK
 EXPE,Consumer Cyclical,Travel Services,VYUS holdings,2026-11-06,259.24,DOWN,2.9,289.4705,289.4705,258.71,266.2375,False,False,True,True,285.082,281.8012,False,False,True,False,4163900,1809093,130.2,GEMENGD,OK
-FIGS,Consumer Cyclical,Apparel Manufacturing,Sector Top Tickers;Simpel Monsters,2026-11-06,19.82,DOWN,4.9,21.2757,21.34,19.41,20.355,False,False,False,False,20.095,16.3542,False,True,True,False,7430900,4248450,74.9,STIJGEND,OK
+FIGS,Consumer Cyclical,Apparel Manufacturing,Sector Top Tickers,2026-11-06,19.82,DOWN,4.9,21.2757,21.34,19.41,20.355,False,False,False,False,20.095,16.3542,False,True,True,False,7430900,4248450,74.9,STIJGEND,OK
 FRO,Energy,Oil & Gas Midstream,Sector Top Tickers,2026-11-06,45.42,DOWN,1.6,48.9597,48.9597,44.82,45.5325,False,False,True,True,52.8565,50.8512,False,False,True,False,5108500,4212183,21.3,GEMENGD,OK
 GDDY,Technology,Software - Infrastructure,VYUS holdings,2026-11-06,114.38,DOWN,1.6,117.9211,118.79,114.08,115.9025,False,False,False,False,110.089,103.2934,True,True,True,True,1792300,1752166,2.3,GEMENGD,OK
 GEN,Technology,Software - Infrastructure,VYUS holdings,2026-11-06,29.79,DOWN,1.4,30.3134,30.5,29.66,30.065,False,False,False,False,26.1385,26.5708,True,True,True,True,6270600,10160030,-38.3,GEMENGD,OK
@@ -38,7 +38,6 @@ INTU,Technology,Software - Application,VYUS holdings,2026-11-06,341.5,DOWN,2.3,3
 IT,Technology,Information Technology Services,VYUS holdings,2026-11-06,190.1,DOWN,2.4,207.4774,207.4774,185.0,189.405,False,False,True,True,213.5475,197.2976,False,False,True,False,1360500,1077650,26.2,DALEND,OK
 KNSA,Healthcare,Drug Manufacturers - Specialty & Generic,Finviz,2026-11-06,93.86,DOWN,3.4,92.735,94.48,88.409,91.4172,False,False,False,False,85.229,80.4618,True,True,False,NVT,636100,830663,-23.4,GEMENGD,OK
 LH,Healthcare,Diagnostics & Research,Finviz,2026-11-06,366.57,DOWN,1.8,363.5698,369.06,355.63,362.1275,False,False,False,False,338.6075,325.6526,True,True,False,NVT,610100,741010,-17.7,DALEND,OK
-MANH,Technology,Software - Application,Follow Thrue,2026-11-06,252.78,DOWN,1.2,256.8097,256.8097,248.76,251.795,False,False,True,True,238.0155,220.5148,True,True,False,NVT,955700,778986,22.7,GEMENGD,OK
 MCK,Healthcare,Medical Distribution,Sector Top Tickers,2026-11-06,1060.84,UP,1.0,1053.1175,1070.15,1046.7,1057.34,False,False,False,False,1003.152,937.6924,True,True,True,True,812100,727443,11.6,GEMENGD,OK
 MPC,Energy,Oil & Gas Refining & Marketing,Sector Top Tickers,2026-11-06,372.74,DOWN,2.1,401.8983,401.8983,367.72,375.4375,False,False,True,True,446.7005,421.7426,False,False,True,False,2478600,2196220,12.9,DALEND,OK
 MTCH,Communication Services,Internet Content & Information,VYUS holdings,2026-11-06,39.03,DOWN,1.1,39.9539,39.9539,38.499,38.9347,False,False,True,True,42.8265,42.0726,False,False,True,False,3689700,3637943,1.4,DALEND,OK
@@ -49,13 +48,14 @@ P,Technology,Computer Hardware,Sector Top Tickers,2026-11-06,96.75,DOWN,4.4,108.
 PARR,Energy,Oil & Gas Refining & Marketing,Sector Top Tickers,2026-11-06,68.06,DOWN,2.8,70.8847,70.8847,66.43,68.3075,False,False,True,True,78.494,80.7432,False,False,True,False,987400,875406,12.8,DALEND,OK
 PAYC,Technology,Software - Application,VYUS holdings,2026-11-06,237.32,DOWN,2.1,257.4461,257.4461,235.83,240.7225,False,False,True,True,257.0535,238.3464,False,False,True,False,1243000,637180,95.1,GEMENGD,OK
 PBF,Energy,Oil & Gas Refining & Marketing,Sector Top Tickers,2026-11-06,67.27,DOWN,2.7,73.1604,73.1604,65.85,67.65,False,False,True,True,79.029,77.6612,False,False,True,False,1840900,2930346,-37.2,DALEND,OK
+PGNY,Healthcare,Healthcare Plans,Follow Thrue,2026-11-06,34.84,UP,8.2,31.6093,34.9,31.6093,34.1875,True,True,False,False,28.9807,27.4507,True,True,False,NVT,1548500,1083346,42.9,GEMENGD,OK
 PLTR,Technology,Software - Infrastructure,Sector Top Tickers,2026-11-06,160.38,DOWN,1.8,167.4637,167.4637,157.24,160.0683,False,False,True,True,190.115,185.8812,False,False,True,False,24298100,24707380,-1.7,GEMENGD,OK
 PSX,Energy,Oil & Gas Refining & Marketing,Sector Top Tickers,2026-11-06,245.72,DOWN,1.6,261.8937,261.8937,243.02,246.9175,False,False,True,True,279.0135,268.1608,False,False,True,False,3069000,2745093,11.8,DALEND,OK
 PTC,Technology,Software - Application,VYUS holdings,2026-11-06,195.07,UP,0.2,194.8061,195.25,194.4,194.8125,False,False,False,False,194.2055,166.9776,True,True,True,True,1354400,3565486,-62.0,GEMENGD,OK
 RELY,Technology,Software - Infrastructure,Sector Top Tickers,2026-11-06,22.32,DOWN,3.0,24.1145,24.1145,21.45,22.1013,False,False,True,True,24.3765,23.5874,False,False,True,False,3866600,3156846,22.5,GEMENGD,OK
 ROP,Technology,Software - Application,VYUS holdings,2026-11-06,476.6,DOWN,1.2,486.9849,486.9849,471.27,476.795,False,False,True,True,428.658,399.0642,True,True,True,True,1059900,998376,6.2,GEMENGD,OK
 SBAC,Real Estate,REIT - Specialty,Sector Top Tickers,2026-11-06,189.42,DOWN,0.9,192.1915,193.19,188.61,190.2325,False,False,False,False,184.6345,179.799,True,True,True,True,1134900,1181183,-3.9,DALEND,OK
-SN,Consumer Cyclical,"Furnishings, Fixtures & Appliances",Finviz;Follow Thrue,2026-11-06,222.95,UP,2.0,216.8422,224.55,216.18,220.61,False,False,False,False,201.033,185.9856,True,True,False,NVT,1548300,1353620,14.4,DALEND,OK
+SN,Consumer Cyclical,"Furnishings, Fixtures & Appliances",Finviz,2026-11-06,222.95,UP,2.0,216.8422,224.55,216.18,220.61,False,False,False,False,201.033,185.9856,True,True,False,NVT,1548300,1353620,14.4,DALEND,OK
 SWKS,Technology,Semiconductors,VYUS holdings,2026-11-06,82.19,UP,2.5,82.0802,83.71,80.32,82.3125,False,False,False,False,82.3235,82.1386,False,True,True,False,4007800,6339560,-36.8,DALEND,OK
 TEAM,Technology,Software - Application,VYUS holdings,2026-11-06,153.68,DOWN,3.2,187.5852,187.5852,151.5,156.355,False,False,True,True,206.0635,196.0509,False,False,True,False,7474700,2786473,168.2,STIJGEND,OK
 THC,Healthcare,Medical Care Facilities,VYUS holdings,2026-11-06,283.33,DOWN,1.7,284.4216,285.76,276.87,281.49,False,False,False,False,271.8755,265.3594,True,True,True,True,631600,767356,-17.7,DALEND,OK

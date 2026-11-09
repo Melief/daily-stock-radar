@@ -1,26 +1,32 @@
-name: Test Finviz ticker retrieval
+name: Refresh Finviz tickers and sync to Google Sheets
 
 on:
   workflow_dispatch:
   schedule:
-    # GitHub cron uses UTC. Keep the existing morning refresh.
-    - cron: "0 6 * * *"
-    # 21:00 UTC is 22:00 CET in winter and 23:00 CEST in summer.
-    - cron: "0 21 * * *"
+    # UTC slots cover both EST and EDT. The timezone gate below selects
+    # only 09:50, 11:30, 13:30, 15:30 and 17:30 America/New_York.
+    - cron: "50 13,14 * * 1-5"
+    - cron: "30 15,16,17,18,19,20,21,22 * * 1-5"
   push:
     branches:
       - main
     paths:
       - "scripts/test_finviz.py"
+      - "scripts/sync_finviz_to_sheets.py"
+      - "scripts/is_finviz_refresh_time.py"
       - ".github/workflows/test-finviz.yml"
 
 permissions:
   contents: write
 
+concurrency:
+  group: finviz-refresh-and-sheets-sync
+  cancel-in-progress: false
+
 jobs:
-  test-finviz:
+  refresh-and-sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -30,10 +36,16 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Check New York refresh time
+        id: timecheck
+        run: python scripts/is_finviz_refresh_time.py
+
       - name: Fetch Finviz tickers and create CSV
+        if: steps.timecheck.outputs.run == 'true' || github.event_name != 'schedule'
         run: python scripts/test_finviz.py
 
       - name: Commit updated ticker CSV to GitHub
+        if: steps.timecheck.outputs.run == 'true' || github.event_name != 'schedule'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -45,10 +57,18 @@ jobs:
             git push
           fi
 
+      - name: Sync latest GitHub ticker CSV to Google Sheets
+        if: steps.timecheck.outputs.run == 'true' || github.event_name != 'schedule'
+        env:
+          GS_WEBAPP_URL: ${{ vars.GS_WEBAPP_URL }}
+          GS_SECRET: ${{ secrets.GS_SECRET }}
+        run: python scripts/sync_finviz_to_sheets.py
+
       - name: Upload ticker CSV artifact
+        if: always() && (steps.timecheck.outputs.run == 'true' || github.event_name != 'schedule')
         uses: actions/upload-artifact@v4
         with:
           name: finviz-tickers-csv
           path: finviz_tickers.csv
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 7

@@ -12,11 +12,6 @@
       "format": "csv"
     },
     {
-      "name": "TradingView screener",
-      "path": "data/tradingview_screener_tickers.csv",
-      "format": "csv"
-    },
-    {
       "name": "Simpel Monsters",
       "path": "data/simpel_monsters_tickers.csv",
       "format": "csv"

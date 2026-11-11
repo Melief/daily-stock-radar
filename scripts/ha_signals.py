@@ -128,7 +128,7 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             raise ValueError(f"onvoldoende historie voor SMA50/volume: {len(daily)} handelsdagen")
 
         # The current trading session is built from 5-minute bars when available.
-        # The SMA and 30-day volume baseline use completed daily sessions only.
+        # SMA and RVOL use completed daily sessions only.
         try:
             intra = yf.download(
                 ticker, period="5d", interval="5m", auto_adjust=False,
@@ -254,7 +254,7 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             "above_sma50": bool(above50),
             "sma20_50_filter_required": requires_filter,
             "sma20_50_filter_pass": filter_pass,
-            "daily_volume": int(daily_volume),
+            "daily_volume": int(latest["Volume"]),
             "average_volume_30d": int(avg30),
             "volume_vs_30d_avg_pct": round(volume_ratio, 1),
             "volume_trend_3d": trend,

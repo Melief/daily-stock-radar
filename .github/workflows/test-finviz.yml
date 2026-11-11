@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # Trigger hourly across the New York trading day in both EST and EDT.
-    # The timezone gate selects 09:50, 11:50, 13:50, 15:50 and 17:50 local.
+    # The timezone gate selects 09:50 through 17:50 local, every hour.
     - cron: "50 13-22 * * 1-5"
   push:
     branches:

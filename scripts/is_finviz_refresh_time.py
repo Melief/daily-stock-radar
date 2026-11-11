@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
-"""Gate scheduled Finviz refreshes to every hour, at :50 New York time.
-
-GitHub scheduled workflows can start several minutes late. Accept a run that
-starts within 20 minutes after its intended slot instead of requiring an
-exact HH:MM match.
-"""
+"""Gate scheduled Finviz refreshes to the configured New York refresh slots."""
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-TARGET_HOURS = tuple(range(9, 18))
+# Existing cadence: every two hours during the New York weekday trading day.
+TARGET_HOURS = (9, 11, 13, 15, 17)
 START_MINUTE = 50
 START_TOLERANCE_MINUTES = 20
 TIMEZONE = ZoneInfo("America/New_York")

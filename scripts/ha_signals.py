@@ -102,8 +102,10 @@ def unknown_row(ticker: str, sources: set[str], reason: str) -> dict:
         "sma20_50_filter_required": bool(sources & SMA_FILTER_SOURCES),
         "sma20_50_filter_pass": "ONBEKEND" if sources & SMA_FILTER_SOURCES else "NVT",
         "daily_volume": "",
-        "average_volume_30d": "",
-        "volume_vs_30d_avg_pct": "",
+        "average_volume_5d": "",
+        "average_volume_21d": "",
+        "rvol_5_21": "",
+        "rvol_5_21_label": "",
         "volume_trend_3d": "ONBEKEND",
         "status": f"ONBEKEND: {reason}",
     }
@@ -175,9 +177,17 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             signal_frame = pd.concat([completed.tail(HA_LOOKBACK), session])
             is_intraday = True
         else:
-            completed = daily.copy()
-            latest = completed.iloc[-1]
-            signal_frame = completed.tail(HA_LOOKBACK)
+            # Yahoo daily data can contain today's still-forming bar even when
+            # intraday data is unavailable. Keep it for the current signal, but
+            # never include it in completed-session averages or volume trend.
+            if has_today_daily:
+                completed = daily.iloc[:-1].copy()
+                latest = daily.iloc[-1]
+                signal_frame = pd.concat([completed.tail(HA_LOOKBACK), daily.tail(1)])
+            else:
+                completed = daily.copy()
+                latest = completed.iloc[-1]
+                signal_frame = completed.tail(HA_LOOKBACK)
             is_intraday = False
 
         if len(completed) < 50:
@@ -210,24 +220,36 @@ def calculate(ticker: str, sources: set[str]) -> dict:
         equal_low = abs(ho - hl) <= 1e-8
         equal_high = abs(ho - hh) <= 1e-8
 
-        # Today's volume may be partial during market hours. Volume trend is based
-        # only on completed daily sessions to avoid comparing partial volume.
+        # RVOL 5/21: compare averages of the latest 5 and 21 fully completed
+        # regular sessions. The current/incomplete session is never included.
         daily_volume = float(latest["Volume"])
-        if is_intraday:
-            daily_volume = float(latest["Volume"])
-        volume_history = completed["Volume"].tail(30) if is_intraday else completed["Volume"].iloc[:-1].tail(30)
-        avg30 = float(volume_history.mean()) if not volume_history.empty else float("nan")
-        if is_intraday:
-            # Current session volume is incomplete; do not mislabel it as a 3-day trend.
-            trend = "ONVOLLEDIG"
+        volume_history = completed["Volume"]
+        avg5 = float(volume_history.tail(5).mean()) if len(volume_history) >= 5 else float("nan")
+        avg21 = float(volume_history.tail(21).mean()) if len(volume_history) >= 21 else float("nan")
+        rvol_5_21 = avg5 / avg21 if avg21 > 0 else float("nan")
+        if pd.isna(rvol_5_21):
+            rvol_label = "ONBEKEND"
+        elif rvol_5_21 < 0.80:
+            rvol_label = "ZWAK"
+        elif rvol_5_21 < 1.00:
+            rvol_label = "BENEDEN GEMIDDELD"
+        elif rvol_5_21 < 1.25:
+            rvol_label = "NEUTRAAL"
+        elif rvol_5_21 < 1.50:
+            rvol_label = "POSITIEF"
+        elif rvol_5_21 <= 2.00:
+            rvol_label = "STERK"
         else:
-            last_three = completed["Volume"].tail(3)
-            if len(last_three) == 3:
-                v0, v1, v2 = map(float, last_three)
-                trend = "STIJGEND" if v0 < v1 < v2 else "DALEND" if v0 > v1 > v2 else "GEMENGD"
-            else:
-                trend = "ONBEKEND"
-        volume_ratio = ((daily_volume / avg30) - 1.0) * 100.0 if avg30 > 0 else float("nan")
+            rvol_label = "ZEER STERK"
+
+        # Keep the separate 3-session rising-volume signal, also using completed
+        # sessions only (not the current partial session).
+        last_three = volume_history.tail(3)
+        if len(last_three) == 3:
+            v0, v1, v2 = map(float, last_three)
+            trend = "STIJGEND" if v0 < v1 < v2 else "DALEND" if v0 > v1 > v2 else "GEMENGD"
+        else:
+            trend = "ONBEKEND"
 
         requires_filter = bool(sources & SMA_FILTER_SOURCES)
         filter_pass = bool(above20 and above50) if requires_filter else "NVT"
@@ -255,8 +277,10 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             "sma20_50_filter_required": requires_filter,
             "sma20_50_filter_pass": filter_pass,
             "daily_volume": int(latest["Volume"]),
-            "average_volume_30d": int(avg30),
-            "volume_vs_30d_avg_pct": round(volume_ratio, 1),
+            "average_volume_5d": int(avg5) if not pd.isna(avg5) else "",
+            "average_volume_21d": int(avg21) if not pd.isna(avg21) else "",
+            "rvol_5_21": round(rvol_5_21, 3) if not pd.isna(rvol_5_21) else "",
+            "rvol_5_21_label": rvol_label,
             "volume_trend_3d": trend,
             "status": "OK" if not is_intraday else "OK_INTRADAY",
         }

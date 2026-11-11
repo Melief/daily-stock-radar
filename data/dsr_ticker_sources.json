@@ -34,8 +34,23 @@
     "SMA20",
     "SMA50",
     "daily_volume",
-    "average_volume_30d",
+    "average_volume_5d",
+    "average_volume_21d",
+    "rvol_5_21",
     "volume_trend_3d",
     "Heikin-Ashi"
-  ]
+  ],
+  "volume_calculation": {
+    "method": "RVOL 5/21",
+    "formula": "average daily volume over latest 5 fully completed regular trading sessions divided by average daily volume over latest 21 fully completed regular trading sessions",
+    "intraday_sessions_excluded": true,
+    "thresholds": {
+      "<0.80": "zwak",
+      "0.80-<1.00": "beneden gemiddeld",
+      "1.00-<1.25": "neutraal",
+      "1.25-<1.50": "positief",
+      "1.50-2.00": "sterk",
+      ">2.00": "zeer sterk"
+    }
+  }
 }

@@ -8,7 +8,8 @@ from zoneinfo import ZoneInfo
 # Existing cadence: every two hours during the New York weekday trading day.
 TARGET_HOURS = (9, 11, 13, 15, 17)
 START_MINUTE = 50
-START_TOLERANCE_MINUTES = 20
+# GitHub scheduled workflows can start late; allow up to 45 minutes.
+START_TOLERANCE_MINUTES = 45
 TIMEZONE = ZoneInfo("America/New_York")
 
 now = datetime.now(TIMEZONE)
@@ -27,7 +28,7 @@ if now.weekday() < 5:
 output_path = os.environ.get("GITHUB_OUTPUT")
 if output_path:
     with Path(output_path).open("a", encoding="utf-8") as file:
-        file.write(f"run={'true' if should_run else 'false'}\\n")
+        file.write(f"run={'true' if should_run else 'false'}\n")
 
 if matched_slot:
     print(

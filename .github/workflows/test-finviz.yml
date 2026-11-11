@@ -3,10 +3,9 @@ name: Refresh Finviz tickers and sync to Google Sheets
 on:
   workflow_dispatch:
   schedule:
-    # UTC slots cover both EST and EDT. The timezone gate below selects
-    # only 09:50, 11:30, 13:30, 15:30 and 17:30 America/New_York.
-    - cron: "50 13,14 * * 1-5"
-    - cron: "30 15,16,17,18,19,20,21,22 * * 1-5"
+    # Trigger hourly across the New York trading day in both EST and EDT.
+    # The timezone gate selects 09:50, 11:50, 13:50, 15:50 and 17:50 local.
+    - cron: "50 13-22 * * 1-5"
   push:
     branches:
       - main

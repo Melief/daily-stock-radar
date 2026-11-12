@@ -3,9 +3,9 @@ name: Refresh Finviz tickers and sync to Google Sheets
 on:
   workflow_dispatch:
   schedule:
-    # Trigger hourly across the New York trading day in both EST and EDT.
-    # The timezone gate selects 09:50 through 17:50 local, every hour.
-    - cron: "50 13-22 * * 1-5"
+    # Run every two hours during the New York weekday trading day.
+    - cron: "50 9,11,13,15,17 * * 1-5"
+      timezone: "America/New_York"
   push:
     branches:
       - main
@@ -35,16 +35,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Check New York refresh time
-        id: timecheck
-        run: python scripts/is_finviz_refresh_time.py
-
       - name: Fetch Finviz tickers and create CSV
-        if: steps.timecheck.outputs.run == 'true' || github.event_name != 'schedule'
         run: python scripts/test_finviz.py
 
       - name: Commit updated ticker CSV to GitHub
-        if: steps.timecheck.outputs.run == 'true' || github.event_name != 'schedule'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -69,14 +63,13 @@ jobs:
           fi
 
       - name: Sync latest GitHub ticker CSV to Google Sheets
-        if: steps.timecheck.outputs.run == 'true' || github.event_name != 'schedule'
         env:
           GS_WEBAPP_URL: ${{ vars.GS_WEBAPP_URL }}
           GS_SECRET: ${{ secrets.GS_SECRET }}
         run: python scripts/sync_finviz_to_sheets.py
 
       - name: Upload ticker CSV artifact
-        if: always() && (steps.timecheck.outputs.run == 'true' || github.event_name != 'schedule')
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: finviz-tickers-csv

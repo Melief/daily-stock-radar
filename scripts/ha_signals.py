@@ -77,127 +77,6 @@ def make_ha(frame: pd.DataFrame):
     return ha_open, ha_high, ha_low, ha_close
 
 
-
-# Breakout validation: use completed daily OHLC only, never an intraday bar.
-PIVOT_LOOKBACK = 65
-PIVOT_MIN_BASE = 15
-PIVOT_MAX_BASE = 65
-PIVOT_MIN_SEPARATION = 5
-PIVOT_TOUCH_TOLERANCE = 0.015
-BUY_ZONE_MAX_EXTENSION = 0.05
-
-
-def detect_breakout(completed: pd.DataFrame, current_close: float | None = None) -> dict:
-    """Find a tested consolidation ceiling and validate any breakout on daily closes.
-
-    A pivot requires at least two distinct local-high tests, at least five sessions
-    apart, within a 1.5% price band, with the first/last tests spanning 15-65 sessions.
-    The pivot is the highest high in that resistance cluster. Confirmation requires
-    a completed-session close above the pivot. Intraday prices are reported separately.
-    """
-    unknown = {
-        "pivot_point": "",
-        "pivot_test_count": 0,
-        "pivot_first_test_date": "",
-        "pivot_last_test_date": "",
-        "breakout_date": "",
-        "breakout_close": "",
-        "breakout_volume": "",
-        "breakout_rvol_21d": "",
-        "breakout_status": "ONBEKEND",
-        "distance_from_pivot_pct": "",
-    }
-    if completed is None or len(completed) < PIVOT_MIN_BASE + 5:
-        return unknown
-
-    frame = completed[["High", "Close", "Volume"]].dropna().tail(PIVOT_LOOKBACK).copy()
-    if len(frame) < PIVOT_MIN_BASE + 5:
-        return unknown
-
-    # Local highs: the session high must be the maximum in a five-session window.
-    highs = frame["High"].astype(float)
-    peaks = []
-    for i in range(2, len(frame) - 2):
-        value = float(highs.iloc[i])
-        window = highs.iloc[i - 2:i + 3]
-        if value >= float(window.max()) and int((window == value).sum()) == 1:
-            peaks.append((i, value))
-
-    # Group nearby resistance tests into price clusters (maximum 1.5% range).
-    clusters = []
-    for peak in peaks:
-        placed = False
-        for cluster in clusters:
-            prices = [p[1] for p in cluster]
-            if max(prices + [peak[1]]) / min(prices + [peak[1]]) - 1.0 <= PIVOT_TOUCH_TOLERANCE:
-                cluster.append(peak)
-                placed = True
-                break
-        if not placed:
-            clusters.append([peak])
-
-    valid = []
-    for cluster in clusters:
-        if len(cluster) < 2:
-            continue
-        cluster = sorted(cluster, key=lambda item: item[0])
-        first_i, last_i = cluster[0][0], cluster[-1][0]
-        span = last_i - first_i
-        if span < PIVOT_MIN_BASE or span > PIVOT_MAX_BASE:
-            continue
-        valid.append(cluster)
-
-    if not valid:
-        return unknown
-
-    # Prefer the most recently tested valid resistance zone.
-    cluster = max(valid, key=lambda c: c[-1][0])
-    first_i, last_i = cluster[0][0], cluster[-1][0]
-    pivot = max(price for _, price in cluster)
-    dates = pd.DatetimeIndex(frame.index)
-    first_date = pd.Timestamp(dates[first_i]).strftime("%Y-%m-%d")
-    last_date = pd.Timestamp(dates[last_i]).strftime("%Y-%m-%d")
-
-    post_test = frame.iloc[last_i + 1:]
-    above = post_test[post_test["Close"].astype(float) > pivot]
-    latest_close = float(frame["Close"].iloc[-1])
-    result = {
-        "pivot_point": round(pivot, 4),
-        "pivot_test_count": len(cluster),
-        "pivot_first_test_date": first_date,
-        "pivot_last_test_date": last_date,
-        "breakout_date": "",
-        "breakout_close": "",
-        "breakout_volume": "",
-        "breakout_rvol_21d": "",
-        "breakout_status": "NIET_UITGEBROKEN",
-        "distance_from_pivot_pct": round((latest_close / pivot - 1.0) * 100.0, 2),
-    }
-
-    if not above.empty:
-        breakout_idx = above.index[0]
-        breakout_row = frame.loc[breakout_idx]
-        breakout_date = pd.Timestamp(breakout_idx).strftime("%Y-%m-%d")
-        breakout_volume = float(breakout_row["Volume"])
-        volume_base = frame.loc[:breakout_idx, "Volume"].iloc[:-1].tail(21)
-        breakout_rvol = breakout_volume / float(volume_base.mean()) if len(volume_base) >= 5 and float(volume_base.mean()) > 0 else float("nan")
-        result.update({
-            "breakout_date": breakout_date,
-            "breakout_close": round(float(breakout_row["Close"]), 4),
-            "breakout_volume": int(breakout_volume),
-            "breakout_rvol_21d": round(breakout_rvol, 3) if not pd.isna(breakout_rvol) else "",
-        })
-        if latest_close <= pivot:
-            result["breakout_status"] = "MISLUKT"
-        elif latest_close <= pivot * (1.0 + BUY_ZONE_MAX_EXTENSION):
-            result["breakout_status"] = "BEVESTIGD_KOOPZONE"
-        else:
-            result["breakout_status"] = "BEVESTIGD_UITGEREKT"
-
-    if current_close is not None and float(current_close) > pivot and latest_close <= pivot:
-        result["breakout_status"] = "INTRADAY_BOVEN_PIVOT_NIET_BEVESTIGD"
-    return result
-
 def unknown_row(ticker: str, sources: set[str], reason: str) -> dict:
     return {
         "ticker": ticker,
@@ -228,16 +107,6 @@ def unknown_row(ticker: str, sources: set[str], reason: str) -> dict:
         "rvol_5_21": "",
         "rvol_5_21_label": "",
         "volume_trend_3d": "ONBEKEND",
-        "pivot_point": "",
-        "pivot_test_count": 0,
-        "pivot_first_test_date": "",
-        "pivot_last_test_date": "",
-        "breakout_date": "",
-        "breakout_close": "",
-        "breakout_volume": "",
-        "breakout_rvol_21d": "",
-        "breakout_status": "ONBEKEND",
-        "distance_from_pivot_pct": "",
         "status": f"ONBEKEND: {reason}",
     }
 
@@ -384,7 +253,6 @@ def calculate(ticker: str, sources: set[str]) -> dict:
 
         requires_filter = bool(sources & SMA_FILTER_SOURCES)
         filter_pass = bool(above20 and above50) if requires_filter else "NVT"
-        breakout = detect_breakout(completed, compare_close if is_intraday else None)
         return {
             "ticker": ticker,
             "sector": sector,
@@ -414,7 +282,6 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             "rvol_5_21": round(rvol_5_21, 3) if not pd.isna(rvol_5_21) else "",
             "rvol_5_21_label": rvol_label,
             "volume_trend_3d": trend,
-            **breakout,
             "status": "OK" if not is_intraday else "OK_INTRADAY",
         }
     except Exception as exc:

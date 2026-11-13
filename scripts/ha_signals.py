@@ -236,8 +236,10 @@ def calculate(ticker: str, sources: set[str]) -> dict:
         recent_highs = [float(v) for v in ha_high.tail(pivot_window)]
         lowest_ha_low = min(recent_lows)
         highest_ha_high = max(recent_highs)
-        low_age = max(i for i, value in enumerate(recent_lows) if value == lowest_ha_low)
-        high_age = max(i for i, value in enumerate(recent_highs) if value == highest_ha_high)
+        low_last_index = max(i for i, value in enumerate(recent_lows) if value == lowest_ha_low)
+        high_last_index = max(i for i, value in enumerate(recent_highs) if value == highest_ha_high)
+        low_age = len(recent_lows) - 1 - low_last_index
+        high_age = len(recent_highs) - 1 - high_last_index
         pivot_up = bool(equal_low and above20 and above50 and low_age <= pivot_max_age)
         pivot_down = bool(equal_high and not above20 and not above50 and high_age <= pivot_max_age)
         if pivot_up and hl > 0:

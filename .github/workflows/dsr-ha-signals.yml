@@ -17,6 +17,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/dsr-ha-signals.yml"
+      - "scripts/ha_signals.py"
 
 permissions:
   contents: write

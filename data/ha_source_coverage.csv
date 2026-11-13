@@ -1,73 +1,71 @@
 source,ticker,ha_row_present,ha_status
-Sector Top Tickers,ACN,True,OK_INTRADAY
-Sector Top Tickers,ANF,True,OK_INTRADAY
-Sector Top Tickers,BNO,True,OK_INTRADAY
-Sector Top Tickers,CCI,True,OK_INTRADAY
-Sector Top Tickers,CEG,True,OK_INTRADAY
-Sector Top Tickers,COP,True,OK_INTRADAY
-Sector Top Tickers,CSGP,True,OK_INTRADAY
-Sector Top Tickers,CTVA,True,OK_INTRADAY
-Sector Top Tickers,DHT,True,OK_INTRADAY
-Sector Top Tickers,DINO,True,OK_INTRADAY
-Sector Top Tickers,ECO,True,OK_INTRADAY
-Sector Top Tickers,EQT,True,OK_INTRADAY
-Sector Top Tickers,FIGS,True,OK_INTRADAY
-Sector Top Tickers,FRO,True,OK_INTRADAY
-Sector Top Tickers,HNGE,True,OK_INTRADAY
-Sector Top Tickers,HPE,True,OK_INTRADAY
-Sector Top Tickers,INSW,True,OK_INTRADAY
-Sector Top Tickers,MCK,True,OK_INTRADAY
-Sector Top Tickers,MPC,True,OK_INTRADAY
-Sector Top Tickers,NXT,True,OK_INTRADAY
-Sector Top Tickers,OSCR,True,OK_INTRADAY
-Sector Top Tickers,OXY,True,OK_INTRADAY
-Sector Top Tickers,P,True,OK_INTRADAY
-Sector Top Tickers,PARR,True,OK_INTRADAY
-Sector Top Tickers,PBF,True,OK_INTRADAY
-Sector Top Tickers,PLTR,True,OK_INTRADAY
-Sector Top Tickers,PSX,True,OK_INTRADAY
-Sector Top Tickers,RELY,True,OK_INTRADAY
-Sector Top Tickers,SBAC,True,OK_INTRADAY
-Sector Top Tickers,TRMD,True,OK_INTRADAY
-Sector Top Tickers,VLO,True,OK_INTRADAY
-Sector Top Tickers,VST,True,OK_INTRADAY
-Finviz,A,True,OK_INTRADAY
-Finviz,ANET,True,OK_INTRADAY
-Finviz,EMBJ,True,OK_INTRADAY
-Finviz,EXEL,True,OK_INTRADAY
-Finviz,GCT,True,OK_INTRADAY
-Finviz,IBN,True,OK_INTRADAY
-Finviz,KNSA,True,OK_INTRADAY
-Finviz,LH,True,OK_INTRADAY
-Finviz,MET,True,OK_INTRADAY
-Finviz,OSW,True,OK_INTRADAY
-Finviz,SN,True,OK_INTRADAY
-Finviz,TMO,True,OK_INTRADAY
-Finviz,VCTR,True,OK_INTRADAY
-Simpel Monsters,EPAM,True,OK_INTRADAY
-Follow Thrue,PGNY,True,OK_INTRADAY
-VYUS holdings,ADBE,True,OK_INTRADAY
-VYUS holdings,CART,True,OK_INTRADAY
-VYUS holdings,COKE,True,OK_INTRADAY
-VYUS holdings,CRM,True,OK_INTRADAY
-VYUS holdings,DELL,True,OK_INTRADAY
-VYUS holdings,DOCU,True,OK_INTRADAY
-VYUS holdings,EXPE,True,OK_INTRADAY
-VYUS holdings,GDDY,True,OK_INTRADAY
-VYUS holdings,GEN,True,OK_INTRADAY
-VYUS holdings,HCA,True,OK_INTRADAY
-VYUS holdings,HPQ,True,OK_INTRADAY
-VYUS holdings,HUBS,True,OK_INTRADAY
-VYUS holdings,INTU,True,OK_INTRADAY
-VYUS holdings,IT,True,OK_INTRADAY
-VYUS holdings,MTCH,True,OK_INTRADAY
-VYUS holdings,PAYC,True,OK_INTRADAY
-VYUS holdings,PTC,True,OK_INTRADAY
-VYUS holdings,ROP,True,OK_INTRADAY
-VYUS holdings,SWKS,True,OK_INTRADAY
-VYUS holdings,TEAM,True,OK_INTRADAY
-VYUS holdings,THC,True,OK_INTRADAY
-VYUS holdings,UHS,True,OK_INTRADAY
-VYUS holdings,WDAY,True,OK_INTRADAY
-VYUS holdings,ZBRA,True,OK_INTRADAY
-VYUS holdings,ZM,True,OK_INTRADAY
+Sector Top Tickers,ACN,True,OK
+Sector Top Tickers,ANF,True,OK
+Sector Top Tickers,BNO,True,OK
+Sector Top Tickers,CCI,True,OK
+Sector Top Tickers,CEG,True,OK
+Sector Top Tickers,COP,True,OK
+Sector Top Tickers,CSGP,True,OK
+Sector Top Tickers,CTVA,True,OK
+Sector Top Tickers,DHT,True,OK
+Sector Top Tickers,DINO,True,OK
+Sector Top Tickers,ECO,True,OK
+Sector Top Tickers,EQT,True,OK
+Sector Top Tickers,FIGS,True,OK
+Sector Top Tickers,FRO,True,OK
+Sector Top Tickers,HNGE,True,OK
+Sector Top Tickers,HPE,True,OK
+Sector Top Tickers,INSW,True,OK
+Sector Top Tickers,MCK,True,OK
+Sector Top Tickers,MPC,True,OK
+Sector Top Tickers,NXT,True,OK
+Sector Top Tickers,OSCR,True,OK
+Sector Top Tickers,OXY,True,OK
+Sector Top Tickers,P,True,OK
+Sector Top Tickers,PARR,True,OK
+Sector Top Tickers,PBF,True,OK
+Sector Top Tickers,PLTR,True,OK
+Sector Top Tickers,PSX,True,OK
+Sector Top Tickers,RELY,True,OK
+Sector Top Tickers,SBAC,True,OK
+Sector Top Tickers,TRMD,True,OK
+Sector Top Tickers,VLO,True,OK
+Sector Top Tickers,VST,True,OK
+Finviz,ANET,True,OK
+Finviz,CBC,True,OK
+Finviz,DGX,True,OK
+Finviz,EMBJ,True,OK
+Finviz,GCT,True,OK
+Finviz,IBN,True,OK
+Finviz,IDXX,True,OK
+Finviz,TMO,True,OK
+Finviz,V,True,OK
+Finviz,VCTR,True,OK
+Finviz,VLTO,True,OK
+Simpel Monsters,EPAM,True,OK
+Follow Thrue,PGNY,True,OK
+VYUS holdings,ADBE,True,OK
+VYUS holdings,CART,True,OK
+VYUS holdings,COKE,True,OK
+VYUS holdings,CRM,True,OK
+VYUS holdings,DELL,True,OK
+VYUS holdings,DOCU,True,OK
+VYUS holdings,EXPE,True,OK
+VYUS holdings,GDDY,True,OK
+VYUS holdings,GEN,True,OK
+VYUS holdings,HCA,True,OK
+VYUS holdings,HPQ,True,OK
+VYUS holdings,HUBS,True,OK
+VYUS holdings,INTU,True,OK
+VYUS holdings,IT,True,OK
+VYUS holdings,MTCH,True,OK
+VYUS holdings,PAYC,True,OK
+VYUS holdings,PTC,True,OK
+VYUS holdings,ROP,True,OK
+VYUS holdings,SWKS,True,OK
+VYUS holdings,TEAM,True,OK
+VYUS holdings,THC,True,OK
+VYUS holdings,UHS,True,OK
+VYUS holdings,WDAY,True,OK
+VYUS holdings,ZBRA,True,OK
+VYUS holdings,ZM,True,OK

@@ -7,6 +7,16 @@ on:
     - cron: "0 14-21 * * 1-5"
     # Morning NL final snapshot using the latest completed US trading session.
     - cron: "15 4 * * 1-5"
+  workflow_run:
+    # Refresh HA immediately after the Finviz CSV workflow has completed.
+    workflows: ["Refresh Finviz tickers and sync to Google Sheets"]
+    types: [completed]
+    branches: [main]
+  push:
+    # Also run once when this workflow definition itself is changed.
+    branches: [main]
+    paths:
+      - ".github/workflows/dsr-ha-signals.yml"
 
 permissions:
   contents: write
@@ -17,6 +27,7 @@ concurrency:
 
 jobs:
   calculate-ha:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:

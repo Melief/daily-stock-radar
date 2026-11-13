@@ -95,6 +95,12 @@ def unknown_row(ticker: str, sources: set[str], reason: str) -> dict:
         "ha_strong_signal": "",
         "ha_open_equals_high": "",
         "ha_strong_down_signal": "",
+        "ha_pivot_low_age": "",
+        "ha_pivot_high_age": "",
+        "ha_pivot_up": "",
+        "ha_pivot_down": "",
+        "ha_pivot_distance_pct": "",
+        "ha_pivot_signal": "",
         "sma20": "",
         "sma50": "",
         "above_sma20": "",
@@ -220,6 +226,30 @@ def calculate(ticker: str, sources: set[str]) -> dict:
         equal_low = abs(ho - hl) <= 1e-8
         equal_high = abs(ho - hh) <= 1e-8
 
+        # Dominant HA pivot from the supplied Apps Script: extreme of the
+        # latest 21 HA candles must have occurred within the latest 8 (age 0-7).
+        # The current candle must also have HA Low=Open / HA High=Open and
+        # the regular close must be above / below both completed-session SMAs.
+        pivot_window = 21
+        pivot_max_age = 7
+        recent_lows = [float(v) for v in ha_low.tail(pivot_window)]
+        recent_highs = [float(v) for v in ha_high.tail(pivot_window)]
+        lowest_ha_low = min(recent_lows)
+        highest_ha_high = max(recent_highs)
+        low_age = max(i for i, value in enumerate(recent_lows) if value == lowest_ha_low)
+        high_age = max(i for i, value in enumerate(recent_highs) if value == highest_ha_high)
+        pivot_up = bool(equal_low and above20 and above50 and low_age <= pivot_max_age)
+        pivot_down = bool(equal_high and not above20 and not above50 and high_age <= pivot_max_age)
+        if pivot_up and hl > 0:
+            pivot_distance = (compare_close - hl) / hl * 100.0
+            pivot_signal = f"UP ↑ {int(pivot_distance + 0.5)}% ({low_age})"
+        elif pivot_down and hh > 0:
+            pivot_distance = (hh - compare_close) / hh * 100.0
+            pivot_signal = f"DOWN ↓ {int(pivot_distance + 0.5)}% ({high_age})"
+        else:
+            pivot_distance = float("nan")
+            pivot_signal = ""
+
         # RVOL 5/21: compare averages of the latest 5 and 21 fully completed
         # regular sessions. The current/incomplete session is never included.
         daily_volume = float(latest["Volume"])
@@ -270,6 +300,12 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             "ha_strong_signal": bool(equal_low and day_type == "UP"),
             "ha_open_equals_high": bool(equal_high),
             "ha_strong_down_signal": bool(equal_high and day_type == "DOWN"),
+            "ha_pivot_low_age": low_age,
+            "ha_pivot_high_age": high_age,
+            "ha_pivot_up": pivot_up,
+            "ha_pivot_down": pivot_down,
+            "ha_pivot_distance_pct": round(pivot_distance, 1) if not pd.isna(pivot_distance) else "",
+            "ha_pivot_signal": pivot_signal,
             "sma20": round(sma20, 4),
             "sma50": round(sma50, 4),
             "above_sma20": bool(above20),

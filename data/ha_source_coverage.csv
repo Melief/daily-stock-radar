@@ -32,12 +32,15 @@ Sector Top Tickers,TRMD,True,OK_INTRADAY
 Sector Top Tickers,VLO,True,OK_INTRADAY
 Sector Top Tickers,VST,True,OK_INTRADAY
 Finviz,ANET,True,OK_INTRADAY
+Finviz,CTAS,True,OK_INTRADAY
 Finviz,EMBJ,True,OK_INTRADAY
 Finviz,GCT,True,OK_INTRADAY
+Finviz,HNGE,True,OK_INTRADAY
 Finviz,IBN,True,OK_INTRADAY
 Finviz,OSW,True,OK_INTRADAY
 Finviz,TMO,True,OK_INTRADAY
 Finviz,VCTR,True,OK_INTRADAY
+Finviz,VLTO,True,OK_INTRADAY
 Simpel Monsters,EPAM,True,OK_INTRADAY
 Follow Thrue,PGNY,True,OK_INTRADAY
 VYUS holdings,ADBE,True,OK_INTRADAY

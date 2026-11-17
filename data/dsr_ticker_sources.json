@@ -12,6 +12,11 @@
       "format": "csv"
     },
     {
+      "name": "Blue Sky",
+      "path": "data/blue_sky_tickers.csv",
+      "format": "csv"
+    },
+    {
       "name": "Simpel Monsters",
       "path": "data/simpel_monsters_tickers.csv",
       "format": "csv"

@@ -26,6 +26,7 @@ HA_LOOKBACK = 30
 SOURCES = [
     ("Sector Top Tickers", ROOT / "tickers.txt", "text"),
     ("Finviz", ROOT / "finviz_tickers.csv", "csv"),
+    ("Blue Sky", ROOT / "data" / "blue_sky_tickers.csv", "csv"),
     ("Simpel Monsters", ROOT / "data" / "simpel_monsters_tickers.csv", "csv"),
     ("Follow Thrue", ROOT / "data" / "follow_thrue_tickers.csv", "csv"),
     ("VYUS holdings", ROOT / "data" / "vyus_tickers.csv", "csv"),

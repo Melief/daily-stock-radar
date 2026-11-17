@@ -11,6 +11,8 @@ on:
       - main
     paths:
       - "scripts/test_finviz.py"
+      - "scripts/test_blue_sky.py"
+      - "blue_sky_url.txt"
       - "scripts/sync_finviz_to_sheets.py"
       - "scripts/is_finviz_refresh_time.py"
       - ".github/workflows/test-finviz.yml"
@@ -38,15 +40,21 @@ jobs:
       - name: Fetch Finviz tickers and create CSV
         run: python scripts/test_finviz.py
 
-      - name: Commit updated ticker CSV to GitHub
+      - name: Fetch Blue Sky tickers and create CSV
+        id: blue_sky
+        continue-on-error: true
+        run: python scripts/test_blue_sky.py
+
+      - name: Commit updated ticker CSVs to GitHub
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add finviz_tickers.csv
+          if [ -f data/blue_sky_tickers.csv ]; then git add data/blue_sky_tickers.csv; fi
           if git diff --cached --quiet; then
             echo "Ticker CSV is unchanged; no commit needed."
           else
-            git commit -m "Update Finviz ticker CSV"
+            git commit -m "Update Finviz and Blue Sky ticker CSVs"
             # Other workflows may also update main; rebase before pushing.
             for attempt in 1 2 3; do
               git fetch origin main
@@ -61,6 +69,12 @@ jobs:
               sleep 3
             done
           fi
+
+      - name: Report Blue Sky fetch failure after preserving Finviz sync
+        if: steps.blue_sky.outcome == 'failure'
+        run: |
+          echo "ERROR: Blue Sky refresh failed. Existing Blue Sky CSV was left unchanged; Finviz refresh and Sheets sync were still completed."
+          exit 1
 
       - name: Sync latest GitHub ticker CSV to Google Sheets
         env:

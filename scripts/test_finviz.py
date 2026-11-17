@@ -13,6 +13,7 @@ from urllib.request import Request, urlopen
 
 CONFIG_FILE = Path("finviz_url.txt")
 OUTPUT_FILE = Path("finviz_tickers.csv")
+SOURCE_NAME = "Finviz"
 TIMEOUT_SECONDS = 30
 MAX_ATTEMPTS = 3
 TICKER_RE = re.compile(r"[A-Z][A-Z0-9.-]{0,9}")
@@ -111,14 +112,14 @@ def write_csv_atomically(tickers):
 
 
 def main():
-    print("Fetch Finviz tickers and refresh finviz_tickers.csv.")
+    print(f"Fetch {SOURCE_NAME} tickers and refresh {OUTPUT_FILE}.")
     if not CONFIG_FILE.exists():
         print("FAIL: finviz_url.txt is missing; existing CSV left unchanged.")
         return 1
     screener_url = CONFIG_FILE.read_text(encoding="utf-8").strip()
     parsed = urlparse(screener_url)
     if parsed.scheme != "https" or parsed.netloc.lower() not in ("finviz.com", "www.finviz.com") or not parsed.query:
-        print("FAIL: Invalid Finviz URL; existing CSV left unchanged.")
+        print(f"FAIL: Invalid {SOURCE_NAME} URL; existing CSV left unchanged.")
         return 1
 
     # Try Finviz's CSV export first, then its classic screener HTML endpoint.

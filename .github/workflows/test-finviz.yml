@@ -70,17 +70,17 @@ jobs:
             done
           fi
 
-      - name: Report Blue Sky fetch failure after preserving Finviz sync
-        if: steps.blue_sky.outcome == 'failure'
-        run: |
-          echo "ERROR: Blue Sky refresh failed. Existing Blue Sky CSV was left unchanged; Finviz refresh and Sheets sync were still completed."
-          exit 1
-
       - name: Sync latest GitHub ticker CSV to Google Sheets
         env:
           GS_WEBAPP_URL: ${{ vars.GS_WEBAPP_URL }}
           GS_SECRET: ${{ secrets.GS_SECRET }}
         run: python scripts/sync_finviz_to_sheets.py
+
+      - name: Report Blue Sky fetch failure after preserving Finviz sync
+        if: steps.blue_sky.outcome == 'failure'
+        run: |
+          echo "ERROR: Blue Sky refresh failed. Existing Blue Sky CSV was left unchanged; Finviz refresh and Sheets sync were still completed."
+          exit 1
 
       - name: Upload ticker CSV artifact
         if: always()

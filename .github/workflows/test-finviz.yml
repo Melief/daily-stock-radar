@@ -79,8 +79,7 @@ jobs:
       - name: Report Blue Sky fetch failure after preserving Finviz sync
         if: steps.blue_sky.outcome == 'failure'
         run: |
-          echo "ERROR: Blue Sky refresh failed. Existing Blue Sky CSV was left unchanged; Finviz refresh and Sheets sync were still completed."
-          exit 1
+          echo "::warning::Blue Sky refresh failed. Existing Blue Sky CSV was left unchanged; Finviz refresh and Sheets sync continue."
 
       - name: Upload ticker CSV artifact
         if: always()

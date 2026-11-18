@@ -31,15 +31,18 @@ Sector Top Tickers,SBAC,True,OK_INTRADAY
 Sector Top Tickers,TRMD,True,OK_INTRADAY
 Sector Top Tickers,VLO,True,OK_INTRADAY
 Sector Top Tickers,VST,True,OK_INTRADAY
+Finviz,A,True,OK_INTRADAY
 Finviz,ASO,True,OK_INTRADAY
-Finviz,CART,True,OK_INTRADAY
 Finviz,DGX,True,OK_INTRADAY
-Finviz,EMBJ,True,OK_INTRADAY
-Finviz,EXEL,True,OK_INTRADAY
+Finviz,GCT,True,OK_INTRADAY
 Finviz,IBN,True,OK_INTRADAY
 Finviz,LH,True,OK_INTRADAY
+Finviz,OSW,True,OK_INTRADAY
+Finviz,SN,True,OK_INTRADAY
+Finviz,ULTA,True,OK_INTRADAY
 Finviz,VCTR,True,OK_INTRADAY
 Finviz,VLTO,True,OK_INTRADAY
+Finviz,WSM,True,OK_INTRADAY
 Finviz,WTW,True,OK_INTRADAY
 Blue Sky,GCT,True,OK_INTRADAY
 Blue Sky,KNSA,True,OK_INTRADAY

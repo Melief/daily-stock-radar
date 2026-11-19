@@ -70,10 +70,21 @@ jobs:
             done
           fi
 
-      - name: Sync latest GitHub ticker CSV to Google Sheets
+      - name: Sync Finviz tickers to Google Sheets
         env:
           GS_WEBAPP_URL: ${{ vars.GS_WEBAPP_URL }}
           GS_SECRET: ${{ secrets.GS_SECRET }}
+          TICKER_CSV_FILE: finviz_tickers.csv
+          GS_TARGET_SHEET: Import FV uit GH
+        run: python scripts/sync_finviz_to_sheets.py
+
+      - name: Sync Blue Sky tickers to Google Sheets
+        if: steps.blue_sky.outcome == 'success'
+        env:
+          GS_WEBAPP_URL: ${{ vars.GS_WEBAPP_URL }}
+          GS_SECRET: ${{ secrets.GS_SECRET }}
+          TICKER_CSV_FILE: data/blue_sky_tickers.csv
+          GS_TARGET_SHEET: FV > GH > Blue Sky
         run: python scripts/sync_finviz_to_sheets.py
 
       - name: Report Blue Sky fetch failure after preserving Finviz sync

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sync the latest Finviz ticker CSV to Google Sheets."""
+"""Sync a ticker CSV to its configured Google Sheets worksheet."""
 
 import csv
 import json
@@ -11,12 +11,13 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 TIMEOUT = 30
-CSV_FILE = Path("finviz_tickers.csv")
 
 
 def main():
     web_app_url = os.environ.get("GS_WEBAPP_URL", "").strip()
     secret = os.environ.get("GS_SECRET", "").strip()
+    csv_file = Path(os.environ.get("TICKER_CSV_FILE", "finviz_tickers.csv"))
+    target_sheet = os.environ.get("GS_TARGET_SHEET", "Import FV uit GH").strip()
 
     if not web_app_url or not web_app_url.startswith(
         "https://script.google.com/macros/s/"
@@ -28,17 +29,21 @@ def main():
         print("ERROR: The GS_SECRET secret is missing.")
         return 1
 
-    if not CSV_FILE.exists():
-        print(f"ERROR: {CSV_FILE} is missing. Google Sheets was not changed.")
+    if not target_sheet:
+        print("ERROR: GS_TARGET_SHEET is empty.")
+        return 1
+
+    if not csv_file.exists():
+        print(f"ERROR: {csv_file} is missing. Google Sheets was not changed.")
         return 1
 
     tickers = []
     seen = set()
     try:
-        with CSV_FILE.open("r", newline="", encoding="utf-8-sig") as file:
+        with csv_file.open("r", newline="", encoding="utf-8-sig") as file:
             reader = csv.DictReader(file)
             if not reader.fieldnames or "Ticker" not in reader.fieldnames:
-                print("ERROR: finviz_tickers.csv must have a 'Ticker' column.")
+                print(f"ERROR: {csv_file} must have a 'Ticker' column.")
                 return 1
             for row in reader:
                 ticker = (row.get("Ticker") or "").strip().upper()
@@ -46,16 +51,17 @@ def main():
                     seen.add(ticker)
                     tickers.append(ticker)
     except (OSError, csv.Error) as exc:
-        print(f"ERROR: Could not read {CSV_FILE}: {exc}")
+        print(f"ERROR: Could not read {csv_file}: {exc}")
         return 1
 
     if not tickers:
-        print("ERROR: No valid tickers in CSV. Google Sheets was not changed.")
+        print(f"ERROR: No valid tickers in {csv_file}. Google Sheets was not changed.")
         return 1
 
     payload = json.dumps({
         "secret": secret,
         "tickers": tickers,
+        "targetSheet": target_sheet,
     }).encode("utf-8")
 
     request = Request(
@@ -76,7 +82,10 @@ def main():
         print(f"ERROR: Apps Script response: {result[:300]}")
         return 1
 
-    print(f"SUCCESS: Sent {len(tickers)} tickers from {CSV_FILE} to Google Sheets.")
+    print(
+        f"SUCCESS: Sent {len(tickers)} tickers from {csv_file} "
+        f"to Google Sheets worksheet '{target_sheet}'."
+    )
     print(", ".join(tickers))
     return 0
 

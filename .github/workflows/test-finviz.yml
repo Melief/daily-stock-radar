@@ -38,7 +38,14 @@ jobs:
           python-version: "3.12"
 
       - name: Fetch Finviz tickers and create CSV
+        id: finviz
+        continue-on-error: true
         run: python scripts/test_finviz.py
+
+      - name: Report Finviz fetch failure without blocking Blue Sky
+        if: steps.finviz.outcome == 'failure'
+        run: |
+          echo "::warning::Finviz refresh failed. Existing Finviz CSV was left unchanged; Blue Sky refresh and Sheets sync continue."
 
       - name: Fetch Blue Sky tickers and create CSV
         id: blue_sky
@@ -71,6 +78,7 @@ jobs:
           fi
 
       - name: Sync Finviz tickers to Google Sheets
+        if: steps.finviz.outcome == 'success'
         env:
           GS_WEBAPP_URL: ${{ vars.GS_WEBAPP_URL }}
           GS_SECRET: ${{ secrets.GS_SECRET }}

@@ -8,6 +8,7 @@ dropped. SMA200 is intentionally not calculated.
 from __future__ import annotations
 
 import csv
+import json
 import re
 import sys
 import time
@@ -15,6 +16,7 @@ from pathlib import Path
 
 import pandas as pd
 import yfinance as yf
+import pandas_market_calendars as mcal
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "ha_signals.csv"
@@ -22,17 +24,40 @@ COVERAGE_OUT = ROOT / "data" / "ha_source_coverage.csv"
 HISTORY_PERIOD = "1y"
 HA_LOOKBACK = 30
 
-# Canonical source list. Each source file is retained in its original format.
-SOURCES = [
-    ("Sector Top Tickers", ROOT / "tickers.txt", "text"),
-    ("Finviz", ROOT / "finviz_tickers.csv", "csv"),
-    ("Blue Sky", ROOT / "data" / "blue_sky_tickers.csv", "csv"),
-    ("Simpel Monsters", ROOT / "data" / "simpel_monsters_tickers.csv", "csv"),
-    ("Follow Thrue", ROOT / "data" / "follow_thrue_tickers.csv", "csv"),
-    ("VYUS holdings", ROOT / "data" / "vyus_tickers.csv", "csv"),
-]
+# The JSON file is the single source of truth for the five DSR sources.
+SOURCE_CONFIG = ROOT / "data" / "dsr_ticker_sources.json"
+EXPECTED_SOURCES = {
+    "Sector Top Tickers", "Finviz", "VYUS holdings",
+    "Simpel Monsters", "Follow Thrue",
+}
 # The existing DSR rule: these two sources must pass both moving averages.
 SMA_FILTER_SOURCES = {"Sector Top Tickers", "VYUS holdings"}
+
+
+def load_source_config():
+    config = json.loads(SOURCE_CONFIG.read_text(encoding="utf-8"))
+    entries = config.get("sources", [])
+    names = {entry.get("name") for entry in entries}
+    if len(entries) != 5 or names != EXPECTED_SOURCES:
+        raise ValueError(
+            "DSR-bronconfiguratie moet exact de vijf afgesproken bronnen bevatten; "
+            f"gevonden: {sorted(str(name) for name in names)}"
+        )
+    sources = []
+    for entry in entries:
+        fmt = entry.get("format")
+        if fmt == "whitespace":
+            fmt = "text"
+        if fmt not in {"csv", "text"}:
+            raise ValueError(f"Ongeldig bronformaat voor {entry.get('name')}: {fmt}")
+        path = (ROOT / entry["path"]).resolve()
+        if ROOT.resolve() not in path.parents:
+            raise ValueError(f"Bronpad valt buiten de repository: {entry.get('path')}")
+        sources.append((entry["name"], path, fmt))
+    return sources
+
+
+SOURCES = load_source_config()
 
 
 def read_source(path: Path, fmt: str) -> list[str]:
@@ -136,66 +161,102 @@ def calculate(ticker: str, sources: set[str]) -> dict:
         if len(daily) < 55:
             raise ValueError(f"onvoldoende historie voor SMA50/volume: {len(daily)} handelsdagen")
 
-        # The current trading session is built from 5-minute bars when available.
-        # SMA and RVOL use completed daily sessions only.
-        try:
-            intra = yf.download(
-                ticker, period="5d", interval="5m", auto_adjust=False,
-                progress=False, threads=False, timeout=25
-            )
-            if intra is not None and not intra.empty:
-                if isinstance(intra.columns, pd.MultiIndex):
-                    intra.columns = intra.columns.get_level_values(0)
-                if all(c in intra.columns for c in needed):
-                    idx = pd.DatetimeIndex(intra.index)
-                    if idx.tz is None:
-                        idx = idx.tz_localize("America/New_York")
-                    else:
-                        idx = idx.tz_convert("America/New_York")
-                    today_et = pd.Timestamp.now(tz="America/New_York").date()
-                    mask = [d == today_et for d in idx.date]
-                    current = intra.loc[mask, needed].dropna(subset=["Open", "High", "Low", "Close"])
-                else:
-                    current = pd.DataFrame()
-            else:
-                current = pd.DataFrame()
-        except Exception as exc:
-            print(f"{ticker}: intradaydata niet beschikbaar; dagdata gebruikt ({exc})")
-            current = pd.DataFrame()
+        # Determine whether the NYSE regular session is actually open.
+        # The calendar also handles holidays and early closes.
+        now_et = pd.Timestamp.now(tz="America/New_York")
+        today_et = now_et.date()
+        calendar = mcal.get_calendar("NYSE")
+        schedule = calendar.schedule(start_date=today_et, end_date=today_et)
+        session_open = session_close = None
+        if not schedule.empty:
+            session_open = schedule.iloc[0]["market_open"].tz_convert("America/New_York")
+            session_close = schedule.iloc[0]["market_close"].tz_convert("America/New_York")
+        session_is_open = bool(
+            session_open is not None and session_open <= now_et < session_close
+        )
 
-        today_et = pd.Timestamp.now(tz="America/New_York").date()
+        current = pd.DataFrame()
+        if session_is_open:
+            try:
+                intra = yf.download(
+                    ticker, period="5d", interval="5m", auto_adjust=False,
+                    progress=False, threads=False, timeout=25
+                )
+                if intra is not None and not intra.empty:
+                    if isinstance(intra.columns, pd.MultiIndex):
+                        intra.columns = intra.columns.get_level_values(0)
+                    if all(c in intra.columns for c in needed):
+                        idx = pd.DatetimeIndex(intra.index)
+                        if idx.tz is None:
+                            idx = idx.tz_localize("America/New_York")
+                        else:
+                            idx = idx.tz_convert("America/New_York")
+                        mask = [d == today_et for d in idx.date]
+                        current = intra.loc[mask, needed].dropna(
+                            subset=["Open", "High", "Low", "Close"]
+                        )
+            except Exception as exc:
+                print(f"{ticker}: intradaydata niet beschikbaar; dagdata-fallback ({exc})")
+
         daily_dates = pd.DatetimeIndex(daily.index)
         if daily_dates.tz is not None:
             daily_dates = daily_dates.tz_convert("America/New_York").tz_localize(None)
         daily_dates_only = [d.date() for d in daily_dates]
         has_today_daily = bool(daily_dates_only and daily_dates_only[-1] == today_et)
 
-        if not current.empty:
-            # Exclude a possibly partial daily bar for today; aggregate 5-minute bars instead.
+        if session_is_open:
+            # The current session is incomplete: exclude its daily bar from all
+            # completed-session indicators and use 5-minute bars for the HA candle.
             completed = daily.iloc[:-1].copy() if has_today_daily else daily.copy()
-            session = pd.DataFrame([{
-                "Open": float(current["Open"].iloc[0]),
-                "High": float(current["High"].max()),
-                "Low": float(current["Low"].min()),
-                "Close": float(current["Close"].iloc[-1]),
-                "Volume": float(current["Volume"].sum()),
-            }], index=[pd.Timestamp(today_et)])
-            latest = session.iloc[0]
-            signal_frame = pd.concat([completed.tail(HA_LOOKBACK), session])
-            is_intraday = True
-        else:
-            # Yahoo daily data can contain today's still-forming bar even when
-            # intraday data is unavailable. Keep it for the current signal, but
-            # never include it in completed-session averages or volume trend.
-            if has_today_daily:
-                completed = daily.iloc[:-1].copy()
+            if not current.empty:
+                session = pd.DataFrame([{
+                    "Open": float(current["Open"].iloc[0]),
+                    "High": float(current["High"].max()),
+                    "Low": float(current["Low"].min()),
+                    "Close": float(current["Close"].iloc[-1]),
+                    "Volume": float(current["Volume"].sum()),
+                }], index=[pd.Timestamp(today_et)])
+                latest = session.iloc[0]
+                signal_frame = pd.concat([completed.tail(HA_LOOKBACK), session])
+                data_status = "OK_INTRADAY"
+            elif has_today_daily:
+                # Fallback only: Yahoo's current daily bar may still be partial.
                 latest = daily.iloc[-1]
                 signal_frame = pd.concat([completed.tail(HA_LOOKBACK), daily.tail(1)])
+                data_status = "OK_INTRADAY_FALLBACK"
             else:
-                completed = daily.copy()
-                latest = completed.iloc[-1]
-                signal_frame = completed.tail(HA_LOOKBACK)
-            is_intraday = False
+                # Do not silently label yesterday's data as current.
+                raise ValueError("lopende NYSE-sessie, maar geen actuele intraday- of dagbalk")
+        else:
+            # Outside the regular session (including after the close, holidays,
+            # weekends and early-close completion), the latest daily bar is final.
+            completed = daily.copy()
+            latest = completed.iloc[-1]
+            signal_frame = completed.tail(HA_LOOKBACK)
+            data_status = "OK"
+
+        # Guard against delayed daily data: indicators must end on the
+        # latest NYSE session that has officially closed.
+        calendar_start = today_et - pd.Timedelta(days=14)
+        recent_schedule = calendar.schedule(
+            start_date=calendar_start, end_date=today_et
+        )
+        now_utc = now_et.tz_convert("UTC")
+        closed_sessions = recent_schedule[
+            recent_schedule["market_close"] <= now_utc
+        ]
+        if closed_sessions.empty:
+            raise ValueError("geen laatst afgeronde NYSE-sessie gevonden")
+        expected_completed_date = closed_sessions.index[-1].date()
+        completed_index = pd.Timestamp(completed.index[-1])
+        if completed_index.tzinfo is not None:
+            completed_index = completed_index.tz_convert("America/New_York").tz_localize(None)
+        actual_completed_date = completed_index.date()
+        if actual_completed_date != expected_completed_date:
+            raise ValueError(
+                "dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: "
+                f"verwacht {expected_completed_date}, ontvangen {actual_completed_date}"
+            )
 
         if len(completed) < 50:
             raise ValueError("minder dan 50 afgeronde handelsdagen voor SMA50")
@@ -321,7 +382,7 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             "rvol_5_21": round(rvol_5_21, 3) if not pd.isna(rvol_5_21) else "",
             "rvol_5_21_label": rvol_label,
             "volume_trend_3d": trend,
-            "status": "OK" if not is_intraday else "OK_INTRADAY",
+            "status": data_status,
         }
     except Exception as exc:
         return unknown_row(ticker, sources, str(exc))

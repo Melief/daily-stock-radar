@@ -235,6 +235,29 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             signal_frame = completed.tail(HA_LOOKBACK)
             data_status = "OK"
 
+        # Guard against delayed daily data: indicators must end on the
+        # latest NYSE session that has officially closed.
+        calendar_start = today_et - pd.Timedelta(days=14)
+        recent_schedule = calendar.schedule(
+            start_date=calendar_start, end_date=today_et
+        )
+        now_utc = now_et.tz_convert("UTC")
+        closed_sessions = recent_schedule[
+            recent_schedule["market_close"] <= now_utc
+        ]
+        if closed_sessions.empty:
+            raise ValueError("geen laatst afgeronde NYSE-sessie gevonden")
+        expected_completed_date = closed_sessions.index[-1].date()
+        completed_index = pd.Timestamp(completed.index[-1])
+        if completed_index.tzinfo is not None:
+            completed_index = completed_index.tz_convert("America/New_York").tz_localize(None)
+        actual_completed_date = completed_index.date()
+        if actual_completed_date != expected_completed_date:
+            raise ValueError(
+                "dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: "
+                f"verwacht {expected_completed_date}, ontvangen {actual_completed_date}"
+            )
+
         if len(completed) < 50:
             raise ValueError("minder dan 50 afgeronde handelsdagen voor SMA50")
 

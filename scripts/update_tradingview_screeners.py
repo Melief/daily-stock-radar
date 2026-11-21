@@ -1,5 +1,7 @@
+import base64
 import csv
 import json
+import os
 import re
 import sys
 import urllib.parse
@@ -95,7 +97,7 @@ def save_rows(label, rows):
     return output
 
 
-def retrieve_screener(browser, label, url):
+def retrieve_screener(context, label, url):
     captured = []
     diagnostics = []
     page = None
@@ -153,7 +155,7 @@ def retrieve_screener(browser, label, url):
             print(f"TradingView network request failed {label}: {json.dumps(detail, ensure_ascii=False)}")
 
     try:
-        page = browser.new_page(viewport={"width": 1600, "height": 1000})
+        page = browser.new_page()
         page.on("response", on_response)
         page.on("requestfailed", on_request_failed)
         print(f"Openen: {label} ({url})")
@@ -189,11 +191,11 @@ def retrieve_screener(browser, label, url):
             page.close()
 
 
-def retrieve_all_screeners(browser, screeners):
+def retrieve_all_screeners(context, screeners):
     failures = []
     for label, url in screeners:
         try:
-            retrieve_screener(browser, label, url)
+            retrieve_screener(context, label, url)
         except Exception as exc:
             failures.append((label, str(exc)))
             print(f"FOUT [{label}]: {exc}", file=sys.stderr)
@@ -203,6 +205,24 @@ def retrieve_all_screeners(browser, screeners):
         raise RuntimeError(
             f"TradingView-refresh gedeeltelijk mislukt ({len(failures)}/{len(screeners)}): {details}"
         )
+
+
+def create_authenticated_context(browser):
+    """Use an optional Playwright storage-state secret; never log its contents."""
+    encoded = os.environ.get("TRADINGVIEW_STORAGE_STATE_B64", "").strip()
+    viewport = {"width": 1600, "height": 1000}
+    if not encoded:
+        print("TradingView storage-state secret ontbreekt; openbare toegang wordt getest.")
+        return browser.new_context(viewport=viewport)
+    try:
+        state_bytes = base64.b64decode(encoded, validate=True)
+        state = json.loads(state_bytes.decode("utf-8"))
+    except Exception as exc:
+        raise RuntimeError("TRADINGVIEW_STORAGE_STATE_B64 is ongeldig; verwacht base64 van Playwright storage_state JSON.") from exc
+    if not isinstance(state, dict) or not isinstance(state.get("cookies"), list):
+        raise RuntimeError("TRADINGVIEW_STORAGE_STATE_B64 bevat geen geldige Playwright storage_state.")
+    print("TradingView storage-state geladen.")
+    return browser.new_context(storage_state=state, viewport=viewport)
 
 
 def main():
@@ -222,9 +242,13 @@ def main():
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
+        context = None
         try:
-            retrieve_all_screeners(browser, screeners)
+            context = create_authenticated_context(browser)
+            retrieve_all_screeners(context, screeners)
         finally:
+            if context is not None:
+                context.close()
             browser.close()
 
 

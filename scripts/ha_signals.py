@@ -74,13 +74,14 @@ def read_source(path: Path, fmt: str) -> list[str]:
             raise ValueError(f"CSV mist een Ticker/Symbol-kolom: {path.relative_to(ROOT)}")
         result = []
         for row in reader:
-            value = (row.get("ticker") or row.get("Ticker") or row.get("symbol") or "").strip().upper()
+            normalized_row = {str(key).strip().lower(): value for key, value in row.items() if key}
+            value = (normalized_row.get("ticker") or normalized_row.get("symbol") or "").strip().upper()
             if value and value not in {"TICKER", "SYMBOL"}:
                 result.append(value)
     else:
         result = [
             token.upper()
-            for token in re.split(r"[\\s,;]+", content)
+            for token in re.split(r"[\s,;]+", content)
             if token.strip() and token.strip().upper() not in {"TICKER", "SYMBOL"}
         ]
 

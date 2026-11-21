@@ -131,7 +131,7 @@ class DsrReportTests(unittest.TestCase):
             self.assertEqual(details["status"], "FULL")
             self.assertIn("VOLLEDIGE DSR", rendered)
             self.assertFalse(details["pending_components"])
-            self.assertTrue(any("News/risk" in item for item in details["non_blocking_components"]))
+            self.assertTrue(any("News/event review" in item for item in details["non_blocking_components"]))
 
 
     def test_unknown_fundamentals_do_not_block_when_candidate_is_excluded_by_sw(self):
@@ -174,7 +174,7 @@ class DsrReportTests(unittest.TestCase):
             self.assertEqual(details["unresolved_fundamental_unknown"], [])
             self.assertIn("Fundamenteel ONBEKEND maar al uitgesloten door SW: MCK", rendered)
 
-    def test_unknown_fundamentals_still_block_when_sw_does_not_exclude(self):
+    def test_unknown_fundamentals_are_nonblocking_when_sw_does_not_exclude(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             data = root / "data"
@@ -216,7 +216,7 @@ class DsrReportTests(unittest.TestCase):
             self.assertTrue(any("Simply Wall St" in item for item in details["non_blocking_components"]))
 
 
-    def test_stale_fundamental_fallback_blocks_full_even_when_sw_excludes_one(self):
+    def test_stale_fundamental_fallback_is_nonblocking_but_not_approved(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             data = root / "data"

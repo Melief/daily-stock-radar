@@ -65,31 +65,48 @@ def read_source(path: Path, fmt: str) -> list[str]:
         raise FileNotFoundError(f"Verplicht bronbestand ontbreekt: {path.relative_to(ROOT)}")
     content = path.read_text(encoding="utf-8-sig").strip()
     if not content:
-        return []
+        raise ValueError(f"Bronbestand is leeg: {path.relative_to(ROOT)}")
+
     if fmt == "csv":
+        reader = csv.DictReader(content.splitlines())
+        fields = {field.strip().lower() for field in (reader.fieldnames or [])}
+        if not fields.intersection({"ticker", "symbol"}):
+            raise ValueError(f"CSV mist een Ticker/Symbol-kolom: {path.relative_to(ROOT)}")
         result = []
-        for row in csv.DictReader(content.splitlines()):
-            # All current DSR CSV exports use a Ticker column.
+        for row in reader:
             value = (row.get("ticker") or row.get("Ticker") or row.get("symbol") or "").strip().upper()
             if value and value not in {"TICKER", "SYMBOL"}:
                 result.append(value)
-        return result
-    return [
-        token.upper()
-        for token in re.split(r"[\s,;]+", content)
-        if token.strip() and token.strip().upper() not in {"TICKER", "SYMBOL"}
-    ]
+    else:
+        result = [
+            token.upper()
+            for token in re.split(r"[\\s,;]+", content)
+            if token.strip() and token.strip().upper() not in {"TICKER", "SYMBOL"}
+        ]
+
+    if not result:
+        raise ValueError(f"Bron bevat geen tickers: {path.relative_to(ROOT)}")
+    return result
 
 
 def load_universe():
     ticker_sources: dict[str, set[str]] = {}
     source_counts: dict[str, int] = {}
+    source_errors: dict[str, str] = {}
+
     for source_name, path, fmt in SOURCES:
-        tickers = read_source(path, fmt)
+        try:
+            tickers = read_source(path, fmt)
+        except Exception as exc:
+            source_errors[source_name] = str(exc)
+            print(f"BRONFOUT [{source_name}]: {exc}", file=sys.stderr)
+            continue
+
         source_counts[source_name] = len(set(tickers))
         for ticker in tickers:
             ticker_sources.setdefault(ticker, set()).add(source_name)
-    return ticker_sources, source_counts
+
+    return ticker_sources, source_counts, source_errors
 
 
 def make_ha(frame: pd.DataFrame):
@@ -390,18 +407,22 @@ def calculate(ticker: str, sources: set[str]) -> dict:
 
 def main() -> int:
     try:
-        ticker_sources, source_counts = load_universe()
+        ticker_sources, source_counts, source_errors = load_universe()
     except Exception as exc:
-        print(f"Broncontrole mislukt: {exc}", file=sys.stderr)
+        print(f"Bronconfiguratie mislukt: {exc}", file=sys.stderr)
         return 1
     if not ticker_sources:
-        print("Geen tickers gevonden in DSR-bronbestanden.", file=sys.stderr)
+        print("Geen bruikbare tickers uit de DSR-bronnen; analyse afgebroken.", file=sys.stderr)
         return 1
 
     print("Broncontrole:")
-    for name, count in source_counts.items():
-        print(f"  {name}: {count} unieke tickers")
+    for source_name, _, _ in SOURCES:
+        if source_name in source_errors:
+            print(f"  {source_name}: BRONFOUT")
+        else:
+            print(f"  {source_name}: {source_counts[source_name]} unieke tickers")
     print(f"Gecombineerd: {len(ticker_sources)} unieke tickers")
+    print(f"Bronfouten: {len(source_errors)}")
 
     rows = []
     for i, ticker in enumerate(sorted(ticker_sources), 1):
@@ -412,10 +433,20 @@ def main() -> int:
     results = pd.DataFrame(rows)
     results.to_csv(OUT, index=False)
 
-    # Explicit coverage audit: every ticker from every source must have a result row.
+    # Explicit coverage audit: ticker rows plus one diagnostic row for each
+    # failed source. Keep the existing four-column output schema unchanged.
     coverage_rows = []
     result_tickers = set(results["ticker"].astype(str))
     for source_name, _, _ in SOURCES:
+        if source_name in source_errors:
+            coverage_rows.append({
+                "source": source_name,
+                "ticker": "",
+                "ha_row_present": False,
+                "ha_status": f"BRONFOUT: {source_errors[source_name]}",
+            })
+            continue
+
         source_tickers = [t for t, names in ticker_sources.items() if source_name in names]
         for ticker in sorted(source_tickers):
             match = results.loc[results["ticker"] == ticker]

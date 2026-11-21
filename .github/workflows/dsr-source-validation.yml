@@ -7,6 +7,7 @@ on:
       - "scripts/ha_signals.py"
       - "scripts/market_context.py"
       - "scripts/technical_score.py"
+      - "scripts/entry_risk.py"
       - "scripts/long_fundamental_screen.py"
       - "scripts/sw_financial_health.py"
       - "scripts/dsr_schedule_guard.py"

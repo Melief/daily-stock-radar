@@ -18,12 +18,22 @@ class DsrReportTests(unittest.TestCase):
         ]
         self.assertEqual([r["ticker"] for r in report.select_long_candidates(rows)], ["AAA"])
 
-    def test_short_requires_technical_score_and_existing_sma_alignment(self):
+    def test_short_requires_close_below_both_smas_and_sma_alignment(self):
         rows = [
-            {"ticker": "AAA", "score_status": "OK", "short_score": "4", "sma20": "90", "sma50": "100"},
-            {"ticker": "BBB", "score_status": "OK", "short_score": "4", "sma20": "110", "sma50": "100"},
-            {"ticker": "CCC", "score_status": "OK", "short_score": "2", "sma20": "90", "sma50": "100"},
-            {"ticker": "DDD", "score_status": "ONBEKEND", "short_score": "5", "sma20": "90", "sma50": "100"},
+            {"ticker": "AAA", "score_status": "OK", "short_score": "4", "sma20": "90", "sma50": "100",
+             "above_sma20_completed": "False", "above_sma50_completed": "False"},
+            {"ticker": "ABOVE20", "score_status": "OK", "short_score": "5", "sma20": "90", "sma50": "100",
+             "above_sma20_completed": "True", "above_sma50_completed": "False"},
+            {"ticker": "ABOVE50", "score_status": "OK", "short_score": "5", "sma20": "90", "sma50": "100",
+             "above_sma20_completed": "False", "above_sma50_completed": "True"},
+            {"ticker": "MISALIGNED", "score_status": "OK", "short_score": "5", "sma20": "110", "sma50": "100",
+             "above_sma20_completed": "False", "above_sma50_completed": "False"},
+            {"ticker": "UNKNOWN", "score_status": "OK", "short_score": "5", "sma20": "90", "sma50": "100",
+             "above_sma20_completed": "", "above_sma50_completed": "False"},
+            {"ticker": "LOW", "score_status": "OK", "short_score": "2", "sma20": "90", "sma50": "100",
+             "above_sma20_completed": "False", "above_sma50_completed": "False"},
+            {"ticker": "BAD", "score_status": "ONBEKEND", "short_score": "5", "sma20": "90", "sma50": "100",
+             "above_sma20_completed": "False", "above_sma50_completed": "False"},
         ]
         self.assertEqual([r["ticker"] for r in report.select_short_candidates(rows)], ["AAA"])
 

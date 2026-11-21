@@ -25,7 +25,8 @@ STATUS_OUTPUT = ROOT / "data" / "long_sw_status.json"
 def load_verified_scores(path: Path = INPUT) -> dict[str, dict]:
     if not path.exists():
         raise FileNotFoundError("data/sw_financial_health.csv ontbreekt")
-    rows = list(csv.DictReader(path.open(encoding="utf-8-sig", newline="")))
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        rows = list(csv.DictReader(handle))
     required = {"ticker", "financial_health_score", "checked_at", "source_url"}
     if rows and not required.issubset(rows[0]):
         raise ValueError(f"SW-bestand mist kolommen: {sorted(required - set(rows[0]))}")

@@ -93,12 +93,12 @@ jobs:
         run: python scripts/short_borrow.py
       - name: Check candidate news, short interest and gap risk
         id: candidate_risk_news
-        if: always() && steps.sw_financial_health.outcome != 'skipped' && steps.short_borrow.outcome != 'skipped'
+        if: always() && steps.schedule.outputs.run == 'true' && steps.sw_financial_health.outcome != 'skipped' && steps.short_borrow.outcome != 'skipped'
         continue-on-error: true
         run: python scripts/candidate_risk_news.py
       - name: Build consolidated DSR report
         id: dsr_report
-        if: always() && steps.technical_score.outcome == 'success'
+        if: always() && steps.schedule.outputs.run == 'true' && steps.technical_score.outcome == 'success'
         continue-on-error: true
         run: python scripts/dsr_report.py
       - name: Commit updated signal, market context and source coverage files
@@ -108,7 +108,7 @@ jobs:
           set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for output in data/ha_signals.csv data/ha_source_coverage.csv data/dsr_source_status.csv data/dsr_run_status.json data/dsr_report_status.json data/dsr_report.md data/market_context.json data/technical_scores.csv data/technical_score_status.json data/short_borrow.csv data/short_borrow_status.json data/long_fundamentals.csv data/long_fundamental_status.json data/long_sw_status.csv data/long_sw_status.json data/candidate_risk_news.csv data/candidate_risk_news_status.json data/dsr_report.md data/dsr_report_status.json; do
+          for output in data/ha_signals.csv data/ha_source_coverage.csv data/dsr_source_status.csv data/dsr_run_status.json data/dsr_report_status.json data/dsr_report.md data/market_context.json data/technical_scores.csv data/technical_score_status.json data/short_borrow.csv data/short_borrow_status.json data/long_fundamentals.csv data/long_fundamental_status.json data/long_sw_status.csv data/long_sw_status.json data/candidate_risk_news.csv data/candidate_risk_news_status.json; do
             if [ -f "$output" ]; then git add "$output"; fi
           done
           if git diff --cached --quiet; then
@@ -160,5 +160,5 @@ jobs:
       - name: Mark partial DSR pipeline as failed
         if: steps.schedule.outputs.run == 'true' && (steps.calculate.outcome == 'failure' || steps.market_context.outcome == 'failure' || steps.technical_score.outcome == 'failure' || steps.short_borrow.outcome == 'failure' || steps.long_fundamentals.outcome == 'failure' || steps.sw_financial_health.outcome == 'failure' || steps.candidate_risk_news.outcome == 'failure' || steps.dsr_report.outcome == 'failure')
         run: |
-          echo "HA pipeline is PARTIAL: source freshness, source coverage, ticker analysis, market context, technical scoring, Long fundamentals, SW Financial Health or IBKR borrow data is incomplete. See status files and outputs."
+          echo "HA pipeline is PARTIAL: source freshness, source coverage, market context, Long/Short screening, SW, borrow, news/risk or report controls are incomplete. See status files and outputs."
           exit 1

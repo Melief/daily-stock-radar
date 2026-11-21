@@ -25,6 +25,7 @@ on:
       - "scripts/ha_signals.py"
       - "scripts/source_status.py"
       - "data/dsr_ticker_sources.json"
+      - "data/source_status/*.json"
 
 permissions:
   contents: write

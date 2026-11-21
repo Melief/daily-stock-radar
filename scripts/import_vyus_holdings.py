@@ -106,11 +106,6 @@ def write_tickers_csv(tickers, output_file=OUTPUT_FILE):
 
 
 def main():
-    endpoint = os.environ.get("VYUS_GS_WEBAPP_URL", "").strip()
-    secret = os.environ.get("VYUS_GS_SECRET", "").strip()
-    if not endpoint or not secret:
-        raise RuntimeError("Missing GitHub variable VYUS_GS_WEBAPP_URL or secret VYUS_GS_SECRET.")
-
     print("VYUS stage 1/3: fetching and parsing StockAnalysis holdings.", flush=True)
     try:
         tickers = fetch_tickers()
@@ -121,6 +116,16 @@ def main():
     # The DSR CSV is written before the independent Sheets sync. A Sheets
     # outage must not discard a successfully retrieved source refresh.
     write_tickers_csv(tickers)
+
+    # Google Sheets is a separate downstream destination. Missing Sheets
+    # credentials must not prevent a valid DSR source CSV from being refreshed.
+    endpoint = os.environ.get("VYUS_GS_WEBAPP_URL", "").strip()
+    secret = os.environ.get("VYUS_GS_SECRET", "").strip()
+    if not endpoint or not secret:
+        raise RuntimeError(
+            "VYUS CSV refreshed, but Google Sheets sync skipped: "
+            "missing VYUS_GS_WEBAPP_URL or VYUS_GS_SECRET."
+        )
 
     payload = json.dumps({"secret": secret, "tickers": tickers}).encode("utf-8")
     req = Request(endpoint, data=payload, headers={"Content-Type": "application/json"}, method="POST")

@@ -148,5 +148,30 @@ class LoadUniverseTests(unittest.TestCase):
             self.assertFalse(status_rows[0]["included"])
 
 
+
+class DSRRunStatusTests(unittest.TestCase):
+    def test_source_and_analysis_completeness_are_reported_separately(self):
+        import json
+
+        with tempfile.TemporaryDirectory(dir=ha_signals.ROOT) as temp:
+            output = Path(temp) / "dsr_run_status.json"
+            with patch.object(ha_signals, "RUN_STATUS_OUT", output):
+                ha_signals.write_run_status(
+                    "PARTIAL",
+                    [{"source": "Finviz", "status": "STALE_FALLBACK"}],
+                    4,
+                    {},
+                    {"Finviz": "STALE_FALLBACK"},
+                    missing_rows=0,
+                    unknown_tickers=2,
+                )
+            payload = json.loads(output.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["status"], "PARTIAL")
+        self.assertEqual(payload["source_status"], "PARTIAL")
+        self.assertEqual(payload["analysis_status"], "PARTIAL")
+        self.assertEqual(payload["unknown_market_data_tickers"], 2)
+
+
 if __name__ == "__main__":
     unittest.main()

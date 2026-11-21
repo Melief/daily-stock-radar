@@ -168,9 +168,25 @@ class DSRRunStatusTests(unittest.TestCase):
             payload = json.loads(output.read_text(encoding="utf-8"))
 
         self.assertEqual(payload["status"], "PARTIAL")
+        self.assertEqual(payload["ha_pipeline_status"], "PARTIAL")
         self.assertEqual(payload["source_status"], "PARTIAL")
         self.assertEqual(payload["analysis_status"], "PARTIAL")
         self.assertEqual(payload["unknown_market_data_tickers"], 2)
+
+
+
+    def test_ha_pipeline_full_does_not_claim_full_dsr_before_required_components_exist(self):
+        import json
+
+        with tempfile.TemporaryDirectory(dir=ha_signals.ROOT) as temp:
+            output = Path(temp) / "dsr_run_status.json"
+            with patch.object(ha_signals, "RUN_STATUS_OUT", output):
+                ha_signals.write_run_status("FULL", [], 5, {}, {}, 0, 0)
+            payload = json.loads(output.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["ha_pipeline_status"], "FULL")
+        self.assertEqual(payload["status"], "PARTIAL")
+        self.assertTrue(payload["pending_components"])
 
 
 if __name__ == "__main__":

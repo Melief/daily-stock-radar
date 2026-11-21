@@ -1,7 +1,7 @@
 {
   "source_id": "follow_thrue",
   "last_attempt_status": "failure",
-  "last_attempt_at": "2026-11-21T18:49:10+00:00",
+  "last_attempt_at": "2026-11-21T18:53:14+00:00",
   "last_success_at": "2026-11-08T07:46:03+00:00",
-  "detail": "TradingView returned rows but ticker fields could not be parsed; last validated CSV restored."
+  "detail": "Follow Thrue: TradingView retourneerde 17 rijen maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden."
 }

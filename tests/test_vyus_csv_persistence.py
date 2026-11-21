@@ -1,9 +1,10 @@
 """Unit tests for the scheduled VYUS CSV persistence."""
 import csv
+import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from scripts import import_vyus_holdings as vyus
 
@@ -23,31 +24,68 @@ class VYUSCsvTests(unittest.TestCase):
     def test_rejects_incomplete_or_duplicate_holdings_without_overwriting(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "vyus_tickers.csv"
-            output.write_text("ticker\nOLD\n", encoding="utf-8")
+            output.write_text("ticker\\nOLD\\n", encoding="utf-8")
             with self.assertRaises(ValueError):
                 vyus.write_tickers_csv(["AAPL"] * 25, output)
-            self.assertEqual(output.read_text(encoding="utf-8"), "ticker\nOLD\n")
+            self.assertEqual(output.read_text(encoding="utf-8"), "ticker\\nOLD\\n")
 
 
 class VYUSMainTests(unittest.TestCase):
+    def _environment(self):
+        return patch.dict("os.environ", {
+            "VYUS_GS_WEBAPP_URL": "https://example.test",
+            "VYUS_GS_SECRET": "test-secret",
+        })
+
     def test_csv_is_persisted_before_sheets_post(self):
         tickers = [f"T{i:02d}" for i in range(25)]
-        with (
-            patch.dict("os.environ", {
-                "VYUS_GS_WEBAPP_URL": "https://example.test",
-                "VYUS_GS_SECRET": "test-secret",
-            }),
-            patch.object(vyus, "fetch_tickers", return_value=tickers),
-            patch.object(vyus, "write_tickers_csv") as write_csv,
-            patch.object(vyus, "urlopen") as urlopen,
-        ):
-            response = urlopen.return_value.__enter__.return_value
-            response.read.return_value = b'{"success": true, "count": 25, "sheet": "VYUS"}'
-            vyus.main()
+        events = []
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "vyus_tickers.csv"
 
-        write_csv.assert_called_once_with(tickers)
-        self.assertTrue(write_csv.call_args_list[0] is not None)
-        urlopen.assert_called_once()
+            def persist(values):
+                events.append("csv")
+                vyus.write_tickers_csv(values, output)
+
+            response = MagicMock()
+            response.__enter__.return_value.read.return_value = json.dumps({
+                "success": True, "count": 25, "sheet": "VYUS"
+            }).encode()
+
+            def post(request, timeout):
+                events.append("sheets")
+                self.assertTrue(output.exists())
+                return response
+
+            with (
+                self._environment(),
+                patch.object(vyus, "fetch_tickers", return_value=tickers),
+                patch.object(vyus, "OUTPUT_FILE", output),
+                patch.object(vyus, "write_tickers_csv", side_effect=persist),
+                patch.object(vyus, "urlopen", side_effect=post),
+            ):
+                vyus.main()
+
+            self.assertEqual(events, ["csv", "sheets"])
+            with output.open(newline="", encoding="utf-8") as handle:
+                self.assertEqual(len(list(csv.DictReader(handle))), 25)
+
+    def test_validated_csv_remains_when_sheets_post_fails(self):
+        tickers = [f"T{i:02d}" for i in range(25)]
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "vyus_tickers.csv"
+            with (
+                self._environment(),
+                patch.object(vyus, "fetch_tickers", return_value=tickers),
+                patch.object(vyus, "OUTPUT_FILE", output),
+                patch.object(vyus, "urlopen", side_effect=OSError("Sheets unavailable")),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "Google Apps Script POST stage failed"):
+                    vyus.main()
+
+            with output.open(newline="", encoding="utf-8") as handle:
+                rows = list(csv.DictReader(handle))
+            self.assertEqual([row["ticker"] for row in rows], tickers)
 
 
 if __name__ == "__main__":

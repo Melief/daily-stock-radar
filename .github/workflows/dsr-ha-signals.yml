@@ -13,6 +13,7 @@ on:
       - "Refresh Finviz tickers and sync to Google Sheets"
       - "Update TradingView screener tickers"
       - "VYUS holdings to CSV"
+      - "Import VYUS Top 25 Holdings"
     types: [completed]
     branches: [main]
   push:

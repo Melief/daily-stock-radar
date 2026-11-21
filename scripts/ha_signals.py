@@ -413,7 +413,24 @@ def main() -> int:
         print(f"Bronconfiguratie mislukt: {exc}", file=sys.stderr)
         return 1
     if not ticker_sources:
-        print("Geen bruikbare tickers uit de DSR-bronnen; analyse afgebroken.", file=sys.stderr)
+        # Persist an empty but schema-compatible signal file and one error row
+        # per failed source, so a fully unavailable source set is still diagnosable.
+        empty_columns = list(unknown_row("", set(), "").keys())
+        pd.DataFrame(columns=empty_columns).to_csv(OUT, index=False)
+        coverage_rows = [
+            {
+                "source": source_name,
+                "ticker": "",
+                "ha_row_present": False,
+                "ha_status": f"BRONFOUT: {source_errors.get(source_name, 'geen tickers beschikbaar')}",
+            }
+            for source_name, _, _ in SOURCES
+        ]
+        pd.DataFrame(
+            coverage_rows,
+            columns=["source", "ticker", "ha_row_present", "ha_status"],
+        ).to_csv(COVERAGE_OUT, index=False)
+        print("Geen bruikbare tickers uit de DSR-bronnen; lege uitvoer en bronfouten opgeslagen.", file=sys.stderr)
         return 1
 
     print("Broncontrole:")

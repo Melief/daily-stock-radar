@@ -26,31 +26,55 @@ def save_rows(label, rows):
     output = DATA_DIR / f"{slug}_tickers.csv"
     retrieved_at = datetime.now(ZoneInfo("Europe/Amsterdam")).isoformat(timespec="seconds")
     parsed = []
+
+    def add_symbol(symbol, description="", exchange=""):
+        symbol = str(symbol or "").strip()
+        if not symbol:
+            return
+        if ":" in symbol:
+            exchange, ticker = symbol.split(":", 1)
+        else:
+            ticker = symbol
+        ticker = ticker.strip().upper()
+        if not ticker or ticker in {"TICKER", "SYMBOL", "NONE", "NAN"}:
+            return
+        parsed.append([ticker, str(exchange or "").strip(), symbol, str(description or "").strip(), retrieved_at])
+
     for row in rows:
+        if isinstance(row, str):
+            add_symbol(row)
+            continue
         if not isinstance(row, dict):
             continue
-        symbol = str(row.get("s") or row.get("symbol") or row.get("ticker") or "").strip()
-        ticker = symbol.split(":")[-1] if symbol else ""
-        exchange = symbol.split(":")[0] if ":" in symbol else str(row.get("exchange") or "").strip()
-        values = row.get("d") or row.get("description") or row.get("fields") or []
-        description = ""
-        if isinstance(values, dict):
-            description = values.get("description") or values.get("short_name") or values.get("name") or ""
-            ticker = values.get("name") or ticker
-            exchange = values.get("exchange") or exchange
-        elif isinstance(values, list):
-            description = next((str(v) for v in values if isinstance(v, str) and v.strip()
-                                and v.strip().upper() not in {ticker.upper(), exchange.upper(), symbol.upper()}
-                                and v.strip().upper() not in {"NASDAQ", "NYSE", "AMEX", "ARCA", "BATS", "USA", "US"}), "")
-        if ticker:
-            parsed.append([ticker, exchange, symbol, description, retrieved_at])
-    if not parsed:
-        raise RuntimeError(f"{label}: TradingView retourneerde {len(rows)} rijen maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden.")
+        symbol = row.get("s") or row.get("symbol") or row.get("ticker") or ""
+        if symbol:
+            add_symbol(symbol, row.get("description", ""), row.get("exchange", ""))
+            continue
+        raw_values = row.get("rawValues")
+        if isinstance(raw_values, list):
+            for value in raw_values:
+                if isinstance(value, dict):
+                    name = value.get("name") or value.get("symbol") or value.get("ticker")
+                    exchange = value.get("exchange", "")
+                    if name:
+                        add_symbol(f"{exchange}:{name}" if exchange else name,
+                                   value.get("description", ""), exchange)
+
+    # Remove duplicates without changing the source's ordering.
+    unique = []
+    seen = set()
+    for item in parsed:
+        key = item[0]
+        if key not in seen:
+            seen.add(key)
+            unique.append(item)
+    if not unique:
+        raise RuntimeError(f"{label}: TradingView retourneerde {len(rows)} records maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden.")
     with output.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f)
         writer.writerow(["ticker", "exchange", "symbol", "description", "retrieved_at"])
-        writer.writerows(parsed)
-    print(f"{label}: {len(parsed)} gevalideerde tickers -> {output.relative_to(ROOT)}")
+        writer.writerows(unique)
+    print(f"{label}: {len(unique)} gevalideerde tickers -> {output.relative_to(ROOT)}")
     return output
 
 
@@ -73,16 +97,24 @@ def retrieve_screener(browser, label, url):
             if isinstance(payload, dict):
                 detail["keys"] = sorted(payload.keys())[:20]
                 rows = payload.get("data", [])
+                symbols = payload.get("symbols", [])
                 if isinstance(rows, list):
                     detail["row_count"] = len(rows)
+                    detail["symbols_count"] = len(symbols) if isinstance(symbols, list) else None
+                    detail["symbols_preview"] = json.dumps(symbols[:25], ensure_ascii=False, default=str)[:1800] if isinstance(symbols, list) else str(type(symbols).__name__)
                     if rows:
                         detail["first_row_type"] = type(rows[0]).__name__
                         if isinstance(rows[0], dict):
                             detail["first_row_keys"] = sorted(rows[0].keys())[:30]
                         detail["first_row_preview"] = json.dumps(rows[0], ensure_ascii=False, default=str)[:1400]
-                        symbols = payload.get("symbols")
-                        if symbols:
-                            detail["symbols_preview"] = json.dumps(symbols[0], ensure_ascii=False, default=str)[:500] if isinstance(symbols, list) else str(type(symbols).__name__)
+                        detail["raw_values_summary"] = [
+                            {"id": item.get("id"), "count": len(item.get("rawValues", [])),
+                             "names": [v.get("name") for v in item.get("rawValues", [])[:8] if isinstance(v, dict)]}
+                            for item in rows[:5] if isinstance(item, dict)
+                        ]
+                    if isinstance(symbols, list) and symbols:
+                        captured.append(symbols)
+                    elif rows:
                         captured.append(rows)
                 else:
                     detail["data_type"] = type(rows).__name__
@@ -108,6 +140,12 @@ def retrieve_screener(browser, label, url):
         response = page.goto(url, wait_until="domcontentloaded", timeout=90000)
         print(f"HTTP-status {label}: {response.status if response else 'geen response'}")
         page.wait_for_timeout(18000)
+        try:
+            visible_text = page.locator("body").inner_text(timeout=5000)
+        except Exception as exc:
+            visible_text = f"body niet leesbaar: {exc}"
+        print(f"TradingView page summary {label}: title={page.title()!r}; "
+              f"url={urllib.parse.urlsplit(page.url).path}; body={visible_text[:1400]!r}")
         if not captured:
             try:
                 body_text = page.locator("body").inner_text(timeout=5000)

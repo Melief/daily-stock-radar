@@ -4,32 +4,49 @@
     {
       "name": "Sector Top Tickers",
       "path": "tickers.txt",
-      "format": "whitespace"
+      "format": "whitespace",
+      "id": "sector_top_tickers",
+      "refresh_mode": "manual"
     },
     {
       "name": "FV Momentum Darvas",
       "path": "finviz_tickers.csv",
-      "format": "csv"
+      "format": "csv",
+      "id": "fv_momentum_darvas",
+      "refresh_mode": "automatic",
+      "max_age_hours": 96
     },
     {
       "name": "Simpel Monsters",
       "path": "data/simpel_monsters_tickers.csv",
-      "format": "csv"
+      "format": "csv",
+      "id": "simpel_monsters",
+      "refresh_mode": "automatic",
+      "max_age_hours": 96
     },
     {
       "name": "Follow Thrue",
       "path": "data/follow_thrue_tickers.csv",
-      "format": "csv"
+      "format": "csv",
+      "id": "follow_thrue",
+      "refresh_mode": "automatic",
+      "max_age_hours": 96
     },
     {
       "name": "VYUS holdings",
       "path": "data/vyus_tickers.csv",
-      "format": "csv"
+      "format": "csv",
+      "id": "vyus_holdings",
+      "refresh_mode": "automatic",
+      "max_age_hours": 96
     },
     {
       "name": "Blue Sky",
       "path": "data/blue_sky_tickers.csv",
-      "format": "csv"
+      "format": "csv",
+      "id": "blue_sky",
+      "refresh_mode": "automatic",
+      "max_age_hours": 96
     }
   ],
   "excluded_indicators": [

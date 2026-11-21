@@ -81,7 +81,7 @@ Gebruik de meest recente voltooide sessie. Maak duidelijk wanneer een marktindic
 - De afzonderlijke indicator voor drie opeenvolgende dagen stijgend volume blijft apart staan. RSI verlaagt de technische score niet.
 - Sector en industry worden per ticker vermeld.
 - 52-weeks high en ATH zijn afzonderlijke referenties; gebruik split-aangepaste gegevens en vermeld ONBEKEND als betrouwbare verificatie ontbreekt.
-- 52-week high/low wordt berekend uit de laatste 252 voltooide handelsdagen; ATH uit de volledige beschikbare split-adjusted High-reeks. Toon afstand tot 52-week high en ATH afzonderlijk. Bij minder dan 252 sessies blijft de 52-weekwaarde ONBEKEND; een beschikbare ATH kan afzonderlijk worden getoond.
+- 52-week high/low wordt berekend uit de 252 voltooide handelsdagen vóór de laatste sessie; ATH uit de volledige beschikbare split-adjusted High-reeks vóór de laatste sessie. De laatste slotkoers wordt met deze voorafgaande referenties vergeleken, zodat een uitbraak boven 100% zichtbaar blijft. Toon afstand tot 52-week high en ATH afzonderlijk. Bij minder dan 252 sessies blijft de 52-weekwaarde ONBEKEND; een beschikbare ATH kan afzonderlijk worden getoond.
 - 52-weeks-high-balk: groen >100%, oranje 95–100%, rood <95%.
 - ATH-balk: groen >=90%, oranje 85–<90%, rood <85%.
 

@@ -488,13 +488,15 @@ def calculate(ticker: str, sources: set[str]) -> dict:
 
 def main() -> int:
     try:
-        ticker_sources, source_counts, source_errors = load_universe()
+        ticker_sources, source_counts, source_errors, source_warnings, source_status_rows = load_universe(
+            include_status=True
+        )
     except Exception as exc:
         print(f"Bronconfiguratie mislukt: {exc}", file=sys.stderr)
         return 1
+
+    write_source_status(source_status_rows)
     if not ticker_sources:
-        # Persist an empty but schema-compatible signal file and one error row
-        # per failed source, so a fully unavailable source set is still diagnosable.
         empty_columns = list(unknown_row("", set(), "").keys())
         pd.DataFrame(columns=empty_columns).to_csv(OUT, index=False)
         coverage_rows = [
@@ -510,17 +512,20 @@ def main() -> int:
             coverage_rows,
             columns=["source", "ticker", "ha_row_present", "ha_status"],
         ).to_csv(COVERAGE_OUT, index=False)
-        print("Geen bruikbare tickers uit de DSR-bronnen; lege uitvoer en bronfouten opgeslagen.", file=sys.stderr)
+        write_run_status("PARTIAL", source_status_rows, 0, source_errors, source_warnings)
+        print("Geen bruikbare tickers uit de DSR-bronnen; lege uitvoer en bronstatus opgeslagen.", file=sys.stderr)
         return 1
 
     print("Broncontrole:")
     for source_name, _, _ in SOURCES:
         if source_name in source_errors:
-            print(f"  {source_name}: BRONFOUT")
+            print(f"  {source_name}: UITGESLOTEN")
+        elif source_name in source_warnings:
+            print(f"  {source_name}: {source_warnings[source_name]}")
         else:
             print(f"  {source_name}: {source_counts[source_name]} unieke tickers")
     print(f"Gecombineerd: {len(ticker_sources)} unieke tickers")
-    print(f"Bronfouten: {len(source_errors)}")
+    print(f"Bronfouten: {len(source_errors)}; bronwaarschuwingen: {len(source_warnings)}")
 
     rows = []
     for i, ticker in enumerate(sorted(ticker_sources), 1):
@@ -531,8 +536,7 @@ def main() -> int:
     results = pd.DataFrame(rows)
     results.to_csv(OUT, index=False)
 
-    # Explicit coverage audit: ticker rows plus one diagnostic row for each
-    # failed source. Keep the existing four-column output schema unchanged.
+    # Preserve the established four-column ticker coverage schema.
     coverage_rows = []
     result_tickers = set(results["ticker"].astype(str))
     for source_name, _, _ in SOURCES:
@@ -560,15 +564,21 @@ def main() -> int:
     ok = int(results["status"].astype(str).str.startswith("OK").sum())
     unknown = len(results) - ok
     missing = len(ticker_sources) - len(result_tickers)
+    partial = bool(source_errors or source_warnings or missing)
+    run_state = "PARTIAL" if partial else "FULL"
+    write_run_status(run_state, source_status_rows, len(ticker_sources),
+                     source_errors, source_warnings, missing)
     print(
         f"Controle voltooid: {ok} tickers OK, {unknown} ONBEKEND, "
         f"{missing} ontbrekende HA-rijen. Totaal {len(ticker_sources)} unieke tickers."
     )
+    print(f"DSR-status: {run_state}")
     print(f"HA-uitvoer: {OUT}")
     print(f"Broncontrole: {COVERAGE_OUT}")
-    # A failed source or missing result row makes this run PARTIAL.
-    # Unknown market data remains visible in the output and does not change source coverage.
-    return 1 if source_errors or missing else 0
+    print(f"Bronactualiteit: {SOURCE_STATUS_OUT}")
+    # Existing market-data ONBEKEND rows remain visible; source freshness errors
+    # and missing HA rows make the overall run PARTIAL.
+    return 1 if partial else 0
 
 
 if __name__ == "__main__":

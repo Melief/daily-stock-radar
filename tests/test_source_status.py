@@ -62,5 +62,41 @@ class SourceStatusTests(unittest.TestCase):
         self.assertTrue(result["partial"])
 
 
+    def test_missing_attempt_timestamp_is_unknown(self):
+        path = self.directory / "finviz.json"
+        path.write_text(json.dumps({
+            "source_id": "finviz",
+            "last_attempt_status": "success",
+            "last_success_at": self.now.isoformat(),
+        }), encoding="utf-8")
+        result = evaluate_status("finviz", "automatic", 24, self.directory, self.now)
+        self.assertEqual(result["status"], "UNKNOWN")
+        self.assertTrue(result["partial"])
+
+    def test_future_attempt_timestamp_is_unknown(self):
+        record_status("finviz", "success", status_dir=self.directory, now=self.now + timedelta(hours=1))
+        result = evaluate_status("finviz", "automatic", 24, self.directory, self.now)
+        self.assertEqual(result["status"], "UNKNOWN")
+        self.assertTrue(result["partial"])
+
+    def test_attempt_before_success_timestamp_is_unknown(self):
+        path = self.directory / "finviz.json"
+        path.write_text(json.dumps({
+            "source_id": "finviz",
+            "last_attempt_status": "failure",
+            "last_attempt_at": (self.now - timedelta(hours=2)).isoformat(),
+            "last_success_at": (self.now - timedelta(hours=1)).isoformat(),
+        }), encoding="utf-8")
+        result = evaluate_status("finviz", "automatic", 24, self.directory, self.now)
+        self.assertEqual(result["status"], "UNKNOWN")
+
+    def test_corrupt_status_is_not_overwritten_and_last_success_is_not_lost(self):
+        path = self.directory / "finviz.json"
+        path.write_text("{bad", encoding="utf-8")
+        with self.assertRaises(json.JSONDecodeError):
+            record_status("finviz", "failure", "refresh failed", self.directory, self.now)
+        self.assertEqual(path.read_text(encoding="utf-8"), "{bad")
+
+
 if __name__ == "__main__":
     unittest.main()

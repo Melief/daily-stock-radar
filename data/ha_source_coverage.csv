@@ -35,8 +35,8 @@ FV Momentum Darvas,DGX,True,OK
 FV Momentum Darvas,KNSA,True,OK
 FV Momentum Darvas,LH,True,OK
 FV Momentum Darvas,VLTO,True,OK
-Simpel Monsters,,False,BRONFOUT: FAILED: Geen scannerresultaten ontvangen voor 'Simpel Monsters'. CSV is niet overschreven.
-Follow Thrue,,False,BRONFOUT: FAILED: Geen scannerresultaten ontvangen voor 'Follow Thrue'. CSV is niet overschreven.
+Simpel Monsters,,False,BRONFOUT: STALE: Last verified successful TradingView refresh: GitHub Actions run 42460044048. Latest refresh failed: no /global/scan results received; prior CSV retained. | Laatste succesvolle refresh ouder dan 96 uur.
+Follow Thrue,,False,BRONFOUT: STALE: Last verified successful TradingView refresh: GitHub Actions run 42460044048. Latest refresh failed: no /global/scan results received; prior CSV retained. | Laatste succesvolle refresh ouder dan 96 uur.
 VYUS holdings,ADBE,True,OK
 VYUS holdings,CART,True,OK
 VYUS holdings,COKE,True,OK

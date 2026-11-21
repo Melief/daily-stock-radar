@@ -13,17 +13,17 @@
     "Fundamentele gegevens ontbreken voor een of meer Long-kandidaten.",
     "SW Financial Health ontbreekt voor een of meer Long-kandidaten."
   ],
-  "generated_at": "2026-11-21T17:52:55+00:00",
+  "generated_at": "2026-11-21T17:55:18+00:00",
   "unique_tickers": 67,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
   "source_errors": {
-    "Simpel Monsters": "FAILED: Geen scannerresultaten ontvangen voor 'Simpel Monsters'. CSV is niet overschreven.",
-    "Follow Thrue": "FAILED: Geen scannerresultaten ontvangen voor 'Follow Thrue'. CSV is niet overschreven."
+    "Simpel Monsters": "STALE: Last verified successful TradingView refresh: GitHub Actions run 42460044048. Latest refresh failed: no /global/scan results received; prior CSV retained. | Laatste succesvolle refresh ouder dan 96 uur.",
+    "Follow Thrue": "STALE: Last verified successful TradingView refresh: GitHub Actions run 42460044048. Latest refresh failed: no /global/scan results received; prior CSV retained. | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "source_warnings": {
-    "Simpel Monsters": "FAILED: Geen scannerresultaten ontvangen voor 'Simpel Monsters'. CSV is niet overschreven.",
-    "Follow Thrue": "FAILED: Geen scannerresultaten ontvangen voor 'Follow Thrue'. CSV is niet overschreven."
+    "Simpel Monsters": "STALE: Last verified successful TradingView refresh: GitHub Actions run 42460044048. Latest refresh failed: no /global/scan results received; prior CSV retained. | Laatste succesvolle refresh ouder dan 96 uur.",
+    "Follow Thrue": "STALE: Last verified successful TradingView refresh: GitHub Actions run 42460044048. Latest refresh failed: no /global/scan results received; prior CSV retained. | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "missing_ha_rows": 0,
   "market_context_status": "FULL",

@@ -13,6 +13,8 @@ from zoneinfo import ZoneInfo
 
 import pandas as pd
 
+from scripts.selection_rules import is_qualified_short_candidate
+
 ROOT = Path(__file__).resolve().parents[1]
 SCORES = ROOT / "data" / "technical_scores.csv"
 OUTPUT = ROOT / "data" / "short_borrow.csv"
@@ -85,17 +87,10 @@ def qualified_short_candidates(path: Path = SCORES) -> list[str]:
     if not path.exists():
         raise FileNotFoundError("technical_scores.csv ontbreekt")
     data = pd.read_csv(path, dtype={"ticker": str})
-    required = {"ticker", "score_status", "short_score", "sma20", "sma50"}
+    required = {"ticker", "score_status", "short_score", "sma20", "sma50", "above_sma20_completed", "above_sma50_completed"}
     if not required.issubset(data.columns):
         raise ValueError(f"technical_scores.csv mist kolommen: {sorted(required - set(data.columns))}")
-    data["short_score"] = pd.to_numeric(data["short_score"], errors="coerce")
-    data["sma20"] = pd.to_numeric(data["sma20"], errors="coerce")
-    data["sma50"] = pd.to_numeric(data["sma50"], errors="coerce")
-    eligible = data[
-        (data["score_status"] == "OK")
-        & (data["short_score"] >= 3)
-        & (data["sma20"] < data["sma50"])
-    ]
+    eligible = data[data.apply(is_qualified_short_candidate, axis=1)]
     return sorted(set(eligible["ticker"].dropna().str.strip().str.upper()))
 
 

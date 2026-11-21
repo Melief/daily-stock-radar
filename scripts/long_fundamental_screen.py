@@ -95,9 +95,6 @@ def load_candidates(path: Path = SCORES) -> pd.DataFrame:
         data[column] = pd.to_numeric(data[column], errors="coerce")
     above_sma20 = data.get("above_sma20_completed", pd.Series(index=data.index, dtype="object"))
     above_sma50 = data.get("above_sma50_completed", pd.Series(index=data.index, dtype="object"))
-    if above_sma20.isna().any() or above_sma50.isna().any():
-        # Missing trend inputs must not pass the Long pre-screen.
-        pass
     return data[
         (data["score_status"] == "OK")
         & (data["long_score"] >= 3)

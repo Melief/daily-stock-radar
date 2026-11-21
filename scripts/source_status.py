@@ -91,15 +91,23 @@ def evaluate_status(
         data = json.loads(path.read_text(encoding="utf-8"))
         if data.get("source_id") != source_id:
             raise ValueError("Source id mismatch in status file.")
+        if not isinstance(data, dict) or data.get("source_id") != source_id:
+            raise ValueError("Source id mismatch or invalid status payload.")
         last_success = parse_timestamp(data.get("last_success_at"))
         last_attempt = parse_timestamp(data.get("last_attempt_at"))
         attempt_status = data.get("last_attempt_status")
         if attempt_status not in {"success", "failure"}:
             raise ValueError("Invalid last_attempt_status.")
+        if last_attempt is None:
+            raise ValueError("Missing last_attempt_at.")
         if last_success is None and attempt_status == "success":
             raise ValueError("Successful refresh has no last_success_at.")
         if last_success and last_success > now + timedelta(minutes=5):
             raise ValueError("last_success_at is in the future.")
+        if last_attempt > now + timedelta(minutes=5):
+            raise ValueError("last_attempt_at is in the future.")
+        if last_success and last_attempt < last_success:
+            raise ValueError("last_attempt_at predates last_success_at.")
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         return {
             "source_id": source_id, "status": "UNKNOWN", "include": True,

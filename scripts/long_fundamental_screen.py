@@ -29,6 +29,12 @@ def number(value):
         return None
 
 
+def has_usable_fundamental_data(info: dict) -> bool:
+    """Detect an empty Yahoo quoteSummary response rather than treating it as valid missing fields."""
+    keys = ("marketCap", "averageVolume", "operatingMargins", "returnOnEquity", "revenueGrowth", "debtToEquity")
+    return any(number(info.get(key)) is not None for key in keys)
+
+
 def evaluate_fundamentals(info: dict, sector: str = "", industry: str = "") -> dict:
     """Return explicit PASS/FAIL/UNKNOWN checks; Yahoo D/E is reported in percent."""
     market_cap = number(info.get("marketCap"))
@@ -109,6 +115,60 @@ def write_status(payload: dict):
     temporary.replace(STATUS_OUTPUT)
 
 
+
+def build_stale_fallback_rows(candidates, previous_rows, checked_at, reason):
+    previous = {str(row.get("ticker", "")).strip().upper(): dict(row)
+                for row in previous_rows if str(row.get("ticker", "")).strip()}
+    output = []
+    for _, candidate in candidates.reset_index(drop=True).iterrows():
+        ticker = str(candidate["ticker"]).strip().upper()
+        row = previous.get(ticker)
+        if row is not None:
+            row["sources"] = candidate.get("sources", "")
+            row["sector"] = candidate.get("sector", "") or "ONBEKEND"
+            row["industry"] = candidate.get("industry", "") or "ONBEKEND"
+            row["technical_score"] = int(candidate["long_score"])
+            row["score_date"] = candidate.get("score_date", "")
+            previous_source = str(row.get("data_source", "Yahoo Finance quoteSummary"))
+            row["data_source"] = previous_source if "STALE_FALLBACK" in previous_source else f"{previous_source} (STALE_FALLBACK)"
+            row["error"] = reason
+        else:
+            row = {
+                "ticker": ticker, "sources": candidate.get("sources", ""),
+                "sector": candidate.get("sector", "") or "ONBEKEND",
+                "industry": candidate.get("industry", "") or "ONBEKEND",
+                "technical_score": int(candidate["long_score"]),
+                "score_date": candidate.get("score_date", ""),
+                "fundamental_status": "UNKNOWN",
+                "checks": {"market_cap": "UNKNOWN", "average_volume": "UNKNOWN",
+                           "operating_margin": "UNKNOWN", "roe": "UNKNOWN",
+                           "revenue_growth": "UNKNOWN", "debt_to_equity": "UNKNOWN"},
+                "checked_at": checked_at,
+                "data_source": "Yahoo Finance quoteSummary (STALE_FALLBACK)",
+                "error": reason,
+            }
+        output.append(row)
+    return output
+
+
+def write_rows(rows, columns):
+    output_rows = []
+    for row in rows:
+        clean = dict(row)
+        if not isinstance(clean.get("checks"), str):
+            clean["checks"] = json.dumps(clean.get("checks", {}), ensure_ascii=False)
+        output_rows.append(clean)
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(output_rows, columns=columns).to_csv(OUTPUT, index=False)
+
+
+def read_status_file():
+    try:
+        return json.loads(STATUS_OUTPUT.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
 def main() -> int:
     try:
         candidates = load_candidates()
@@ -119,10 +179,15 @@ def main() -> int:
 
     rows, errors = [], []
     checked_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    previous_rows = (pd.read_csv(OUTPUT, dtype={"ticker": str}).fillna("").to_dict("records")
+                     if OUTPUT.exists() else [])
+    previous_status = read_status_file()
     for index, candidate in candidates.reset_index(drop=True).iterrows():
         ticker = str(candidate["ticker"]).strip().upper()
         try:
             info = yf.Ticker(ticker).info or {}
+            if not has_usable_fundamental_data(info):
+                raise RuntimeError("Yahoo Finance quoteSummary returned no usable fundamental fields (possible Invalid Crumb, access block or rate limit).")
             result = evaluate_fundamentals(info, str(candidate.get("sector", "")),
                                            str(candidate.get("industry", "")))
             row = {
@@ -154,25 +219,46 @@ def main() -> int:
         print(f"[{index + 1}/{len(candidates)}] {ticker}: {row['fundamental_status']}")
         time.sleep(SLEEP_SECONDS)
 
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     columns = ["ticker", "sources", "sector", "industry", "technical_score", "score_date",
                "fundamental_status", "checks", "market_cap", "average_volume",
                "operating_margin", "roe", "revenue_growth", "debt_to_equity_raw_pct",
                "debt_to_equity_ratio", "biotech_clinical_risk_review", "checked_at",
                "data_source", "error"]
-    output_rows = []
-    for row in rows:
-        clean = dict(row)
-        clean["checks"] = json.dumps(clean.get("checks", {}), ensure_ascii=False)
-        output_rows.append(clean)
-    pd.DataFrame(output_rows, columns=columns).to_csv(OUTPUT, index=False)
+    global_unavailable = bool(rows) and all(
+        row["fundamental_status"] == "UNKNOWN"
+        and not any(number(row.get(key)) is not None for key in
+                    ("market_cap", "average_volume", "operating_margin", "roe",
+                     "revenue_growth", "debt_to_equity_raw_pct"))
+        for row in rows
+    )
+    if global_unavailable:
+        reason = ("Yahoo Finance quoteSummary returned no usable fundamental fields for any current Long candidate; "
+                  "the last validated values are retained as STALE_FALLBACK.")
+        fallback_rows = build_stale_fallback_rows(candidates, previous_rows, checked_at, reason)
+        write_rows(fallback_rows, columns)
+        last_success_at = previous_status.get("last_success_at") or previous_status.get("checked_at")
+        last_known_counts = {"passed": previous_status.get("passed", 0),
+                             "failed": previous_status.get("failed", 0),
+                             "unknown": previous_status.get("unknown", 0)}
+        payload = {"status": "PARTIAL", "data_status": "STALE_FALLBACK",
+                   "candidate_count": len(candidates), "passed": 0, "failed": 0,
+                   "unknown": len(candidates), "checked_at": checked_at,
+                   "last_success_at": last_success_at, "last_known_counts": last_known_counts,
+                   "fallback_used": True, "errors": [reason]}
+        write_status(payload)
+        print(f"Long-fundamentals: Yahoo leverde geen bruikbare velden voor {len(candidates)} kandidaten; "
+              "laatste gevalideerde gegevens behouden als STALE_FALLBACK.")
+        return 1
+
+    write_rows(rows, columns)
     passed = sum(row["fundamental_status"] == "PASS" for row in rows)
     failed = sum(row["fundamental_status"] == "FAIL" for row in rows)
     unknown = sum(row["fundamental_status"] == "UNKNOWN" for row in rows)
     status = "FULL" if unknown == 0 and not errors else "PARTIAL"
-    payload = {"status": status, "candidate_count": len(rows), "passed": passed,
-               "failed": failed, "unknown": unknown, "checked_at": checked_at,
-               "errors": errors}
+    payload = {"status": status, "data_status": "CURRENT", "candidate_count": len(rows),
+               "passed": passed, "failed": failed, "unknown": unknown,
+               "checked_at": checked_at, "last_success_at": checked_at,
+               "fallback_used": False, "errors": errors}
     write_status(payload)
     print(f"Long-fundamentals: {passed} PASS, {failed} FAIL, {unknown} UNKNOWN; status={status}")
     return 0 if status == "FULL" else 1

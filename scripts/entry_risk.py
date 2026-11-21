@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from scripts.selection_rules import is_qualified_short_candidate
+
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 TECHNICAL = DATA / "technical_scores.csv"
@@ -156,9 +158,7 @@ def build_rows() -> list[dict]:
         candidates.append((ticker, "LONG"))
     for _, row in technical.iterrows():
         ticker = str(row["ticker"]).upper()
-        short_score = number(row.get("short_score"))
-        sma20, sma50 = number(row.get("sma20")), number(row.get("sma50"))
-        if row.get("score_status") == "OK" and short_score is not None and short_score >= 3 and sma20 is not None and sma50 is not None and sma20 < sma50:
+        if is_qualified_short_candidate(row):
             candidates.append((ticker, "SHORT"))
 
     output = []

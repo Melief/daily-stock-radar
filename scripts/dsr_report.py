@@ -304,12 +304,12 @@ def build_report() -> tuple[str, dict]:
         f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**. "
         f"SW PASS: **{sw_status.get('passed', 0)}**; SW uitgesloten: **{sw_status.get('excluded_sw', 0)}**; "
         f"onbekend: **{sw_status.get('unknown', 0)}**. Goedgekeurd voor verdere Long-beoordeling: **{len(long_candidates)}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "20d pivot-ref", "Koopzone", "52w high", "Afstand %", "ATH", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "20d pivot-ref", "Koopzone", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
         "",
         "## 4. Short",
         f"Technisch gekwalificeerd: **{short_tech_count}**. IBKR beschikbaar: **{borrow_available}**; "
         f"IBKR onbekend: **{borrow_unknown}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high", "Afstand %", "ATH", "Afstand %", "Nieuws", "Actie"], short_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "Nieuws", "Actie"], short_table),
         "",
         "## 5. HA-signalen",
         f"Long-signalen die aan HA Low=Open en SMA20/SMA50 voldoen: **{len(ha_long)}**.",

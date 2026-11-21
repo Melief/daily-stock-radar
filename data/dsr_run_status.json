@@ -9,18 +9,15 @@
     "Long-fundamentalgegevens bevatten onbekende criteria; deze kandidaten blijven uitgesloten.",
     "Simply Wall St Financial Health bevat onbekende scores; deze kandidaten blijven uitgesloten."
   ],
-  "generated_at": "2026-11-21T18:48:59+00:00",
+  "generated_at": "2026-11-21T18:51:10+00:00",
   "unique_tickers": 67,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
   "source_errors": {
-    "Simpel Monsters": "STALE: Last verified successful TradingView refresh: GitHub Actions run 42460044048. Latest refresh failed: no /global/scan results received; prior CSV retained. | Laatste succesvolle refresh ouder dan 96 uur.",
-    "Follow Thrue": "STALE: Last verified successful TradingView refresh: GitHub Actions run 42460044048. Latest refresh failed: no /global/scan results received; prior CSV retained. | Laatste succesvolle refresh ouder dan 96 uur."
+    "Simpel Monsters": "Bron bevat geen tickers: data/simpel_monsters_tickers.csv",
+    "Follow Thrue": "Bron bevat geen tickers: data/follow_thrue_tickers.csv"
   },
-  "source_warnings": {
-    "Simpel Monsters": "STALE: Last verified successful TradingView refresh: GitHub Actions run 42460044048. Latest refresh failed: no /global/scan results received; prior CSV retained. | Laatste succesvolle refresh ouder dan 96 uur.",
-    "Follow Thrue": "STALE: Last verified successful TradingView refresh: GitHub Actions run 42460044048. Latest refresh failed: no /global/scan results received; prior CSV retained. | Laatste succesvolle refresh ouder dan 96 uur."
-  },
+  "source_warnings": {},
   "missing_ha_rows": 0,
   "market_context_status": "FULL",
   "market_context_data_status": "FULL",

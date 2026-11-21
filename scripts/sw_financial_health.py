@@ -20,6 +20,7 @@ FUNDAMENTALS = ROOT / "data" / "long_fundamentals.csv"
 INPUT = ROOT / "data" / "sw_financial_health.csv"
 OUTPUT = ROOT / "data" / "long_sw_status.csv"
 STATUS_OUTPUT = ROOT / "data" / "long_sw_status.json"
+FUNDAMENTAL_STATUS = ROOT / "data" / "long_fundamental_status.json"
 
 
 def load_verified_scores(path: Path = INPUT) -> dict[str, dict]:
@@ -61,6 +62,14 @@ def load_verified_scores(path: Path = INPUT) -> dict[str, dict]:
             continue
         verified[ticker] = matches[0]
     return verified
+
+
+def load_fundamental_data_status(path: Path = FUNDAMENTAL_STATUS) -> str:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return "UNKNOWN"
+    return str(payload.get("data_status", "CURRENT")).upper()
 
 
 def build_sw_rows(fundamentals: pd.DataFrame, verified: dict[str, dict], fundamental_data_status: str = "CURRENT") -> list[dict]:
@@ -110,11 +119,7 @@ def main() -> int:
     try:
         fundamentals = pd.read_csv(FUNDAMENTALS, dtype={"ticker": str})
         verified = load_verified_scores()
-        try:
-            fundamental_status = json.loads(FUNDAMENTAL_STATUS.read_text(encoding="utf-8"))
-        except Exception:
-            fundamental_status = {}
-        fundamental_data_status = fundamental_status.get("data_status", "CURRENT")
+        fundamental_data_status = load_fundamental_data_status()
         rows = build_sw_rows(fundamentals, verified, fundamental_data_status)
     except Exception as exc:
         write_status({"status": "PARTIAL", "errors": [str(exc)]})

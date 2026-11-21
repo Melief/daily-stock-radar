@@ -91,5 +91,17 @@ class SwFinancialHealthTests(unittest.TestCase):
         self.assertEqual(rows[1]["sw_status"], "EXCLUDED")
 
 
+    def test_fundamental_data_status_is_read_from_status_file(self):
+        with tempfile.TemporaryDirectory() as folder:
+            status_path = Path(folder) / "long_fundamental_status.json"
+            status_path.write_text('{"status":"PARTIAL","data_status":"STALE_FALLBACK"}', encoding="utf-8")
+            self.assertEqual(sw.load_fundamental_data_status(status_path), "STALE_FALLBACK")
+
+    def test_missing_fundamental_status_is_not_assumed_current(self):
+        with tempfile.TemporaryDirectory() as folder:
+            status_path = Path(folder) / "missing.json"
+            self.assertEqual(sw.load_fundamental_data_status(status_path), "UNKNOWN")
+
+
 if __name__ == "__main__":
     unittest.main()

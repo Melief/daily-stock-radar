@@ -15,7 +15,6 @@
   "ha_long_signals": 0,
   "ha_short_signals": 3,
   "pending_components": [
-    "Risk-on/risk-off marktregime: expliciete criteria ontbreken.",
     "Long-entry: actuele consolidatiepivot, breakoutdatum, officiële slotkoers, volume en koopzone moeten zijn geverifieerd.",
     "Short-entry: actuele consolidatiepivot, breakdowndatum, officiële slotkoers en volume moeten zijn geverifieerd; borrow en ruwe squeeze-/gapgegevens blijven afzonderlijk zichtbaar.",
     "IBKR-borrowinventaris ontbreekt voor 4 Short-kandidaten.",

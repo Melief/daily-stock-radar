@@ -1,5 +1,5 @@
 {
-  "status": "PARTIAL",
+  "status": "FULL",
   "data_status": "FULL",
   "session_date": "2026-11-20",
   "symbols": {
@@ -9,6 +9,11 @@
       "close": 6910.3901,
       "sma20": 7499.2315,
       "sma50": 7625.2564,
+      "ema8": 7283.4191,
+      "ema21": 7454.6115,
+      "ema_gap_pct": -2.296,
+      "ema_gap_direction": "WIDENING",
+      "ema_momentum_status": "BEARISH",
       "close_above_sma20": false,
       "close_above_sma50": false,
       "position": "ONDER_BEIDE",
@@ -29,6 +34,11 @@
       "close": 608.45,
       "sma20": 678.5305,
       "sma50": 710.9572,
+      "ema8": 652.0654,
+      "ema21": 675.5691,
+      "ema_gap_pct": -3.479,
+      "ema_gap_direction": "WIDENING",
+      "ema_momentum_status": "BEARISH",
       "close_above_sma20": false,
       "close_above_sma50": false,
       "position": "ONDER_BEIDE",
@@ -45,10 +55,10 @@
     }
   },
   "qqq_minus_spx_momentum_21d_pct": -3.8,
-  "market_regime": "ONBEKEND",
+  "market_regime": "RISK-OFF",
   "errors": {},
   "limitations": [
     "Steun en weerstand zijn afgeleid van bevestigde vijf-sessie swing-pivots; het zijn referentieniveaus, geen automatische entrysignalen.",
-    "Marktregime blijft ONBEKEND; afgesproken risk-on/risk-off criteria ontbreken."
+    "Marktregime is bepaald op basis van SPX en QQQ ten opzichte van SMA20 en SMA50."
   ]
 }

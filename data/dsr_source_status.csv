@@ -1,7 +1,7 @@
 source,source_id,status,last_attempt_at,last_success_at,age_hours,included,ticker_count,detail
 Sector Top Tickers,sector_top_tickers,MANUAL,,,,True,32,Handmatig beheerde bron; automatische actualiteit niet van toepassing.
-FV Momentum Darvas,fv_momentum_darvas,STALE_FALLBACK,2026-11-21T10:45:38+00:00,2026-11-21T03:33:34+00:00,12.8,True,4,Finviz fetch step; last successful fetch confirmed in GitHub Actions run 44861728262. | Laatste refresh mislukte; vorige succesvolle data gebruikt.
+FV Momentum Darvas,fv_momentum_darvas,STALE_FALLBACK,2026-11-21T10:45:38+00:00,2026-11-21T03:33:34+00:00,13.6,True,4,Finviz fetch step; last successful fetch confirmed in GitHub Actions run 44861728262. | Laatste refresh mislukte; vorige succesvolle data gebruikt.
 Simpel Monsters,simpel_monsters,UNKNOWN,,,,True,1,Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.
 Follow Thrue,follow_thrue,UNKNOWN,,,,True,1,Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.
 VYUS holdings,vyus_holdings,UNKNOWN,,,,True,25,Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.
-Blue Sky,blue_sky,STALE_FALLBACK,2026-11-21T10:45:38+00:00,2026-11-21T03:33:41+00:00,12.7,True,9,Blue Sky fetch step; last successful fetch confirmed in GitHub Actions run 44861728262. | Laatste refresh mislukte; vorige succesvolle data gebruikt.
+Blue Sky,blue_sky,STALE_FALLBACK,2026-11-21T10:45:38+00:00,2026-11-21T03:33:41+00:00,13.6,True,9,Blue Sky fetch step; last successful fetch confirmed in GitHub Actions run 44861728262. | Laatste refresh mislukte; vorige succesvolle data gebruikt.

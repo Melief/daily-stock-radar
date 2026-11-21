@@ -1,6 +1,8 @@
 {
   "status": "PARTIAL",
-  "errors": [
-    "type NoneType doesn't define __round__ method"
-  ]
+  "candidate_count": 36,
+  "stop_2r_calculated": 31,
+  "target_feasibility_unknown": 17,
+  "unknown_or_invalid": 17,
+  "note": "Consolidation pivot uses a confirmed swing origin and the following 5–21 completed sessions; the latest completed close is evaluated separately for breakout/breakdown."
 }

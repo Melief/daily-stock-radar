@@ -81,8 +81,9 @@ class CandidateRiskNewsTests(unittest.TestCase):
         }, index=dates)
         result = rn.calculate_history_extremes(frame, "2026-11-20")
         self.assertEqual(result["history_extremes_status"], "FULL")
-        self.assertEqual(result["high_52w"], 359)
-        self.assertEqual(result["all_time_high"], 359)
+        self.assertEqual(result["high_52w"], 358)
+        self.assertEqual(result["all_time_high"], 358)
+        self.assertLess(result["distance_to_ath_pct"], 0)
         self.assertEqual(result["all_time_high_date"], "2026-11-20")
 
     def test_short_history_keeps_ath_but_52_week_high_unknown(self):

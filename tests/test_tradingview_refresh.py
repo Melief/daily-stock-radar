@@ -12,19 +12,20 @@ class RetrieveAllScreenersTests(unittest.TestCase):
             ("Simpel Monsters", "https://example.test/first"),
             ("Follow Thrue", "https://example.test/second"),
         ]
+        browser = object()
         with patch.object(
             tradingview,
             "retrieve_screener",
             side_effect=[RuntimeError("first source unavailable"), None],
         ) as retrieve:
             with self.assertRaisesRegex(RuntimeError, "Simpel Monsters"):
-                tradingview.retrieve_all_screeners(object(), screeners)
+                tradingview.retrieve_all_screeners(browser, screeners)
 
         self.assertEqual(
             retrieve.call_args_list,
             [
-                call(object(), "Simpel Monsters", "https://example.test/first"),
-                call(object(), "Follow Thrue", "https://example.test/second"),
+                call(browser, "Simpel Monsters", "https://example.test/first"),
+                call(browser, "Follow Thrue", "https://example.test/second"),
             ],
         )
 

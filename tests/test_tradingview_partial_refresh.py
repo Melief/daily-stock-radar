@@ -86,5 +86,17 @@ class TradingViewPartialRefreshTests(unittest.TestCase):
             self.assertEqual(rows, [])
 
 
+    def test_login_restricted_screen_is_not_marked_as_success(self):
+        message = (
+            "Log in to see the results. "
+            "This screen is using some filters for registered users only."
+        )
+        with self.assertRaisesRegex(RuntimeError, "verbergt screenerresultaten achter een login"):
+            tv.ensure_results_visible("Simpel Monsters", message)
+
+    def test_unrestricted_empty_screen_is_allowed(self):
+        tv.ensure_results_visible("Simpel Monsters", "No symbols match your criteria")
+
+
 if __name__ == "__main__":
     unittest.main()

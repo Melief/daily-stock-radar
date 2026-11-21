@@ -169,25 +169,33 @@ def calculate_history_extremes(frame: pd.DataFrame, expected_date: str) -> dict:
     if actual_date != expected_date:
         raise ValueError(f"koersdata loopt achter: verwacht {expected_date}, ontvangen {actual_date}")
     close = float(data["Close"].iloc[-1])
-    ath_position = int(data["High"].to_numpy().argmax())
-    ath = float(data["High"].iloc[ath_position])
+    # Reference levels exclude the latest completed session so a breakout can
+    # legitimately print above 100% of the prior 52-week high / prior ATH.
+    prior = data.iloc[:-1]
+    if prior.empty:
+        raise ValueError("geen voorafgaande sessies voor high-referenties")
+    ath_position = int(prior["High"].to_numpy().argmax())
+    ath = float(prior["High"].iloc[ath_position])
     result = {
         "history_date": actual_date,
         "history_sessions": int(len(data)),
         "high_52w": "",
+        "high_52w_date": "",
         "low_52w": "",
         "distance_to_52w_high_pct": "",
         "all_time_high": round(ath, 4),
-        "all_time_high_date": data.index[ath_position].strftime("%Y-%m-%d"),
+        "all_time_high_date": prior.index[ath_position].strftime("%Y-%m-%d"),
         "distance_to_ath_pct": round((ath - close) / ath * 100.0, 2) if ath > 0 else "",
         "history_extremes_status": "PARTIAL",
     }
-    if len(data) >= 252:
-        recent = data.tail(252)
-        high_52w = float(recent["High"].max())
+    if len(data) >= 253:
+        recent = prior.tail(252)
+        high_position = int(recent["High"].to_numpy().argmax())
+        high_52w = float(recent["High"].iloc[high_position])
         low_52w = float(recent["Low"].min())
         result.update({
             "high_52w": round(high_52w, 4),
+            "high_52w_date": recent.index[high_position].strftime("%Y-%m-%d"),
             "low_52w": round(low_52w, 4),
             "distance_to_52w_high_pct": round((high_52w - close) / high_52w * 100.0, 2) if high_52w > 0 else "",
             "history_extremes_status": "FULL",

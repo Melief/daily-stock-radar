@@ -209,6 +209,31 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertNotEqual(result["current_ha_close"], "")
 
 
+    def test_optional_news_and_risk_unknowns_are_counted_without_hiding_history_status(self):
+        results = [
+            {"candidate_type": "LONG", "ticker": "AAA", "_history_ok": True,
+             "_pivot_ok": True, "risk_status": "UNKNOWN", "news_status": "UNKNOWN", "error": ""},
+            {"candidate_type": "SHORT", "ticker": "BBB", "_history_ok": True,
+             "_pivot_ok": True, "risk_status": "REVIEW", "news_status": "CHECKED", "error": ""},
+        ]
+        status = rn.summarise_results(results, candidate_count=2)
+        self.assertEqual(status["status"], "FULL")
+        self.assertEqual(status["status_scope"], "HISTORICAL_PRICE_AND_PIVOT")
+        self.assertEqual(status["history_pivot_unknown"], 0)
+        self.assertEqual(status["risk_unknown"], 1)
+        self.assertEqual(status["news_unknown"], 1)
+        self.assertEqual(status["review_required"], 1)
+
+    def test_missing_pivot_history_keeps_historical_component_partial(self):
+        results = [
+            {"candidate_type": "LONG", "ticker": "AAA", "_history_ok": True,
+             "_pivot_ok": False, "risk_status": "CHECKED", "news_status": "CHECKED", "error": ""},
+        ]
+        status = rn.summarise_results(results, candidate_count=1)
+        self.assertEqual(status["status"], "PARTIAL")
+        self.assertEqual(status["history_pivot_unknown"], 1)
+
+
     def test_short_score_three_is_checked_even_without_borrow_file(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

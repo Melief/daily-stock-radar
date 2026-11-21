@@ -514,6 +514,37 @@ def load_candidates() -> list[dict]:
     return candidates
 
 
+def summarise_results(results: list[dict], candidate_count: int) -> dict:
+    """Separate mandatory history/pivot coverage from optional risk/news enrichment."""
+    history_pivot_unknown = sum(
+        not row.get("_history_ok", False) or not row.get("_pivot_ok", False)
+        for row in results
+    )
+    risk_unknown = sum(row.get("risk_status") == "UNKNOWN" for row in results)
+    news_unknown = sum(row.get("news_status") == "UNKNOWN" for row in results)
+    review = sum(row.get("risk_status") == "REVIEW" for row in results)
+    return {
+        "status": "FULL" if history_pivot_unknown == 0 and len(results) == candidate_count else "PARTIAL",
+        "status_scope": "HISTORICAL_PRICE_AND_PIVOT",
+        "candidate_count": candidate_count,
+        "checked": len(results) - history_pivot_unknown,
+        "unknown": history_pivot_unknown,
+        "history_pivot_unknown": history_pivot_unknown,
+        "risk_unknown": risk_unknown,
+        "news_unknown": news_unknown,
+        "review_required": review,
+        "long_candidates": sum(row["candidate_type"] == "LONG" for row in results),
+        "short_candidates": sum(row["candidate_type"] == "SHORT" for row in results),
+        "errors": [f"{row['ticker']}: {row['error']}" for row in results if row.get("error")],
+        "limitations": [
+            "NO_RESULTS betekent geen geïndexeerde Google News RSS-resultaten binnen 7 dagen; het bewijst niet dat er geen nieuws of gebeurtenisrisico bestaat.",
+            "Short interest, days-to-cover, ATR en gaps zijn bronafhankelijke ruwe gegevens; er worden geen niet-afgesproken risicodrempels toegepast.",
+            "Geen geldige consolidatiepivot is een expliciete negatieve uitkomst (GEEN_GELDIGE_PIVOT); alleen ontbrekende of onvoldoende historische koersdata maakt de historische/pivotcontrole PARTIAL.",
+            "Nieuws-, short-interest- en earningsgegevens blijven afzonderlijke verrijkingen; UNKNOWN wordt expliciet gerapporteerd en nooit als PASS behandeld.",
+        ],
+    }
+
+
 def write_status(payload: dict):
     temporary = STATUS_OUTPUT.with_suffix(".json.tmp")
     temporary.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -549,28 +580,9 @@ def main() -> int:
     public_rows = [{key: value for key, value in row.items() if not key.startswith("_")} for row in results]
     pd.DataFrame(public_rows).to_csv(OUTPUT, index=False)
 
-    unknown = sum(
-        not row["_history_ok"]
-        for row in results
-    )
-    review = sum(row["risk_status"] == "REVIEW" for row in results)
-    payload = {
-        "status": "FULL" if unknown == 0 and len(results) == len(candidates) else "PARTIAL",
-        "candidate_count": len(candidates),
-        "checked": len(results) - unknown,
-        "unknown": unknown,
-        "review_required": review,
-        "long_candidates": sum(row["candidate_type"] == "LONG" for row in results),
-        "short_candidates": sum(row["candidate_type"] == "SHORT" for row in results),
-        "errors": [f"{row['ticker']}: {row['error']}" for row in results if row["error"]],
-        "limitations": [
-            "NO_RESULTS betekent geen geïndexeerde Google News RSS-resultaten binnen 7 dagen; het bewijst niet dat er geen nieuws of gebeurtenisrisico bestaat.",
-            "Short interest, days-to-cover, ATR en gaps zijn bronafhankelijke ruwe gegevens; er worden geen niet-afgesproken risicodrempels toegepast.",
-            "Geen geldige consolidatiepivot is een expliciete negatieve uitkomst (GEEN_GELDIGE_PIVOT); alleen ontbrekende of onvoldoende historische koersdata maakt de controle PARTIAL.",
-        ],
-    }
+    payload = summarise_results(results, len(candidates))
     write_status(payload)
-    print(f"News/risk: {payload['checked']} gecontroleerd, {unknown} ONBEKEND, {review} REVIEW.")
+    print(f"News/risk: {payload['checked']} historie/pivot gecontroleerd, {payload['risk_unknown']} risk UNKNOWN, {payload['news_unknown']} news UNKNOWN, {payload['review_required']} REVIEW.")
     return 0 if payload["status"] == "FULL" else 1
 
 

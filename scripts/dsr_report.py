@@ -227,6 +227,8 @@ def build_report() -> tuple[str, dict]:
         market_lines.append(
             f"- **{label}:** close {clean(item.get('close'))}; SMA20 {clean(item.get('sma20'))}; "
             f"SMA50 {clean(item.get('sma50'))}; positie {clean(item.get('position'))}; "
+            f"EMA8 {clean(item.get('ema8'))}; EMA21 {clean(item.get('ema21'))}; "
+            f"EMA-status {clean(item.get('ema_momentum_status'))}; "
             f"momentum 5d {clean(item.get('momentum_5d_pct'))}%; "
             f"21d {clean(item.get('momentum_21d_pct'))}%; "
             f"steun {clean(item.get('support'))} ({clean(item.get('support_date'))}); "
@@ -267,7 +269,6 @@ def build_report() -> tuple[str, dict]:
     ]
 
     pending = [
-        "Risk-on/risk-off marktregime: expliciete criteria ontbreken.",
         "Long-entry: actuele consolidatiepivot, breakoutdatum, officiële slotkoers, volume en koopzone moeten zijn geverifieerd.",
         "Short-entry: actuele consolidatiepivot, breakdowndatum, officiële slotkoers en volume moeten zijn geverifieerd; borrow en ruwe squeeze-/gapgegevens blijven afzonderlijk zichtbaar.",
     ]

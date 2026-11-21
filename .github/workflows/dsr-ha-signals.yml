@@ -8,10 +8,13 @@ on:
     # Morning NL final snapshot using the latest completed US trading session.
     - cron: "15 4 * * 1-5"
   workflow_run:
-    # Refresh HA immediately after the Finviz CSV workflow has completed.
+    # Refresh HA after each source workflow has persisted its result/status.
+    # A failed downstream Sheets sync must not block valid source processing.
     workflows:
       - "Refresh Finviz tickers and sync to Google Sheets"
       - "Update TradingView screener tickers"
+      - "Import VYUS Top 25 Holdings"
+      - "VYUS holdings to CSV"
     types: [completed]
     branches: [main]
   push:

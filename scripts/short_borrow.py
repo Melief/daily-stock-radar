@@ -25,7 +25,7 @@ MAX_AGE = timedelta(hours=24)
 
 def parse_ftp_payload(payload: str) -> tuple[datetime, dict[str, dict]]:
     """Parse IBKR #BOF/#SYM pipe-delimited data; duplicate symbols stay ambiguous."""
-    rows = list(csv.reader(io.StringIO(payload)))
+    rows = list(csv.reader(io.StringIO(payload), delimiter="|"))
     bof = next((row for row in rows if row and row[0] == "#BOF"), None)
     header = next((row for row in rows if row and row[0] == "#SYM"), None)
     if not bof or len(bof) < 3 or not header:

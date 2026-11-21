@@ -24,10 +24,10 @@ class VYUSCsvTests(unittest.TestCase):
     def test_rejects_incomplete_or_duplicate_holdings_without_overwriting(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "vyus_tickers.csv"
-            output.write_text("ticker\\nOLD\\n", encoding="utf-8")
+            output.write_text("ticker\nOLD\n", encoding="utf-8")
             with self.assertRaises(ValueError):
                 vyus.write_tickers_csv(["AAPL"] * 25, output)
-            self.assertEqual(output.read_text(encoding="utf-8"), "ticker\\nOLD\\n")
+            self.assertEqual(output.read_text(encoding="utf-8"), "ticker\nOLD\n")
 
 
 class VYUSMainTests(unittest.TestCase):

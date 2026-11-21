@@ -41,7 +41,7 @@ def evaluate_pivot_status(side, entry, pivot, score_date, volume,
                          consolidation_pivot_status, consolidation_pivot_date,
                          prior_breakout_date, prior_breakout_close,
                          prior_breakout_volume, current_ha_close,
-                         prior_breakout_ha_close):
+                         prior_breakout_ha_close, current_close):
     pivot_status = "ONBEKEND"
     distance = ""
     breakout_date = ""
@@ -57,7 +57,7 @@ def evaluate_pivot_status(side, entry, pivot, score_date, volume,
     elif pivot is not None and pivot > 0 and consolidation_pivot_status == "OK":
         if side == "LONG":
             distance = (entry / pivot - 1) * 100 if entry is not None else ""
-            broken = current_ha_close is not None and current_ha_close > pivot
+            broken = current_close is not None and current_close > pivot
             prior_broken = bool(prior_breakout_date)
             pivot_status = ("BREAKOUT_BEVESTIGD" if broken else
                             "BREAKOUT_TERUGGEVALLEN" if prior_broken else "GEEN_BREAKOUT")
@@ -70,7 +70,7 @@ def evaluate_pivot_status(side, entry, pivot, score_date, volume,
                         "WITHIN_5PCT" if distance <= 5 else "EXTENDED")
         else:
             distance = (pivot / entry - 1) * 100 if entry is not None and entry > 0 else ""
-            broken = current_ha_close is not None and current_ha_close < pivot
+            broken = current_close is not None and current_close < pivot
             prior_broken = bool(prior_breakout_date)
             pivot_status = ("DOORBRAAK_BEVESTIGD" if broken else
                             "DOORBRAAK_TERUGGEVALLEN" if prior_broken else "GEEN_DOORBRAAK")
@@ -120,7 +120,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
     pivot_result = evaluate_pivot_status(
         side, pivot_entry, pivot, score_date, volume, consolidation_pivot_status,
         consolidation_pivot_date, prior_breakout_date, prior_breakout_close,
-        prior_breakout_volume, current_close, prior_breakout_ha_close,
+        prior_breakout_volume, current_ha_close, prior_breakout_ha_close, current_close,
     )
     if entry is None or entry <= 0 or stop is None:
         return {

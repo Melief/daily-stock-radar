@@ -1,5 +1,6 @@
 {
   "status": "FULL",
+  "data_status": "CURRENT",
   "long_candidates": 12,
   "passed": 6,
   "excluded_sw": 3,

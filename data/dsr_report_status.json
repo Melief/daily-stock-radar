@@ -3,6 +3,7 @@
   "session_date": "2026-11-20",
   "technical_score_status": "FULL",
   "long_fundamental_status": "PARTIAL",
+  "long_fundamental_data_status": "STALE_FALLBACK",
   "fundamental_unknown_excluded_by_sw": [
     "MCK"
   ],
@@ -20,6 +21,7 @@
   "ha_short_signals": 3,
   "pending_components": [
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
-    "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
+    "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig.",
+    "Yahoo Finance leverde geen actuele Long-fundamentalvelden; de laatste gevalideerde waarden zijn alleen als STALE_FALLBACK bewaard."
   ]
 }

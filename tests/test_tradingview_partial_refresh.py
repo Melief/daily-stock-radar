@@ -40,7 +40,7 @@ class TradingViewPartialRefreshTests(unittest.TestCase):
     def test_legacy_symbol_rows_are_written_with_valid_ticker(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            with patch.object(tv, "DATA_DIR", root):
+            with patch.object(tv, "DATA_DIR", root), patch.object(tv, "ROOT", root):
                 output = tv.save_rows("Follow Thrue", [
                     {"s": "NASDAQ:PGNY", "d": ["PGNY", "StrongBuy"]}
                 ])

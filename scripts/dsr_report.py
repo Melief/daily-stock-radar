@@ -81,9 +81,14 @@ def select_short_candidates(technical_rows: list[dict]) -> list[dict]:
 def _table(headers: list[str], rows: list[list[str]]) -> str:
     if not rows:
         return "_Geen kandidaten._"
+    def cell(value):
+        if value == "__EMPTY__":
+            return ""
+        return clean(value)
+
     lines = ["| " + " | ".join(headers) + " |",
              "| " + " | ".join("---" for _ in headers) + " |"]
-    lines.extend("| " + " | ".join(clean(value) for value in row) + " |" for row in rows)
+    lines.extend("| " + " | ".join(cell(value) for value in row) + " |" for row in rows)
     return "\n".join(lines)
 
 
@@ -136,7 +141,7 @@ def build_report() -> tuple[str, dict]:
         short_table.append([
             ticker, candidate.get("sources", ""), candidate.get("sector", ""),
             candidate.get("industry", ""), ha.get("ha_day_type", candidate.get("ha_day_type", "")),
-            candidate.get("short_score", ""), "", borrow.get("status", "ONBEKEND"),
+            candidate.get("short_score", ""), "__EMPTY__", borrow.get("status", "ONBEKEND"),
             borrow.get("fee_rate_pct", ""), borrow.get("available_shares", ""),
             risk.get("short_percent_of_float", ""), risk.get("days_to_cover", ""),
             risk.get("risk_status", "ONBEKEND"),
@@ -148,8 +153,12 @@ def build_report() -> tuple[str, dict]:
         ticker = row.get("ticker", "").upper()
         if as_bool(row.get("ha_strong_signal")) and as_bool(row.get("above_sma20")) and as_bool(row.get("above_sma50")):
             ha_long.append(row)
-        if as_bool(row.get("ha_strong_down_signal")) and not as_bool(row.get("above_sma20")) and not as_bool(row.get("above_sma50")):
+        if as_bool(row.get("ha_strong_down_signal")) and as_bool(row.get("above_sma20")) is False and as_bool(row.get("above_sma50")) is False:
             ha_short.append(row)
+    ha_short.sort(key=lambda row: (
+        ((as_float(row.get("ha_high")) - as_float(row.get("ha_close"))) / as_float(row.get("ha_high")) * 100)
+        if as_float(row.get("ha_high")) and as_float(row.get("ha_close")) is not None else float("inf")
+    ))
 
     market_lines = []
     symbols = market.get("symbols", {})
@@ -266,9 +275,11 @@ def build_report() -> tuple[str, dict]:
              row.get("distance_from_low_pct"), row.get("rvol_5_21")] for row in ha_long
         ]),
         f"Short-signalen die aan HA High=Open en SMA20/SMA50 voldoen: **{len(ha_short)}**.",
-        _table(["Ticker", "Sector", "Industry", "Close", "Afstand", "RVOL 5/21"], [
+        _table(["Ticker", "Sector", "Industry", "Close", "Afstand HA High %", "RVOL 5/21"], [
             [row.get("ticker"), row.get("sector"), row.get("industry"), row.get("close"),
-             row.get("distance_from_low_pct"), row.get("rvol_5_21")] for row in ha_short
+             round((as_float(row.get("ha_high")) - as_float(row.get("ha_close"))) / as_float(row.get("ha_high")) * 100, 1)
+             if as_float(row.get("ha_high")) and as_float(row.get("ha_close")) is not None else "ONBEKEND",
+             row.get("rvol_5_21")] for row in ha_short
         ]),
         "",
         "## 6. Nieuws-/eventsignalen",

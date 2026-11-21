@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """Import the 25 publicly displayed VYUS holdings from StockAnalysis."""
+import csv
 import json
 import os
 import re
 import sys
+from pathlib import Path
 from html.parser import HTMLParser
 from urllib.request import Request, urlopen
 
+ROOT = Path(__file__).resolve().parents[1]
 SOURCE_URL = "https://stockanalysis.com/quote/etr/VYUS/holdings/"
+OUTPUT_FILE = ROOT / "data" / "vyus_tickers.csv"
 EXPECTED_COUNT = 25
 
 
@@ -65,7 +69,7 @@ def fetch_tickers():
             break
 
     if header_index is None:
-        raise RuntimeError("Could not find a holdings table with a Symbol/Ticker column; Sheet left unchanged.")
+        raise RuntimeError("Could not find a holdings table with a Symbol/Ticker column; CSV and Sheet left unchanged.")
 
     tickers = []
     for row in parser.rows[header_index + 1:]:
@@ -78,8 +82,27 @@ def fetch_tickers():
             break
 
     if len(tickers) != EXPECTED_COUNT:
-        raise RuntimeError(f"Expected exactly {EXPECTED_COUNT} public holdings; found {len(tickers)}. Sheet left unchanged.")
+        raise RuntimeError(f"Expected exactly {EXPECTED_COUNT} public holdings; found {len(tickers)}. CSV and Sheet left unchanged.")
     return tickers
+
+
+def write_tickers_csv(tickers, output_file=OUTPUT_FILE):
+    """Atomically persist a validated VYUS ticker list for the DSR source loader."""
+    if len(tickers) != EXPECTED_COUNT or len(set(tickers)) != EXPECTED_COUNT:
+        raise ValueError(f"Expected {EXPECTED_COUNT} unique VYUS tickers before writing CSV.")
+    output_file = Path(output_file)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    temporary_file = output_file.with_suffix(output_file.suffix + ".tmp")
+    try:
+        with temporary_file.open("w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerow(["ticker"])
+            writer.writerows([[ticker] for ticker in tickers])
+        temporary_file.replace(output_file)
+    finally:
+        if temporary_file.exists():
+            temporary_file.unlink()
+    print(f"Persisted {len(tickers)} validated VYUS tickers to {output_file}.", flush=True)
 
 
 def main():
@@ -88,16 +111,20 @@ def main():
     if not endpoint or not secret:
         raise RuntimeError("Missing GitHub variable VYUS_GS_WEBAPP_URL or secret VYUS_GS_SECRET.")
 
-    print("VYUS stage 1/2: fetching and parsing StockAnalysis holdings.", flush=True)
+    print("VYUS stage 1/3: fetching and parsing StockAnalysis holdings.", flush=True)
     try:
         tickers = fetch_tickers()
     except Exception as exc:
         raise RuntimeError(f"StockAnalysis fetch/parse stage failed: {exc}") from exc
-    print(f"VYUS stage 1/2 complete: {len(tickers)} tickers retrieved.", flush=True)
+    print(f"VYUS stage 1/3 complete: {len(tickers)} tickers retrieved.", flush=True)
+
+    # The DSR CSV is written before the independent Sheets sync. A Sheets
+    # outage must not discard a successfully retrieved source refresh.
+    write_tickers_csv(tickers)
 
     payload = json.dumps({"secret": secret, "tickers": tickers}).encode("utf-8")
     req = Request(endpoint, data=payload, headers={"Content-Type": "application/json"}, method="POST")
-    print("VYUS stage 2/2: posting holdings to Google Apps Script.", flush=True)
+    print("VYUS stage 2/3: posting holdings to Google Apps Script.", flush=True)
     try:
         with urlopen(req, timeout=45) as response:
             result = json.loads(response.read().decode("utf-8"))

@@ -42,9 +42,12 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
                           borrow_status: str = "NVT", nearest_support=None,
                           nearest_resistance=None, consolidation_pivot_status="ONBEKEND",
                           consolidation_pivot_date="", prior_breakout_date="",
-                          prior_breakout_close=None, prior_breakout_volume=None) -> dict:
+                          prior_breakout_close=None, prior_breakout_volume=None,
+                          current_ha_close=None, prior_breakout_ha_close=None) -> dict:
     entry, stop, pivot = number(entry), number(stop), number(pivot)
     volume = number(volume)
+    current_ha_close = number(current_ha_close)
+    prior_breakout_ha_close = number(prior_breakout_ha_close)
     prior_breakout_date = clean_text(prior_breakout_date)
     consolidation_pivot_date = clean_text(consolidation_pivot_date)
     consolidation_pivot_status = clean_text(consolidation_pivot_status, "ONBEKEND")
@@ -68,6 +71,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "target_feasibility": "ONBEKEND",
             "breakout_reference_date": "",
             "breakout_reference_close": "",
+            "breakout_reference_ha_close": "",
             "breakout_reference_volume": "",
             "entry_status": "ONBEKEND_STOP_OF_ENTRY",
             "action": "WACHTEN OP BEVESTIGING",
@@ -79,7 +83,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "risk_pct": "", "target_2r": "", "pivot_reference_20d": pivot or "",
             "distance_to_pivot_pct": "", "long_buy_zone_status": "ONBEKEND",
             "breakout_reference_status": "ONBEKEND", "target_feasibility": "ONBEKEND",
-            "breakout_reference_date": "", "breakout_reference_close": "", "breakout_reference_volume": "",
+            "breakout_reference_date": "", "breakout_reference_close": "", "breakout_reference_ha_close": "", "breakout_reference_volume": "",
             "entry_status": "ONGELDIGE_STOP", "action": "VERMIJDEN TOT STOP HERSTELD",
         }
     target = entry + 2 * risk if side == "LONG" else entry - 2 * risk
@@ -93,7 +97,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "distance_to_pivot_pct": "",
             "long_buy_zone_status": "ONBEKEND", "breakout_reference_status": "ONBEKEND",
             "target_feasibility": "ONBEKEND", "breakout_reference_date": "",
-            "breakout_reference_close": "", "breakout_reference_volume": "",
+            "breakout_reference_close": "", "breakout_reference_ha_close": "", "breakout_reference_volume": "",
             "entry_status": "ONGELDIGE_2R", "action": "VERMIJDEN TOT 2R HERSTELD",
         }
 
@@ -109,47 +113,60 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "2R_DOEL_ONDER_STEUN" if target < support else "2R_DOEL_BOVEN_STEUN"
         )
 
-    if pivot is None or pivot <= 0 or consolidation_pivot_status != "OK":
-        pivot_status, distance, breakout_date, breakout_close, breakout_volume = (
-            "ONBEKEND", "", "", "", ""
+    if consolidation_pivot_status == "GEEN_GELDIGE_PIVOT":
+        pivot_status, distance, breakout_date, breakout_close, breakout_ha_close, breakout_volume = (
+            "GEEN_GELDIGE_PIVOT", "", "", "", "", ""
+        )
+        action = "WACHTEN OP GELDIGE CONSOLIDATIEPIVOT"
+        buy_zone = "ONBEKEND"
+    elif pivot is None or pivot <= 0 or consolidation_pivot_status != "OK":
+        pivot_status, distance, breakout_date, breakout_close, breakout_ha_close, breakout_volume = (
+            "ONBEKEND", "", "", "", "", ""
         )
         action = "WACHTEN OP PIVOTVERIFICATIE"
         buy_zone = "ONBEKEND"
     elif side == "LONG":
         distance = (entry / pivot - 1) * 100
-        broken = bool(prior_breakout_date) or entry > pivot
-        pivot_status = "BREAKOUT_BEVESTIGD" if broken else "GEEN_BREAKOUT"
-        breakout_date = prior_breakout_date or (score_date if entry > pivot else "")
+        broken = current_ha_close is not None and current_ha_close > pivot
+        prior_broken = bool(prior_breakout_date)
+        pivot_status = ("BREAKOUT_BEVESTIGD" if broken else
+                        "BREAKOUT_TERUGGEVALLEN" if prior_broken else "GEEN_BREAKOUT")
+        breakout_date = prior_breakout_date or (score_date if current_ha_close is not None and current_ha_close > pivot else "")
         breakout_close = (
             number(prior_breakout_close) if prior_breakout_date
-            else entry if entry > pivot else ""
+            else entry if current_ha_close is not None and current_ha_close > pivot else ""
+        )
+        breakout_ha_close = (
+            prior_breakout_ha_close if prior_breakout_date
+            else current_ha_close if current_ha_close is not None and current_ha_close > pivot else ""
         )
         breakout_volume = (
             number(prior_breakout_volume) if prior_breakout_date
-            else volume if entry > pivot and volume is not None else ""
+            else volume if current_ha_close is not None and current_ha_close > pivot and volume is not None else ""
         )
         buy_zone = "NOT_BROKEN" if not broken else ("WITHIN_5PCT" if distance <= 5 else "EXTENDED")
         action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
     else:
         distance = (pivot / entry - 1) * 100
-        broken = bool(prior_breakout_date) or entry < pivot
-        pivot_status = "DOORBRAAK_BEVESTIGD" if broken else "GEEN_DOORBRAAK"
-        breakout_date = prior_breakout_date or (score_date if entry < pivot else "")
+        broken = current_ha_close is not None and current_ha_close < pivot
+        prior_broken = bool(prior_breakout_date)
+        pivot_status = ("DOORBRAAK_BEVESTIGD" if broken else
+                        "DOORBRAAK_TERUGGEVALLEN" if prior_broken else "GEEN_DOORBRAAK")
+        breakout_date = prior_breakout_date or (score_date if current_ha_close is not None and current_ha_close < pivot else "")
         breakout_close = (
             number(prior_breakout_close) if prior_breakout_date
-            else entry if entry < pivot else ""
+            else entry if current_ha_close is not None and current_ha_close < pivot else ""
+        )
+        breakout_ha_close = (
+            prior_breakout_ha_close if prior_breakout_date
+            else current_ha_close if current_ha_close is not None and current_ha_close < pivot else ""
         )
         breakout_volume = (
             number(prior_breakout_volume) if prior_breakout_date
-            else volume if entry < pivot and volume is not None else ""
+            else volume if current_ha_close is not None and current_ha_close < pivot and volume is not None else ""
         )
         buy_zone = "NVT"
         action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
-
-    if news_status in {"REVIEW", "UNKNOWN"}:
-        action = "WACHTEN OP NIEUWS-/RISICOCONTROLE"
-    if side == "SHORT" and borrow_status != "AVAILABLE":
-        action = "GEEN BEVESTIGDE BORROW"
 
     return {
         "entry": round(entry, 4),
@@ -167,6 +184,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         "target_feasibility": target_feasibility,
         "breakout_reference_date": breakout_date,
         "breakout_reference_close": round(breakout_close, 4) if breakout_close is not None and breakout_close != "" else "",
+        "breakout_reference_ha_close": round(breakout_ha_close, 4) if breakout_ha_close is not None and breakout_ha_close != "" else "",
         "breakout_reference_volume": int(breakout_volume) if breakout_volume is not None and breakout_volume != "" else "",
         "entry_status": "STOP_2R_BEREKEND",
         "action": action,
@@ -222,6 +240,7 @@ def build_rows() -> list[dict]:
             str(risk_row.get("prior_breakout_date", "")),
             risk_row.get("prior_breakout_close"),
             risk_row.get("prior_breakout_volume"),
+            risk_row.get("current_ha_close"), risk_row.get("prior_breakout_ha_close"),
         )
         output.append({
             "ticker": ticker,
@@ -263,7 +282,7 @@ def main() -> int:
         "target_2r", "pivot_reference_20d", "consolidation_pivot",
         "consolidation_pivot_date", "consolidation_pivot_status", "distance_to_pivot_pct",
         "long_buy_zone_status", "breakout_reference_status", "breakout_reference_date",
-        "breakout_reference_close", "breakout_reference_volume", "nearest_support",
+        "breakout_reference_close", "breakout_reference_ha_close", "breakout_reference_volume", "nearest_support",
         "nearest_support_date", "nearest_resistance", "nearest_resistance_date",
         "target_feasibility", "borrow_status", "news_status", "entry_status", "action", "score_date",
     ]
@@ -271,8 +290,9 @@ def main() -> int:
     pd.DataFrame(rows, columns=columns).to_csv(OUTPUT, index=False)
     stop_unknown = sum(row["entry_status"] != "STOP_2R_BEREKEND" for row in rows)
     feasibility_unknown = sum(row.get("target_feasibility") == "ONBEKEND" for row in rows)
+    invalid = sum(row["entry_status"] in {"ONGELDIGE_STOP", "ONGELDIGE_2R"} for row in rows)
     unknown = sum(
-        row["entry_status"] != "STOP_2R_BEREKEND" or row.get("target_feasibility") == "ONBEKEND"
+        row["entry_status"] == "ONBEKEND_STOP_OF_ENTRY" or row.get("target_feasibility") == "ONBEKEND"
         for row in rows
     )
     status = "FULL" if unknown == 0 else "PARTIAL"
@@ -281,11 +301,13 @@ def main() -> int:
         "candidate_count": len(rows),
         "stop_2r_calculated": len(rows) - stop_unknown,
         "target_feasibility_unknown": feasibility_unknown,
-        "unknown_or_invalid": unknown,
-        "note": "Consolidation pivot uses a confirmed swing origin and the following 5–21 completed sessions; the latest completed close is evaluated separately for breakout/breakdown.",
+        "unknown": unknown,
+        "invalid_stop_or_2r": invalid,
+        "unknown_or_invalid": unknown + invalid,
+        "note": "Consolidation pivot is calculated from completed-session Heikin-Ashi candles; actual close and volume are reported separately for breakout/breakdown confirmation.",
     }
     write_status(payload)
-    print(f"Entry risk: {payload['stop_2r_calculated']} stop/2R berekend, {unknown} onbekend/ongeldig.")
+    print(f"Entry risk: {payload['stop_2r_calculated']} stop/2R berekend, {unknown} onbekend, {invalid} ongeldig.")
     return 0 if status == "FULL" else 1
 
 

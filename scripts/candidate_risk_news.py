@@ -224,11 +224,12 @@ def calculate_history_extremes(frame: pd.DataFrame, expected_date: str) -> dict:
  
 def calculate_consolidation_pivot(frame: pd.DataFrame, expected_date: str,
                                   candidate_type: str) -> dict:
-    """Find a confirmed 5–21-session base and its first close-confirmed break.
+    """Find a 5–21-session consolidation and confirm breaks with Heikin-Ashi.
 
     The latest completed session is excluded from pivot construction and is
-    evaluated separately by entry_risk. The pivot is the range extreme before
-    the first close beyond that range.
+    evaluated separately by entry_risk. HA prices define the swing origin,
+    pivot and breakout confirmation. Reported breakout close and volume remain
+    the actual market close and traded volume.
     """
     side = candidate_type.upper()
     if side not in {"LONG", "SHORT"}:
@@ -237,7 +238,21 @@ def calculate_consolidation_pivot(frame: pd.DataFrame, expected_date: str,
     data = data.loc[data.index.strftime("%Y-%m-%d") <= expected_date]
     if data.empty or data.index[-1].strftime("%Y-%m-%d") != expected_date:
         raise ValueError("consolidatiepivot gebruikt geen actuele voltooide koerssessie")
+
+    # Calculate HA from the full available history so the recursive HA Open
+    # is correctly seeded and is not reset at the 21-session pivot window.
+    ha_close = (data["Open"] + data["High"] + data["Low"] + data["Close"]) / 4.0
+    ha_open_values = [float((data["Open"].iloc[0] + data["Close"].iloc[0]) / 2.0)]
+    for i in range(1, len(data)):
+        ha_open_values.append((ha_open_values[i - 1] + float(ha_close.iloc[i - 1])) / 2.0)
+    ha_open = pd.Series(ha_open_values, index=data.index)
+    ha_high = pd.concat([data["High"], ha_open, ha_close], axis=1).max(axis=1)
+    ha_low = pd.concat([data["Low"], ha_open, ha_close], axis=1).min(axis=1)
+
     prior = data.iloc[:-1].tail(21)
+    prior_ha_high = ha_high.loc[prior.index]
+    prior_ha_low = ha_low.loc[prior.index]
+    prior_ha_close = ha_close.loc[prior.index]
     unknown = {
         "consolidation_pivot": "",
         "consolidation_pivot_date": "",
@@ -245,13 +260,15 @@ def calculate_consolidation_pivot(frame: pd.DataFrame, expected_date: str,
         "consolidation_pivot_status": "ONBEKEND",
         "prior_breakout_date": "",
         "prior_breakout_close": "",
+        "prior_breakout_ha_close": "",
         "prior_breakout_volume": "",
+        "current_ha_close": round(float(ha_close.iloc[-1]), 4),
     }
     if len(prior) < 5:
         return unknown
 
-    highs = prior["High"].tolist()
-    lows = prior["Low"].tolist()
+    highs = prior_ha_high.tolist()
+    lows = prior_ha_low.tolist()
     eligible = []
     for i in range(2, len(prior) - 2):
         is_origin = (
@@ -263,47 +280,53 @@ def calculate_consolidation_pivot(frame: pd.DataFrame, expected_date: str,
         if is_origin and 5 <= sessions <= 21:
             eligible.append(i)
     if not eligible:
-        return unknown
+        return {**unknown, "consolidation_pivot_status": "GEEN_GELDIGE_PIVOT"}
 
     index = max(eligible)
     breakout = None
     for j in range(index + 5, len(prior)):
-        base = prior.iloc[index:j]
-        pivot = float(base["High"].max() if side == "LONG" else base["Low"].min())
-        close = float(prior["Close"].iloc[j])
-        broken = close > pivot if side == "LONG" else close < pivot
+        base_high = prior_ha_high.iloc[index:j]
+        base_low = prior_ha_low.iloc[index:j]
+        pivot = float(base_high.max() if side == "LONG" else base_low.min())
+        confirmed_ha_close = float(prior_ha_close.iloc[j])
+        broken = confirmed_ha_close > pivot if side == "LONG" else confirmed_ha_close < pivot
         if broken:
-            breakout = (j, pivot, base)
+            breakout = (j, pivot)
             break
 
     if breakout is not None:
-        j, level, segment = breakout
+        j, level = breakout
+        segment = prior.iloc[index:j]
         sessions = j - index
         breakout_date = prior.index[j].strftime("%Y-%m-%d")
         breakout_close = float(prior["Close"].iloc[j])
+        breakout_ha_close = float(prior_ha_close.iloc[j])
         breakout_volume = (
             float(prior["Volume"].iloc[j])
             if "Volume" in prior.columns and pd.notna(prior["Volume"].iloc[j]) else ""
         )
     else:
         segment = prior.iloc[index:]
-        level = float(segment["High"].max() if side == "LONG" else segment["Low"].min())
+        level = float(
+            prior_ha_high.iloc[index:].max() if side == "LONG"
+            else prior_ha_low.iloc[index:].min()
+        )
         sessions = len(prior) - index
-        breakout_date = breakout_close = breakout_volume = ""
+        breakout_date = breakout_close = breakout_ha_close = breakout_volume = ""
 
-    level_date = (
-        segment["High"].idxmax() if side == "LONG" else segment["Low"].idxmin()
-    ).strftime("%Y-%m-%d")
+    level_series = ha_high.loc[segment.index] if side == "LONG" else ha_low.loc[segment.index]
+    level_date = level_series.idxmax() if side == "LONG" else level_series.idxmin()
     return {
         "consolidation_pivot": round(level, 4),
-        "consolidation_pivot_date": level_date,
+        "consolidation_pivot_date": level_date.strftime("%Y-%m-%d"),
         "consolidation_sessions": int(sessions),
         "consolidation_pivot_status": "OK",
         "prior_breakout_date": breakout_date,
         "prior_breakout_close": round(breakout_close, 4) if breakout_close != "" else "",
+        "prior_breakout_ha_close": round(breakout_ha_close, 4) if breakout_ha_close != "" else "",
         "prior_breakout_volume": int(breakout_volume) if breakout_volume != "" else "",
+        "current_ha_close": round(float(ha_close.iloc[-1]), 4),
     }
-
 
 def _earnings_date(info: dict, today: datetime | None = None) -> str:
     today = (today or datetime.now(timezone.utc)).date()
@@ -440,7 +463,7 @@ def _fetch_candidate(candidate: dict) -> dict:
         "_short_metrics_ok": short_metrics_ok,
         "_earnings_date_known": earnings_date_known,
         "_history_ok": history_extremes.get("history_extremes_status") == "FULL",
-        "_pivot_ok": history_extremes.get("consolidation_pivot_status") == "OK",
+        "_pivot_ok": history_extremes.get("consolidation_pivot_status") in {"OK", "GEEN_GELDIGE_PIVOT"},
     }
 
 
@@ -480,15 +503,13 @@ def load_candidates() -> list[dict]:
         if sma20 is None or sma50 is None or sma20 >= sma50:
             continue
         loan = borrow_map.get(ticker)
-        if loan is None or str(loan.get("status", "")) != "AVAILABLE":
-            continue
         candidates.append({
             "candidate_type": "SHORT", "ticker": ticker,
             "sector": row.get("sector", ""), "industry": row.get("industry", ""),
             "technical_score": int(short_score), "score_date": str(row.get("score_date", "")),
-            "borrow_status": loan.get("status", ""),
-            "available_shares": loan.get("available_shares", ""),
-            "borrow_fee_rate_pct": loan.get("fee_rate_pct", ""),
+            "borrow_status": loan.get("status", "ONBEKEND") if loan is not None else "ONBEKEND",
+            "available_shares": loan.get("available_shares", "") if loan is not None else "",
+            "borrow_fee_rate_pct": loan.get("fee_rate_pct", "") if loan is not None else "",
         })
     return candidates
 
@@ -529,11 +550,7 @@ def main() -> int:
     pd.DataFrame(public_rows).to_csv(OUTPUT, index=False)
 
     unknown = sum(
-        row["risk_status"] == "UNKNOWN"
-        or not row["_history_ok"]
-        or not row["_pivot_ok"]
-        or (row["candidate_type"] == "SHORT" and
-            (not row["_info_ok"] or not row["_price_ok"] or not row["_short_metrics_ok"] or not row["_earnings_date_known"]))
+        not row["_history_ok"]
         for row in results
     )
     review = sum(row["risk_status"] == "REVIEW" for row in results)

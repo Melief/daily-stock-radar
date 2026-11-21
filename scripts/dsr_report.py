@@ -178,7 +178,7 @@ def build_report() -> tuple[str, dict]:
             entry.get("target_feasibility", ""), entry.get("consolidation_pivot", ""),
             entry.get("consolidation_pivot_date", ""), entry.get("breakout_reference_status", ""),
             entry.get("breakout_reference_date", ""), entry.get("breakout_reference_close", ""),
-            entry.get("breakout_reference_volume", ""), entry.get("long_buy_zone_status", ""),
+            entry.get("breakout_reference_ha_close", ""), entry.get("breakout_reference_volume", ""), entry.get("long_buy_zone_status", ""),
             risk.get("high_52w", ""), proximity_bar(risk.get("distance_to_52w_high_pct"), "52w"),
             risk.get("all_time_high", ""), proximity_bar(risk.get("distance_to_ath_pct"), "ath"),
             tech.get("rvol_5_21", ""), risk.get("risk_status", "ONBEKEND"),
@@ -201,7 +201,7 @@ def build_report() -> tuple[str, dict]:
             entry.get("target_feasibility", ""), entry.get("consolidation_pivot", ""),
             entry.get("consolidation_pivot_date", ""), entry.get("breakout_reference_status", ""),
             entry.get("breakout_reference_date", ""), entry.get("breakout_reference_close", ""),
-            entry.get("breakout_reference_volume", ""), borrow.get("status", "ONBEKEND"), borrow.get("fee_rate_pct", ""),
+            entry.get("breakout_reference_ha_close", ""), entry.get("breakout_reference_volume", ""), borrow.get("status", "ONBEKEND"), borrow.get("fee_rate_pct", ""),
             borrow.get("available_shares", ""), risk.get("short_percent_of_float", ""),
             risk.get("days_to_cover", ""), risk.get("high_52w", ""),
             proximity_bar(risk.get("distance_to_52w_high_pct"), "52w"), risk.get("all_time_high", ""),
@@ -268,26 +268,25 @@ def build_report() -> tuple[str, dict]:
         if row.get("status") not in {"CURRENT", "MANUAL"}
     ]
 
-    pending = [
-        "Long-entry: actuele consolidatiepivot, breakoutdatum, officiële slotkoers, volume en koopzone moeten zijn geverifieerd.",
-        "Short-entry: actuele consolidatiepivot, breakdowndatum, officiële slotkoers en volume moeten zijn geverifieerd; borrow en ruwe squeeze-/gapgegevens blijven afzonderlijk zichtbaar.",
-    ]
-    if market.get("market_regime") == "ONBEKEND":
-        pending.append("Risk-on/risk-off marktregime is ONBEKEND door ontbrekende of ongeldige marktdata.")
-    if borrow_unknown:
-        pending.append(f"IBKR-borrowinventaris ontbreekt voor {borrow_unknown} Short-kandidaten.")
+    pending = []
+    if market.get("status") != "FULL" or market.get("data_status") != "FULL":
+        pending.append("SPX/QQQ-marktcontext ontbreekt of is verouderd.")
+    if tech_status.get("status") != "FULL":
+        pending.append("Technische Long/Short-scores zijn niet volledig berekend.")
     if source_warnings:
-        pending.append("Bronverversing/dekking bevat waarschuwingen of onbekende statussen.")
+        pending.append("Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.")
     if risk_status.get("status") != "FULL":
-        pending.append("Nieuws- en Short-risicocontrole is gedeeltelijk of bevat onbekende gegevens.")
+        pending.append("Historische koersdata of HA-consolidatiepivotcontrole is onvolledig.")
     if entry_risk_status.get("status") != "FULL":
-        pending.append("HA-stop, risico% en 2R zijn niet voor alle kandidaten betrouwbaar berekend.")
-    if fundamental_status.get("unknown", 0):
-        pending.append("Fundamentele gegevens ontbreken voor een of meer Long-kandidaten.")
-    if sw_status.get("unknown", 0):
-        pending.append("SW Financial Health ontbreekt voor een of meer Long-kandidaten.")
+        pending.append("Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig.")
+    if fundamental_status.get("status") != "FULL" or fundamental_status.get("unknown", 0):
+        pending.append("Long-fundamentalgegevens bevatten onbekende criteria; deze kandidaten blijven uitgesloten.")
+    if sw_status.get("status") != "FULL" or sw_status.get("unknown", 0):
+        pending.append("Simply Wall St Financial Health bevat onbekende scores; deze kandidaten blijven uitgesloten.")
 
-    report_status = "PARTIAL"
+    # Borrow inventory and news/event feeds remain visible, but are optional
+    # enrichments and do not determine DSR completeness.
+    report_status = "FULL" if not pending else "PARTIAL"
     details = {
         "status": report_status,
         "session_date": session,
@@ -308,7 +307,7 @@ def build_report() -> tuple[str, dict]:
     }
 
     lines = [
-        f"# DAILY STOCK RADAR — GEDEELTELIJKE DSR",
+        f"# DAILY STOCK RADAR — {'VOLLEDIGE DSR' if report_status == 'FULL' else 'GEDEELTELIJKE DSR'}",
         f"**Gegevensdatum:** {session}  ",
         f"**Status:** {report_status}",
         "",
@@ -323,12 +322,12 @@ def build_report() -> tuple[str, dict]:
         f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**. "
         f"SW PASS: **{sw_status.get('passed', 0)}**; SW uitgesloten: **{sw_status.get('excluded_sw', 0)}**; "
         f"onbekend: **{sw_status.get('unknown', 0)}**. Goedgekeurd voor verdere Long-beoordeling: **{len(long_candidates)}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Breakoutdatum", "Breakoutslot", "Breakoutvolume", "Koopzone", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Breakoutdatum", "Officieel slot", "HA-slot", "Volume", "Koopzone", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
         "",
         "## 4. Short",
         f"Technisch gekwalificeerd: **{short_tech_count}**. IBKR beschikbaar: **{borrow_available}**; "
         f"IBKR onbekend: **{borrow_unknown}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Doorbraakdatum", "Doorbraakslot", "Doorbraakvolume", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "Nieuws", "Actie"], short_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Doorbraakdatum", "Officieel slot", "HA-slot", "Volume", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "Nieuws", "Actie"], short_table),
         "",
         "## 5. HA-signalen",
         f"Long-signalen volgens HA 21/8 (HA Low=Open; slotkoers boven SMA20 en SMA50): **{len(ha_long)}**.",
@@ -361,7 +360,7 @@ def build_report() -> tuple[str, dict]:
 
 def update_run_status(details: dict):
     current = read_json("dsr_run_status.json")
-    current["status"] = "PARTIAL"
+    current["status"] = details["status"]
     current["report_status"] = details["status"]
     current["component_status"] = {
         "technical_scores": details["technical_score_status"],
@@ -387,7 +386,7 @@ def main() -> int:
         f"Long technisch={details['long_technical_candidates']} goedgekeurd={details['long_approved_candidates']}; "
         f"Short technisch={details['short_technical_candidates']} borrow beschikbaar={details['short_borrow_available']}"
     )
-    return 0
+    return 0 if details["status"] == "FULL" else 1
 
 
 if __name__ == "__main__":

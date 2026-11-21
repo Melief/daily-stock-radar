@@ -28,7 +28,8 @@ def number(value):
 
 def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: str,
                           volume, news_status: str = "ONBEKEND",
-                          borrow_status: str = "NVT") -> dict:
+                          borrow_status: str = "NVT", nearest_support=None,
+                          nearest_resistance=None) -> dict:
     entry, stop, pivot = number(entry), number(stop), number(pivot)
     volume = number(volume)
     side = candidate_type.upper()
@@ -45,6 +46,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "distance_to_pivot_pct": "",
             "long_buy_zone_status": "ONBEKEND",
             "breakout_reference_status": "ONBEKEND",
+            "target_feasibility": "ONBEKEND",
             "breakout_reference_date": "",
             "breakout_reference_close": "",
             "breakout_reference_volume": "",
@@ -71,6 +73,18 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "breakout_reference_close": "", "breakout_reference_volume": "",
             "entry_status": "ONGELDIGE_2R", "action": "VERMIJDEN TOT 2R HERSTELD",
         }
+
+    support, resistance = number(nearest_support), number(nearest_resistance)
+    if side == "LONG":
+        target_feasibility = (
+            "ONBEKEND" if resistance is None else
+            "2R_DOEL_BOVEN_WEERSTAND" if target > resistance else "2R_DOEL_ONDER_WEERSTAND"
+        )
+    else:
+        target_feasibility = (
+            "ONBEKEND" if support is None else
+            "2R_DOEL_ONDER_STEUN" if target < support else "2R_DOEL_BOVEN_STEUN"
+        )
 
     if pivot is None or pivot <= 0:
         pivot_status, distance, breakout_date, breakout_close, breakout_volume = (
@@ -112,6 +126,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         "distance_to_pivot_pct": round(distance, 2) if distance != "" else "",
         "long_buy_zone_status": buy_zone if side == "LONG" else "NVT",
         "breakout_reference_status": pivot_status,
+        "target_feasibility": target_feasibility,
         "breakout_reference_date": breakout_date,
         "breakout_reference_close": round(breakout_close, 4) if breakout_close != "" else "",
         "breakout_reference_volume": int(breakout_volume) if breakout_volume != "" else "",
@@ -127,7 +142,10 @@ def build_rows() -> list[dict]:
     news = pd.read_csv(RISK_NEWS, dtype={"ticker": str}) if RISK_NEWS.exists() else pd.DataFrame()
     tech_map = {str(row["ticker"]).upper(): row for _, row in technical.iterrows()}
     borrow_map = {str(row["ticker"]).upper(): row for _, row in borrow.iterrows()}
-    news_map = {str(row["ticker"]).upper(): row for _, row in news.iterrows()} if not news.empty else {}
+    news_map = {
+        (str(row["ticker"]).upper(), str(row.get("candidate_type", "")).upper()): row
+        for _, row in news.iterrows()
+    } if not news.empty else {}
     long_tickers = {
         str(row["ticker"]).upper() for _, row in sw.iterrows()
         if row.get("fundamental_status") == "PASS" and row.get("sw_status") == "PASS"
@@ -146,7 +164,7 @@ def build_rows() -> list[dict]:
     for ticker, side in sorted(set(candidates)):
         tech = tech_map.get(ticker, {})
         borrow_row = borrow_map.get(ticker, {})
-        news_row = news_map.get(ticker, {})
+        news_row = news_map.get((ticker, side), {})
         stop_key = "last_ha_long_stop" if side == "LONG" else "last_ha_short_stop"
         stop_date_key = "last_ha_long_stop_date" if side == "LONG" else "last_ha_short_stop_date"
         pivot_key = "pivot_resistance_20d" if side == "LONG" else "pivot_support_20d"
@@ -159,6 +177,7 @@ def build_rows() -> list[dict]:
             tech.get("daily_volume"),
             str(news_row.get("risk_status", "ONBEKEND")),
             str(borrow_row.get("status", "ONBEKEND")) if side == "SHORT" else "NVT",
+            news_row.get("nearest_support"), news_row.get("nearest_resistance"),
         )
         output.append({
             "ticker": ticker,
@@ -170,6 +189,10 @@ def build_rows() -> list[dict]:
             "ha_day_type": tech.get("ha_day_type", ""),
             "stop_date": tech.get(stop_date_key, ""),
             "borrow_status": borrow_row.get("status", "") if side == "SHORT" else "",
+            "nearest_support": news_row.get("nearest_support", ""),
+            "nearest_support_date": news_row.get("nearest_support_date", ""),
+            "nearest_resistance": news_row.get("nearest_resistance", ""),
+            "nearest_resistance_date": news_row.get("nearest_resistance_date", ""),
             "news_status": news_row.get("risk_status", "ONBEKEND"),
             "score_date": tech.get("score_date", ""),
             **result,
@@ -195,7 +218,9 @@ def main() -> int:
         "ha_day_type", "stop_date", "entry", "stop", "risk_per_share", "risk_pct",
         "target_2r", "pivot_reference_20d", "distance_to_pivot_pct",
         "long_buy_zone_status", "breakout_reference_status", "breakout_reference_date",
-        "breakout_reference_close", "breakout_reference_volume", "borrow_status", "news_status", "entry_status", "action", "score_date",
+        "breakout_reference_close", "breakout_reference_volume", "nearest_support",
+        "nearest_support_date", "nearest_resistance", "nearest_resistance_date",
+        "target_feasibility", "borrow_status", "news_status", "entry_status", "action", "score_date",
     ]
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(rows, columns=columns).to_csv(OUTPUT, index=False)

@@ -25,25 +25,32 @@ def save_rows(label, rows):
     slug = re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_")
     output = DATA_DIR / f"{slug}_tickers.csv"
     retrieved_at = datetime.now(ZoneInfo("Europe/Amsterdam")).isoformat(timespec="seconds")
+    parsed = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        symbol = str(row.get("s") or row.get("symbol") or row.get("ticker") or "").strip()
+        ticker = symbol.split(":")[-1] if symbol else ""
+        exchange = symbol.split(":")[0] if ":" in symbol else str(row.get("exchange") or "").strip()
+        values = row.get("d") or row.get("description") or row.get("fields") or []
+        description = ""
+        if isinstance(values, dict):
+            description = values.get("description") or values.get("short_name") or values.get("name") or ""
+            ticker = values.get("name") or ticker
+            exchange = values.get("exchange") or exchange
+        elif isinstance(values, list):
+            description = next((str(v) for v in values if isinstance(v, str) and v.strip()
+                                and v.strip().upper() not in {ticker.upper(), exchange.upper(), symbol.upper()}
+                                and v.strip().upper() not in {"NASDAQ", "NYSE", "AMEX", "ARCA", "BATS", "USA", "US"}), "")
+        if ticker:
+            parsed.append([ticker, exchange, symbol, description, retrieved_at])
+    if not parsed:
+        raise RuntimeError(f"{label}: TradingView retourneerde {len(rows)} rijen maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden.")
     with output.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f)
         writer.writerow(["ticker", "exchange", "symbol", "description", "retrieved_at"])
-        for row in rows:
-            symbol = row.get("s", "")
-            ticker = symbol.split(":")[-1]
-            exchange = symbol.split(":")[0] if ":" in symbol else ""
-            values = row.get("d") or []
-            description = ""
-            if isinstance(values, dict):
-                description = values.get("description") or values.get("short_name") or ""
-                ticker = values.get("name") or ticker
-                exchange = values.get("exchange") or exchange
-            elif isinstance(values, list):
-                description = next((str(v) for v in values if isinstance(v, str) and v.strip()
-                                    and v.strip().upper() not in {ticker.upper(), exchange.upper(), symbol.upper()}
-                                    and v.strip().upper() not in {"NASDAQ", "NYSE", "AMEX", "ARCA", "BATS", "USA", "US"}), "")
-            writer.writerow([ticker, exchange, symbol, description, retrieved_at])
-    print(f"{label}: {len(rows)} tickers -> {output.relative_to(ROOT)}")
+        writer.writerows(parsed)
+    print(f"{label}: {len(parsed)} gevalideerde tickers -> {output.relative_to(ROOT)}")
     return output
 
 
@@ -69,6 +76,13 @@ def retrieve_screener(browser, label, url):
                 if isinstance(rows, list):
                     detail["row_count"] = len(rows)
                     if rows:
+                        detail["first_row_type"] = type(rows[0]).__name__
+                        if isinstance(rows[0], dict):
+                            detail["first_row_keys"] = sorted(rows[0].keys())[:30]
+                        detail["first_row_preview"] = json.dumps(rows[0], ensure_ascii=False, default=str)[:1400]
+                        symbols = payload.get("symbols")
+                        if symbols:
+                            detail["symbols_preview"] = json.dumps(symbols[0], ensure_ascii=False, default=str)[:500] if isinstance(symbols, list) else str(type(symbols).__name__)
                         captured.append(rows)
                 else:
                     detail["data_type"] = type(rows).__name__

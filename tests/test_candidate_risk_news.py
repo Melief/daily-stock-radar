@@ -36,6 +36,26 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertEqual(items[0]["source"], "Example News")
         self.assertEqual(items[0]["event_flags"], ["earnings", "guidance"])
 
+    def test_news_results_must_match_company_or_ticker(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+        <rss><channel>
+          <item><title>MarketAxess Holdings stock update</title>
+            <link>https://example.com/unrelated</link>
+            <pubDate>Fri, 20 Nov 2026 12:00:00 GMT</pubDate></item>
+          <item><title>Cboe Global Markets announces earnings guidance</title>
+            <link>https://example.com/relevant</link>
+            <pubDate>Fri, 20 Nov 2026 12:00:00 GMT</pubDate></item>
+        </channel></rss>"""
+        now = datetime(2026, 11, 21, 12, tzinfo=timezone.utc)
+        items = rn.parse_google_news_rss(xml, now, ["cboe"])
+        self.assertEqual([item["url"] for item in items], ["https://example.com/relevant"])
+
+    def test_earnings_date_uses_future_date_only(self):
+        today = datetime(2026, 11, 21, tzinfo=timezone.utc)
+        info = {"earningsDate": ["2026-09-09", "2026-12-15"]}
+        self.assertEqual(rn._earnings_date(info, today), "2026-12-15")
+        self.assertEqual(rn._earnings_date({"earningsDate": ["2026-09-09"]}, today), "")
+
     def test_short_price_risk_metrics_use_completed_session(self):
         dates = pd.bdate_range(end="2026-11-20", periods=30)
         close = [100 - i * 0.5 for i in range(30)]

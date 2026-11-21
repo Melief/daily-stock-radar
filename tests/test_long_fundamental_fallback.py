@@ -36,3 +36,5 @@ class LongFundamentalFallbackTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+# Regression coverage for Yahoo quoteSummary outages and stale fallback safety.

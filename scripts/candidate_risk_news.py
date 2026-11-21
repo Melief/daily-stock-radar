@@ -5,6 +5,7 @@ from __future__ import annotations
 import concurrent.futures
 import email.utils
 import json
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -45,7 +46,8 @@ def event_flags(text: str) -> list[str]:
     return [keyword for keyword in EVENT_KEYWORDS if keyword in lowered]
 
 
-def parse_google_news_rss(xml_text: str, now: datetime | None = None) -> list[dict]:
+def parse_google_news_rss(xml_text: str, now: datetime | None = None,
+                         relevance_terms: list[str] | None = None) -> list[dict]:
     now = now or datetime.now(timezone.utc)
     if now.tzinfo is None:
         now = now.replace(tzinfo=timezone.utc)
@@ -69,6 +71,11 @@ def parse_google_news_rss(xml_text: str, now: datetime | None = None) -> list[di
             continue
         if published < cutoff or published > now + timedelta(hours=1):
             continue
+        if relevance_terms:
+            title_lower = title.lower()
+            if not any(re.search(r"\b" + re.escape(term.lower()) + r"\b", title_lower)
+                       for term in relevance_terms if term):
+                continue
         flags = event_flags(title)
         items.append({
             "title": title,
@@ -81,7 +88,7 @@ def parse_google_news_rss(xml_text: str, now: datetime | None = None) -> list[di
     return items[:NEWS_LIMIT]
 
 
-def fetch_google_news(query: str) -> list[dict]:
+def fetch_google_news(query: str, relevance_terms: list[str] | None = None) -> list[dict]:
     params = urllib.parse.urlencode({
         "q": f'"{query}" stock when:{NEWS_DAYS}d',
         "hl": "en-US",
@@ -95,7 +102,9 @@ def fetch_google_news(query: str) -> list[dict]:
     )
     with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
         xml_text = response.read().decode("utf-8", errors="replace")
-    return parse_google_news_rss(xml_text)
+    if not relevance_terms:
+        raise ValueError("geen betrouwbare bedrijfsnaam/ticker voor nieuwsrelevantie")
+    return parse_google_news_rss(xml_text, relevance_terms=relevance_terms)
 
 
 def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
@@ -146,18 +155,21 @@ def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
     }
 
 
-def _earnings_date(info: dict) -> str:
+def _earnings_date(info: dict, today: datetime | None = None) -> str:
+    today = (today or datetime.now(timezone.utc)).date()
+    candidates = []
     timestamp = number(info.get("earningsTimestamp"))
     if timestamp is not None and timestamp > 0:
-        return datetime.fromtimestamp(timestamp, timezone.utc).date().isoformat()
+        candidates.append(datetime.fromtimestamp(timestamp, timezone.utc).date())
     dates = info.get("earningsDate")
-    if isinstance(dates, (list, tuple)) and dates:
-        value = dates[0]
+    values = list(dates) if isinstance(dates, (list, tuple)) else ([dates] if dates is not None else [])
+    for value in values:
         try:
-            return pd.Timestamp(value).date().isoformat()
+            candidates.append(pd.Timestamp(value).date())
         except Exception:
-            return ""
-    return ""
+            continue
+    future = sorted(value for value in candidates if value >= today)
+    return future[0].isoformat() if future else ""
 
 
 def derive_risk_status(news_status: str, flags: list[str], short_metrics_ok: bool = True,
@@ -177,13 +189,22 @@ def _fetch_candidate(candidate: dict) -> dict:
     info, info_error = {}, ""
     try:
         info = yf.Ticker(ticker).info or {}
+        if not info:
+            info_error = "Yahoo Finance info is empty or unavailable"
     except Exception as exc:
         info_error = str(exc)
 
     company = str(info.get("longName") or info.get("shortName") or ticker).strip()
     query = company if company and company != ticker else ticker
+    relevance_terms = []
+    if len(ticker) >= 3:
+        relevance_terms.append(ticker)
+    if company and company != ticker:
+        first_word = re.split(r"\s+", company.strip())[0].strip(".,")
+        if len(first_word) >= 3:
+            relevance_terms.append(first_word)
     try:
-        news = fetch_google_news(query)
+        news = fetch_google_news(query, relevance_terms)
         news_status = "CHECKED" if news else "NO_RESULTS"
         news_error = ""
     except Exception as exc:

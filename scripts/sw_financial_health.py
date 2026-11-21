@@ -80,16 +80,16 @@ def build_sw_rows(fundamentals: pd.DataFrame, verified: dict[str, dict]) -> list
             "source_url": "",
         }
         item = verified.get(ticker)
-        if item is not None and fundamental_status != "FAIL":
+        if item is not None and (fundamental_data_status != "CURRENT" or fundamental_status != "FAIL"):
             row["financial_health_score"] = item["score"]
             row["checked_at"] = item["checked_at"]
             row["source_url"] = item["source_url"]
-        if item is not None and fundamental_status != "FAIL" and item["score"] < 4:
-            # A verified SW score below 4 is an independent exclusion,
-            # even when other fundamental metrics are still unknown.
-            row["sw_status"] = "EXCLUDED"
+        if fundamental_data_status != "CURRENT":
+            row["sw_status"] = "EXCLUDED" if item is not None and item["score"] < 4 else "ONBEKEND_FUNDAMENTALS"
         elif fundamental_status == "FAIL":
             row["sw_status"] = "NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN"
+        elif item is not None and item["score"] < 4:
+            row["sw_status"] = "EXCLUDED"
         elif fundamental_status != "PASS":
             row["sw_status"] = "ONBEKEND_FUNDAMENTALS"
         elif item is None:
@@ -110,7 +110,12 @@ def main() -> int:
     try:
         fundamentals = pd.read_csv(FUNDAMENTALS, dtype={"ticker": str})
         verified = load_verified_scores()
-        rows = build_sw_rows(fundamentals, verified)
+        try:
+        fundamental_status = json.loads(FUNDAMENTAL_STATUS.read_text(encoding="utf-8"))
+    except Exception:
+        fundamental_status = {}
+    fundamental_data_status = fundamental_status.get("data_status", "CURRENT")
+    rows = build_sw_rows(fundamentals, verified, fundamental_data_status)
     except Exception as exc:
         write_status({"status": "PARTIAL", "errors": [str(exc)]})
         print(f"SW-controle niet beschikbaar: {exc}", file=sys.stderr)

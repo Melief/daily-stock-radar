@@ -11,6 +11,7 @@ on:
       - "scripts/sw_financial_health.py"
       - "scripts/dsr_schedule_guard.py"
       - "scripts/short_borrow.py"
+      - "scripts/candidate_risk_news.py"
       - "scripts/source_status.py"
       - "scripts/import_vyus_holdings.py"
       - "scripts/update_tradingview_screeners.py"

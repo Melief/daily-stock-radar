@@ -8,6 +8,7 @@ on:
       - "scripts/market_context.py"
       - "scripts/technical_score.py"
       - "scripts/short_borrow.py"
+      - "scripts/long_fundamental_screen.py"
       - "scripts/source_status.py"
       - "scripts/import_vyus_holdings.py"
       - "scripts/update_tradingview_screeners.py"

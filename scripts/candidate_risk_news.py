@@ -468,11 +468,11 @@ def _fetch_candidate(candidate: dict) -> dict:
 
 
 def load_candidates() -> list[dict]:
-    if not TECHNICAL.exists() or not LONG_SW.exists() or not BORROW.exists():
-        raise FileNotFoundError("technical_scores.csv, long_sw_status.csv of short_borrow.csv ontbreekt")
+    if not TECHNICAL.exists() or not LONG_SW.exists():
+        raise FileNotFoundError("technical_scores.csv of long_sw_status.csv ontbreekt")
     technical = pd.read_csv(TECHNICAL, dtype={"ticker": str})
     long_sw = pd.read_csv(LONG_SW, dtype={"ticker": str})
-    borrow = pd.read_csv(BORROW, dtype={"ticker": str})
+    borrow = pd.read_csv(BORROW, dtype={"ticker": str}) if BORROW.exists() else pd.DataFrame(columns=["ticker", "status", "available_shares", "fee_rate_pct"])
     candidates = []
     technical_map = {
         str(row["ticker"]).upper(): row for _, row in technical.iterrows()
@@ -498,7 +498,7 @@ def load_candidates() -> list[dict]:
         ticker = str(row.get("ticker", "")).upper()
         short_score = number(row.get("short_score"))
         sma20, sma50 = number(row.get("sma20")), number(row.get("sma50"))
-        if str(row.get("score_status", "")) != "OK" or short_score is None or short_score < 4:
+        if str(row.get("score_status", "")) != "OK" or short_score is None or short_score < 3:
             continue
         if sma20 is None or sma50 is None or sma20 >= sma50:
             continue

@@ -81,8 +81,11 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         return {
             "entry": entry, "stop": stop, "risk_per_share": round(risk, 4),
             "risk_pct": "", "target_2r": "", "pivot_reference_20d": pivot or "",
+            "consolidation_pivot": pivot if pivot is not None else "",
+            "consolidation_pivot_date": consolidation_pivot_date or "",
+            "consolidation_pivot_status": consolidation_pivot_status,
             "distance_to_pivot_pct": "", "long_buy_zone_status": "ONBEKEND",
-            "breakout_reference_status": "ONBEKEND", "target_feasibility": "ONBEKEND",
+            "breakout_reference_status": "ONBEKEND", "target_feasibility": "NVT_STOP_ONGELDIG",
             "breakout_reference_date": "", "breakout_reference_close": "", "breakout_reference_ha_close": "", "breakout_reference_volume": "",
             "entry_status": "ONGELDIGE_STOP", "action": "VERMIJDEN TOT STOP HERSTELD",
         }
@@ -194,7 +197,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
 def build_rows() -> list[dict]:
     technical = pd.read_csv(TECHNICAL, dtype={"ticker": str})
     sw = pd.read_csv(LONG_SW, dtype={"ticker": str})
-    borrow = pd.read_csv(BORROW, dtype={"ticker": str})
+    borrow = pd.read_csv(BORROW, dtype={"ticker": str}) if BORROW.exists() else pd.DataFrame(columns=["ticker", "status"])
     news = pd.read_csv(RISK_NEWS, dtype={"ticker": str}) if RISK_NEWS.exists() else pd.DataFrame()
     tech_map = {str(row["ticker"]).upper(): row for _, row in technical.iterrows()}
     borrow_map = {str(row["ticker"]).upper(): row for _, row in borrow.iterrows()}

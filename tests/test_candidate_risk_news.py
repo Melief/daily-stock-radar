@@ -1,5 +1,8 @@
 """Tests for candidate news parsing and raw Short risk metrics."""
 import unittest
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -204,6 +207,27 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertEqual(result["consolidation_pivot_status"], "GEEN_GELDIGE_PIVOT")
         self.assertEqual(result["consolidation_pivot"], "")
         self.assertNotEqual(result["current_ha_close"], "")
+
+
+    def test_short_score_three_is_checked_even_without_borrow_file(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            technical = root / "technical_scores.csv"
+            long_sw = root / "long_sw_status.csv"
+            technical.write_text(
+                "ticker,score_status,short_score,sma20,sma50,score_date,sector,industry\n"
+                "ABC,OK,3,90,100,2026-11-20,Technology,Software\n",
+                encoding="utf-8",
+            )
+            long_sw.write_text("ticker,fundamental_status,sw_status\n", encoding="utf-8")
+            missing_borrow = root / "short_borrow.csv"
+            with patch.object(rn, "TECHNICAL", technical), patch.object(rn, "LONG_SW", long_sw), patch.object(rn, "BORROW", missing_borrow):
+                candidates = rn.load_candidates()
+            self.assertEqual(len(candidates), 1)
+            self.assertEqual(candidates[0]["ticker"], "ABC")
+            self.assertEqual(candidates[0]["candidate_type"], "SHORT")
+            self.assertEqual(candidates[0]["technical_score"], 3)
+            self.assertEqual(candidates[0]["borrow_status"], "ONBEKEND")
 
 
 if __name__ == "__main__":

@@ -5,10 +5,9 @@
   "analysis_status": "FULL",
   "pending_components": [
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
-    "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig.",
-    "Yahoo Finance leverde geen actuele Long-fundamentalvelden; de laatste gevalideerde waarden zijn alleen als STALE_FALLBACK bewaard."
+    "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
   ],
-  "generated_at": "2026-11-21T19:13:06+00:00",
+  "generated_at": "2026-11-21T19:17:16+00:00",
   "unique_tickers": 67,
   "unknown_market_data_tickers": 0,
   "source_count": 6,

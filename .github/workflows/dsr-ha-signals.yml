@@ -58,9 +58,9 @@ jobs:
             git commit -m "Update DSR Heikin Ashi and volume signals"
             git pull --rebase origin main
             git push
+          fi
       - name: Mark partial DSR run as failed
         if: steps.calculate.outcome == 'failure'
         run: |
           echo "DSR is PARTIAL: one or more source or ticker checks failed. See the source coverage and HA outputs above."
           exit 1
-          fi

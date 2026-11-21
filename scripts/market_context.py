@@ -147,12 +147,12 @@ def update_run_status(payload: dict) -> None:
     except (OSError, json.JSONDecodeError) as exc:
         raise RuntimeError(f"DSR-runstatus kan niet veilig worden bijgewerkt: {exc}") from exc
 
-    run_status["market_context_status"] = payload["status"]
+    # Price-data completeness is not the same as a complete DSR market assessment.
+    run_status["market_context_status"] = "PARTIAL"
+    run_status["market_context_data_status"] = payload.get("data_status", "PARTIAL")
     pending = run_status.get("pending_components", [])
     component = "SPX/QQQ market context"
-    if payload.get("data_status") == "FULL":
-        run_status["pending_components"] = [item for item in pending if item != component]
-    elif component not in pending:
+    if component not in pending:
         run_status["pending_components"] = pending + [component]
     run_status["status"] = "PARTIAL"
     temporary = run_status_path.with_suffix(".json.tmp")

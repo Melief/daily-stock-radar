@@ -137,7 +137,7 @@ class CandidateRiskNewsTests(unittest.TestCase):
         frame = pd.DataFrame({
             "Open": 10.0, "High": 11.0, "Low": 9.0, "Close": 10.0
         }, index=dates)
-        with self.assertRaisesRegex(ValueError, "koersdata loopt achter"):
+        with self.assertRaisesRegex(ValueError, "geen actuele voltooide"):
             rn.calculate_consolidation_pivot(frame, "2026-11-20", "LONG")
 
     def test_short_history_keeps_ath_but_52_week_high_unknown(self):

@@ -51,7 +51,22 @@ def load_source_config():
             f"gevonden: {sorted(str(name) for name in names)}"
         )
     sources = []
+    source_ids = set()
     for entry in entries:
+        source_id = entry.get("id")
+        refresh_mode = entry.get("refresh_mode")
+        if not source_id or source_id in source_ids:
+            raise ValueError(f"Ontbrekende of dubbele bron-id voor {entry.get('name')}.")
+        source_ids.add(source_id)
+        if refresh_mode not in {"manual", "automatic"}:
+            raise ValueError(f"Ongeldige refresh_mode voor {entry.get('name')}: {refresh_mode}")
+        if refresh_mode == "automatic":
+            try:
+                max_age_hours = int(entry.get("max_age_hours", 0))
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"Ongeldige max_age_hours voor {entry.get('name')}.") from exc
+            if max_age_hours <= 0:
+                raise ValueError(f"max_age_hours moet positief zijn voor {entry.get('name')}.")
         fmt = entry.get("format")
         if fmt == "whitespace":
             fmt = "text"

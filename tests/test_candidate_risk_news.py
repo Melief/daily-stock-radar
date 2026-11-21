@@ -117,7 +117,7 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertEqual(result["consolidation_sessions"], 11)
         self.assertEqual(result["consolidation_pivot"], max(highs[10:21]))
 
-    def test_long_pivot_records_first_prior_breakout_close_and_volume(self):
+    def test_regular_close_alone_does_not_confirm_ha_pivot_breakout(self):
         dates = pd.bdate_range(end="2026-11-20", periods=22)
         lows = [10.0] * 22
         lows[8:13] = [8.0, 7.0, 4.0, 7.5, 8.0]
@@ -133,10 +133,10 @@ class CandidateRiskNewsTests(unittest.TestCase):
         }, index=dates)
         result = rn.calculate_consolidation_pivot(frame, "2026-11-20", "LONG")
         self.assertEqual(result["consolidation_pivot_status"], "OK")
-        self.assertEqual(result["consolidation_pivot"], max(highs[10:15]))
-        self.assertEqual(result["prior_breakout_date"], dates[15].strftime("%Y-%m-%d"))
-        self.assertEqual(result["prior_breakout_close"], 13.0)
-        self.assertEqual(result["prior_breakout_volume"], 2500)
+        self.assertEqual(result["consolidation_pivot"], 14.0)
+        self.assertEqual(result["prior_breakout_date"], "")
+        self.assertEqual(result["prior_breakout_close"], "")
+        self.assertEqual(result["prior_breakout_volume"], "")
 
     def test_short_consolidation_pivot_is_mirrored(self):
         dates = pd.bdate_range(end="2026-11-20", periods=22)

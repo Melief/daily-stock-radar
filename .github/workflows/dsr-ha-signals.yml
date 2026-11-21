@@ -25,6 +25,7 @@ on:
       - "scripts/ha_signals.py"
       - "scripts/market_context.py"
       - "scripts/technical_score.py"
+      - "scripts/long_fundamental_screen.py"
       - "scripts/source_status.py"
       - "data/dsr_ticker_sources.json"
       - "data/source_status/*.json"
@@ -65,6 +66,11 @@ jobs:
         if: always() && steps.calculate.outcome != 'skipped' && steps.market_context.outcome == 'success'
         continue-on-error: true
         run: python scripts/technical_score.py
+      - name: Check Long fundamental criteria
+        id: long_fundamentals
+        if: always() && steps.technical_score.outcome == 'success'
+        continue-on-error: true
+        run: python scripts/long_fundamental_screen.py
       - name: Commit updated signal, market context and source coverage files
         if: always() && steps.calculate.outcome != 'skipped'
         shell: bash
@@ -72,7 +78,7 @@ jobs:
           set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for output in data/ha_signals.csv data/ha_source_coverage.csv data/dsr_source_status.csv data/dsr_run_status.json data/market_context.json data/technical_scores.csv data/technical_score_status.json; do
+          for output in data/ha_signals.csv data/ha_source_coverage.csv data/dsr_source_status.csv data/dsr_run_status.json data/market_context.json data/technical_scores.csv data/technical_score_status.json data/long_fundamentals.csv data/long_fundamental_status.json; do
             if [ -f "$output" ]; then git add "$output"; fi
           done
           if git diff --cached --quiet; then
@@ -123,7 +129,7 @@ jobs:
             sleep 3
           done
       - name: Mark partial DSR pipeline as failed
-        if: steps.calculate.outcome == 'failure' || steps.market_context.outcome == 'failure' || steps.technical_score.outcome == 'failure'
+        if: steps.calculate.outcome == 'failure' || steps.market_context.outcome == 'failure' || steps.technical_score.outcome == 'failure' || steps.long_fundamentals.outcome == 'failure'
         run: |
-          echo "HA pipeline is PARTIAL: source freshness, source coverage, ticker analysis, market context or technical scoring is incomplete. See the source status and HA outputs above."
+          echo "HA pipeline is PARTIAL: source freshness, source coverage, ticker analysis, market context or technical scoring or Long fundamental screening is incomplete. See the source status and HA outputs above."
           exit 1

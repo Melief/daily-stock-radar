@@ -65,9 +65,10 @@ class MarketContextTests(unittest.TestCase):
             self.assertEqual(json.loads(raw)["data_status"], "FULL")
             updated = json.loads(status_file.read_text(encoding="utf-8"))
             self.assertEqual(updated["status"], "PARTIAL")
-            self.assertEqual(updated["pending_components"], ["Long selectie"])
+            self.assertEqual(updated["pending_components"], ["SPX/QQQ market context", "Long selectie"])
             self.assertEqual(updated["other_field"], "preserve")
-            self.assertEqual(updated["market_context_status"], "FULL")
+            self.assertEqual(updated["market_context_status"], "PARTIAL")
+            self.assertEqual(updated["market_context_data_status"], "FULL")
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ from __future__ import annotations
 import concurrent.futures
 import email.utils
 import json
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -45,7 +46,8 @@ def event_flags(text: str) -> list[str]:
     return [keyword for keyword in EVENT_KEYWORDS if keyword in lowered]
 
 
-def parse_google_news_rss(xml_text: str, now: datetime | None = None) -> list[dict]:
+def parse_google_news_rss(xml_text: str, now: datetime | None = None,
+                         relevance_terms: list[str] | None = None) -> list[dict]:
     now = now or datetime.now(timezone.utc)
     if now.tzinfo is None:
         now = now.replace(tzinfo=timezone.utc)
@@ -69,6 +71,11 @@ def parse_google_news_rss(xml_text: str, now: datetime | None = None) -> list[di
             continue
         if published < cutoff or published > now + timedelta(hours=1):
             continue
+        if relevance_terms:
+            title_lower = title.lower()
+            if not any(re.search(r"\b" + re.escape(term.lower()) + r"\b", title_lower)
+                       for term in relevance_terms if term):
+                continue
         flags = event_flags(title)
         items.append({
             "title": title,
@@ -81,7 +88,7 @@ def parse_google_news_rss(xml_text: str, now: datetime | None = None) -> list[di
     return items[:NEWS_LIMIT]
 
 
-def fetch_google_news(query: str) -> list[dict]:
+def fetch_google_news(query: str, relevance_terms: list[str] | None = None) -> list[dict]:
     params = urllib.parse.urlencode({
         "q": f'"{query}" stock when:{NEWS_DAYS}d',
         "hl": "en-US",
@@ -95,10 +102,12 @@ def fetch_google_news(query: str) -> list[dict]:
     )
     with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
         xml_text = response.read().decode("utf-8", errors="replace")
-    return parse_google_news_rss(xml_text)
+    if not relevance_terms:
+        raise ValueError("geen betrouwbare bedrijfsnaam/ticker voor nieuwsrelevantie")
+    return parse_google_news_rss(xml_text, relevance_terms=relevance_terms)
 
 
-def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
+def _normalise_price_history(frame: pd.DataFrame) -> pd.DataFrame:
     if frame is None or frame.empty:
         raise ValueError("geen OHLC-data ontvangen")
     data = frame.copy()
@@ -118,7 +127,12 @@ def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
     data = data[~data.index.duplicated(keep="last")].sort_index()
     for column in required:
         data[column] = pd.to_numeric(data[column], errors="coerce")
-    data = data.dropna(subset=required)
+    return data.dropna(subset=required)
+
+
+def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
+    data = _normalise_price_history(frame)
+    data = data.loc[data.index.strftime("%Y-%m-%d") <= expected_date]
     if len(data) < 22:
         raise ValueError(f"onvoldoende historie voor ATR/gap: {len(data)} sessies")
     actual_date = data.index[-1].strftime("%Y-%m-%d")
@@ -146,18 +160,82 @@ def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
     }
 
 
-def _earnings_date(info: dict) -> str:
+def calculate_history_extremes(frame: pd.DataFrame, expected_date: str) -> dict:
+    data = _normalise_price_history(frame)
+    data = data.loc[data.index.strftime("%Y-%m-%d") <= expected_date]
+    if data.empty:
+        raise ValueError("geen afgeronde sessies tot de verwachte datum")
+    actual_date = data.index[-1].strftime("%Y-%m-%d")
+    if actual_date != expected_date:
+        raise ValueError(f"koersdata loopt achter: verwacht {expected_date}, ontvangen {actual_date}")
+    close = float(data["Close"].iloc[-1])
+    # Reference levels exclude the latest completed session so a breakout can
+    # legitimately print above 100% of the prior 52-week high / prior ATH.
+    prior = data.iloc[:-1]
+    if prior.empty:
+        raise ValueError("geen voorafgaande sessies voor high-referenties")
+    ath_position = int(prior["High"].to_numpy().argmax())
+    ath = float(prior["High"].iloc[ath_position])
+    recent_swings = data.tail(126)
+    highs = recent_swings["High"].tolist()
+    lows = recent_swings["Low"].tolist()
+    swing_highs = []
+    swing_lows = []
+    for i in range(2, len(recent_swings) - 2):
+        if highs[i] > max(highs[i - 2:i]) and highs[i] >= max(highs[i + 1:i + 3]):
+            swing_highs.append((float(highs[i]), recent_swings.index[i].strftime("%Y-%m-%d")))
+        if lows[i] < min(lows[i - 2:i]) and lows[i] <= min(lows[i + 1:i + 3]):
+            swing_lows.append((float(lows[i]), recent_swings.index[i].strftime("%Y-%m-%d")))
+    support_levels = [level for level in swing_lows if level[0] < close]
+    resistance_levels = [level for level in swing_highs if level[0] > close]
+    nearest_support = max(support_levels, key=lambda item: item[0]) if support_levels else None
+    nearest_resistance = min(resistance_levels, key=lambda item: item[0]) if resistance_levels else None
+
+    result = {
+        "history_date": actual_date,
+        "history_sessions": int(len(data)),
+        "nearest_support": round(nearest_support[0], 4) if nearest_support else "",
+        "nearest_support_date": nearest_support[1] if nearest_support else "",
+        "nearest_resistance": round(nearest_resistance[0], 4) if nearest_resistance else "",
+        "nearest_resistance_date": nearest_resistance[1] if nearest_resistance else "",
+        "high_52w": "",
+        "high_52w_date": "",
+        "low_52w": "",
+        "distance_to_52w_high_pct": "",
+        "all_time_high": round(ath, 4),
+        "all_time_high_date": prior.index[ath_position].strftime("%Y-%m-%d"),
+        "distance_to_ath_pct": round((ath - close) / ath * 100.0, 2) if ath > 0 else "",
+        "history_extremes_status": "PARTIAL",
+    }
+    if len(data) >= 253:
+        recent = prior.tail(252)
+        high_position = int(recent["High"].to_numpy().argmax())
+        high_52w = float(recent["High"].iloc[high_position])
+        low_52w = float(recent["Low"].min())
+        result.update({
+            "high_52w": round(high_52w, 4),
+            "high_52w_date": recent.index[high_position].strftime("%Y-%m-%d"),
+            "low_52w": round(low_52w, 4),
+            "distance_to_52w_high_pct": round((high_52w - close) / high_52w * 100.0, 2) if high_52w > 0 else "",
+            "history_extremes_status": "FULL",
+        })
+    return result
+
+def _earnings_date(info: dict, today: datetime | None = None) -> str:
+    today = (today or datetime.now(timezone.utc)).date()
+    candidates = []
     timestamp = number(info.get("earningsTimestamp"))
     if timestamp is not None and timestamp > 0:
-        return datetime.fromtimestamp(timestamp, timezone.utc).date().isoformat()
+        candidates.append(datetime.fromtimestamp(timestamp, timezone.utc).date())
     dates = info.get("earningsDate")
-    if isinstance(dates, (list, tuple)) and dates:
-        value = dates[0]
+    values = list(dates) if isinstance(dates, (list, tuple)) else ([dates] if dates is not None else [])
+    for value in values:
         try:
-            return pd.Timestamp(value).date().isoformat()
+            candidates.append(pd.Timestamp(value).date())
         except Exception:
-            return ""
-    return ""
+            continue
+    future = sorted(value for value in candidates if value >= today)
+    return future[0].isoformat() if future else ""
 
 
 def derive_risk_status(news_status: str, flags: list[str], short_metrics_ok: bool = True,
@@ -177,13 +255,31 @@ def _fetch_candidate(candidate: dict) -> dict:
     info, info_error = {}, ""
     try:
         info = yf.Ticker(ticker).info or {}
+        if not info:
+            info_error = "Yahoo Finance info is empty or unavailable"
     except Exception as exc:
         info_error = str(exc)
 
     company = str(info.get("longName") or info.get("shortName") or ticker).strip()
     query = company if company and company != ticker else ticker
+    relevance_terms = []
+    if len(ticker) >= 3:
+        relevance_terms.append(ticker)
+    if company and company != ticker:
+        common_name_words = {
+            "the", "a", "an", "inc", "corp", "corporation", "company",
+            "holdings", "group", "plc", "limited", "ltd", "co",
+        }
+        name_words = re.findall(r"[A-Za-z0-9]+", company)
+        distinctive = next(
+            (word for word in name_words
+             if len(word) >= 3 and word.lower() not in common_name_words),
+            "",
+        )
+        if distinctive:
+            relevance_terms.append(distinctive)
     try:
-        news = fetch_google_news(query)
+        news = fetch_google_news(query, relevance_terms)
         news_status = "CHECKED" if news else "NO_RESULTS"
         news_error = ""
     except Exception as exc:
@@ -193,14 +289,19 @@ def _fetch_candidate(candidate: dict) -> dict:
 
     price = {}
     price_error = ""
-    if candidate["candidate_type"] == "SHORT":
-        try:
-            frame = yf.download(
-                ticker, period="3mo", interval="1d", auto_adjust=False,
-                progress=False, threads=False, timeout=25,
-            )
+    history_extremes = {}
+    history_error = ""
+    try:
+        frame = yf.download(
+            ticker, period="max", interval="1d", auto_adjust=False,
+            progress=False, threads=False, timeout=25,
+        )
+        history_extremes = calculate_history_extremes(frame, candidate["score_date"])
+        if candidate["candidate_type"] == "SHORT":
             price = calculate_price_risk(frame, candidate["score_date"])
-        except Exception as exc:
+    except Exception as exc:
+        history_error = str(exc)
+        if candidate["candidate_type"] == "SHORT":
             price_error = str(exc)
 
     short_float_raw = number(info.get("shortPercentOfFloat"))
@@ -220,7 +321,7 @@ def _fetch_candidate(candidate: dict) -> dict:
     earnings_date = _earnings_date(info)
     earnings_date_known = candidate["candidate_type"] != "SHORT" or bool(earnings_date)
     risk_status = derive_risk_status(news_status, all_flags, short_metrics_ok, price_ok, earnings_date_known)
-    errors = [value for value in (info_error, news_error, price_error) if value]
+    errors = [value for value in (info_error, news_error, price_error, history_error) if value]
     return {
         "candidate_type": candidate["candidate_type"],
         "ticker": ticker,
@@ -235,6 +336,7 @@ def _fetch_candidate(candidate: dict) -> dict:
         "shares_short": shares_short if shares_short is not None else "",
         "shares_short_prior_month": shares_short_prior if shares_short_prior is not None else "",
         "earnings_date": earnings_date,
+        **history_extremes,
         "close": price.get("close", ""),
         "momentum_5d_pct": price.get("momentum_5d_pct", ""),
         "atr14_pct": price.get("atr14_pct", ""),
@@ -250,6 +352,7 @@ def _fetch_candidate(candidate: dict) -> dict:
         "_price_ok": not bool(price_error) if candidate["candidate_type"] == "SHORT" else True,
         "_short_metrics_ok": short_metrics_ok,
         "_earnings_date_known": earnings_date_known,
+        "_history_ok": history_extremes.get("history_extremes_status") == "FULL",
     }
 
 
@@ -331,6 +434,7 @@ def main() -> int:
 
     unknown = sum(
         row["risk_status"] == "UNKNOWN"
+        or not row["_history_ok"]
         or (row["candidate_type"] == "SHORT" and
             (not row["_info_ok"] or not row["_price_ok"] or not row["_short_metrics_ok"] or not row["_earnings_date_known"]))
         for row in results

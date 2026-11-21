@@ -81,6 +81,7 @@ Gebruik de meest recente voltooide sessie. Maak duidelijk wanneer een marktindic
 - De afzonderlijke indicator voor drie opeenvolgende dagen stijgend volume blijft apart staan. RSI verlaagt de technische score niet.
 - Sector en industry worden per ticker vermeld.
 - 52-weeks high en ATH zijn afzonderlijke referenties; gebruik split-aangepaste gegevens en vermeld ONBEKEND als betrouwbare verificatie ontbreekt.
+- 52-week high/low wordt berekend uit de 252 voltooide handelsdagen vóór de laatste sessie; ATH uit de volledige beschikbare split-adjusted High-reeks vóór de laatste sessie. De laatste slotkoers wordt met deze voorafgaande referenties vergeleken, zodat een uitbraak boven 100% zichtbaar blijft. Toon afstand tot 52-week high en ATH afzonderlijk. Bij minder dan 252 sessies blijft de 52-weekwaarde ONBEKEND; een beschikbare ATH kan afzonderlijk worden getoond.
 - 52-weeks-high-balk: groen >100%, oranje 95–100%, rood <95%.
 - ATH-balk: groen >=90%, oranje 85–<90%, rood <85%.
 
@@ -178,6 +179,8 @@ Mogelijke acties:
 - VERMIJDEN ALS SHORT — alleen bij concrete reden.
 
 Voor de Short-watchlist geldt dezelfde 2R-benadering gespiegeld voor een shortpositie: instap actuele koers; stop op de laatste HA High waarbij HA High = HA Open; risk = afstand instap tot stop; koersdoel op 2R. Beoordeel R/R en technische haalbaarheid, daarna Risk %, daarna Entry Score.
+
+Vergelijk het 2R-doel met de dichtstbijzijnde bevestigde vijf-sessie swingweerstand (Long) of swingsteun (Short), berekend over maximaal 126 voltooide sessies. Rapporteer expliciet of het 2R-doel vóór of voorbij dat niveau ligt; dit is technische context, geen garantie.
 
 De Short-tabel toont een lege SW-kolom, uitsluitend om de kolommen uit te lijnen met de Long-tabel. Haal geen SW-scores op, bereken of beoordeel ze niet voor Short.
 

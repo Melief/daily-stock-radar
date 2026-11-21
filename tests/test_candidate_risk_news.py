@@ -36,6 +36,26 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertEqual(items[0]["source"], "Example News")
         self.assertEqual(items[0]["event_flags"], ["earnings", "guidance"])
 
+    def test_news_results_must_match_company_or_ticker(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+        <rss><channel>
+          <item><title>MarketAxess Holdings stock update</title>
+            <link>https://example.com/unrelated</link>
+            <pubDate>Fri, 20 Nov 2026 12:00:00 GMT</pubDate></item>
+          <item><title>Cboe Global Markets announces earnings guidance</title>
+            <link>https://example.com/relevant</link>
+            <pubDate>Fri, 20 Nov 2026 12:00:00 GMT</pubDate></item>
+        </channel></rss>"""
+        now = datetime(2026, 11, 21, 12, tzinfo=timezone.utc)
+        items = rn.parse_google_news_rss(xml, now, ["cboe"])
+        self.assertEqual([item["url"] for item in items], ["https://example.com/relevant"])
+
+    def test_earnings_date_uses_future_date_only(self):
+        today = datetime(2026, 11, 21, tzinfo=timezone.utc)
+        info = {"earningsDate": ["2026-09-09", "2026-12-15"]}
+        self.assertEqual(rn._earnings_date(info, today), "2026-12-15")
+        self.assertEqual(rn._earnings_date({"earningsDate": ["2026-09-09"]}, today), "")
+
     def test_short_price_risk_metrics_use_completed_session(self):
         dates = pd.bdate_range(end="2026-11-20", periods=30)
         close = [100 - i * 0.5 for i in range(30)]
@@ -50,6 +70,60 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertGreater(result["atr14_pct"], 0)
         self.assertGreater(result["max_overnight_gap_20d_pct"], 0)
         self.assertLess(result["momentum_5d_pct"], 0)
+
+    def test_history_extremes_require_252_sessions_for_52_week_high(self):
+        dates = pd.bdate_range(end="2026-11-20", periods=260)
+        frame = pd.DataFrame({
+            "Open": [99 + i for i in range(260)],
+            "High": [100 + i for i in range(260)],
+            "Low": [98 + i for i in range(260)],
+            "Close": [99.5 + i for i in range(260)],
+        }, index=dates)
+        result = rn.calculate_history_extremes(frame, "2026-11-20")
+        self.assertEqual(result["history_extremes_status"], "FULL")
+        self.assertEqual(result["high_52w"], 358)
+        self.assertEqual(result["all_time_high"], 358)
+        self.assertLess(result["distance_to_ath_pct"], 0)
+        self.assertEqual(result["all_time_high_date"], "2026-11-19")
+
+    def test_confirmed_stock_swing_support_and_resistance_are_returned(self):
+        dates = pd.bdate_range(end="2026-11-20", periods=260)
+        cycle = [100, 105, 110, 105, 100, 95, 100, 105, 110, 105]
+        close = (cycle * 26)[:260]
+        frame = pd.DataFrame({
+            "Open": close,
+            "High": [value + 1 for value in close],
+            "Low": [value - 1 for value in close],
+            "Close": close,
+        }, index=dates)
+        result = rn.calculate_history_extremes(frame, "2026-11-20")
+        self.assertNotEqual(result["nearest_support"], "")
+        self.assertNotEqual(result["nearest_resistance"], "")
+        self.assertLess(result["nearest_support"], 105)
+        self.assertGreater(result["nearest_resistance"], 105)
+
+    def test_short_history_keeps_ath_but_52_week_high_unknown(self):
+        dates = pd.bdate_range(end="2026-11-20", periods=30)
+        frame = pd.DataFrame({
+            "Open": 10, "High": 12, "Low": 9, "Close": 11
+        }, index=dates)
+        result = rn.calculate_history_extremes(frame, "2026-11-20")
+        self.assertEqual(result["history_extremes_status"], "PARTIAL")
+        self.assertEqual(result["all_time_high"], 12)
+        self.assertEqual(result["high_52w"], "")
+
+    def test_incomplete_current_session_is_excluded(self):
+        dates = pd.bdate_range(end="2026-11-21", periods=31)
+        frame = pd.DataFrame({
+            "Open": [100 + i for i in range(31)],
+            "High": [102 + i for i in range(31)],
+            "Low": [99 + i for i in range(31)],
+            "Close": [101 + i for i in range(31)],
+        }, index=dates)
+        risk = rn.calculate_price_risk(frame, "2026-11-20")
+        extremes = rn.calculate_history_extremes(frame, "2026-11-20")
+        self.assertEqual(risk["price_date"], "2026-11-20")
+        self.assertEqual(extremes["history_date"], "2026-11-20")
 
     def test_rejects_stale_price_risk_data(self):
         dates = pd.bdate_range(end="2026-11-19", periods=30)

@@ -119,5 +119,12 @@ class TradingViewPartialRefreshTests(unittest.TestCase):
         self.assertIs(context, browser.new_context.return_value)
 
 
+    def test_retrieve_screener_uses_authenticated_context_for_pages(self):
+        import inspect
+        source = inspect.getsource(tv.retrieve_screener)
+        self.assertIn("context.new_page()", source)
+        self.assertNotIn("browser.new_page()", source)
+
+
 if __name__ == "__main__":
     unittest.main()

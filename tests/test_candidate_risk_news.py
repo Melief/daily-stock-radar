@@ -95,6 +95,19 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertEqual(result["all_time_high"], 12)
         self.assertEqual(result["high_52w"], "")
 
+    def test_incomplete_current_session_is_excluded(self):
+        dates = pd.bdate_range(end="2026-11-21", periods=31)
+        frame = pd.DataFrame({
+            "Open": [100 + i for i in range(31)],
+            "High": [102 + i for i in range(31)],
+            "Low": [99 + i for i in range(31)],
+            "Close": [101 + i for i in range(31)],
+        }, index=dates)
+        risk = rn.calculate_price_risk(frame, "2026-11-20")
+        extremes = rn.calculate_history_extremes(frame, "2026-11-20")
+        self.assertEqual(risk["price_date"], "2026-11-20")
+        self.assertEqual(extremes["history_date"], "2026-11-20")
+
     def test_rejects_stale_price_risk_data(self):
         dates = pd.bdate_range(end="2026-11-19", periods=30)
         frame = pd.DataFrame({

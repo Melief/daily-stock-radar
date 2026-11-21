@@ -87,7 +87,7 @@ def write_run_status(status: str, source_rows: list[dict], ticker_count: int,
         "missing_ha_rows": missing_rows,
     }
     temporary = RUN_STATUS_OUT.with_suffix(".json.tmp")
-    temporary.write_text(json.dumps(payload, indent=2) + "\\n", encoding="utf-8")
+    temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     temporary.replace(RUN_STATUS_OUT)
 
 

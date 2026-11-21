@@ -221,6 +221,60 @@ def calculate_history_extremes(frame: pd.DataFrame, expected_date: str) -> dict:
         })
     return result
 
+ 
+def calculate_consolidation_pivot(frame: pd.DataFrame, expected_date: str,
+                                  candidate_type: str) -> dict:
+    """Find the latest confirmed swing-origin consolidation in the prior 5–21 sessions.
+
+    The latest completed session is excluded from the range so it can confirm
+    a breakout/breakdown. A swing origin needs two completed bars on each side.
+    """
+    side = candidate_type.upper()
+    if side not in {"LONG", "SHORT"}:
+        raise ValueError("candidate_type moet LONG of SHORT zijn")
+    data = _normalise_price_history(frame)
+    data = data.loc[data.index.strftime("%Y-%m-%d") <= expected_date]
+    if data.empty or data.index[-1].strftime("%Y-%m-%d") != expected_date:
+        raise ValueError("consolidatiepivot gebruikt geen actuele voltooide koerssessie")
+    prior = data.iloc[:-1].tail(21)
+    unknown = {
+        "consolidation_pivot": "",
+        "consolidation_pivot_date": "",
+        "consolidation_sessions": "",
+        "consolidation_pivot_status": "ONBEKEND",
+    }
+    if len(prior) < 5:
+        return unknown
+
+    highs = prior["High"].tolist()
+    lows = prior["Low"].tolist()
+    eligible = []
+    for i in range(2, len(prior) - 2):
+        is_origin = (
+            lows[i] < min(lows[i - 2:i]) and lows[i] <= min(lows[i + 1:i + 3])
+            if side == "LONG" else
+            highs[i] > max(highs[i - 2:i]) and highs[i] >= max(highs[i + 1:i + 3])
+        )
+        sessions = len(prior) - i
+        if is_origin and 5 <= sessions <= 21:
+            eligible.append((i, sessions))
+    if not eligible:
+        return unknown
+
+    index, sessions = max(eligible, key=lambda item: item[0])
+    segment = prior.iloc[index:]
+    level = float(segment["High"].max() if side == "LONG" else segment["Low"].min())
+    level_date = (
+        segment["High"].idxmax() if side == "LONG" else segment["Low"].idxmin()
+    ).strftime("%Y-%m-%d")
+    return {
+        "consolidation_pivot": round(level, 4),
+        "consolidation_pivot_date": level_date,
+        "consolidation_sessions": int(sessions),
+        "consolidation_pivot_status": "OK",
+    }
+
+
 def _earnings_date(info: dict, today: datetime | None = None) -> str:
     today = (today or datetime.now(timezone.utc)).date()
     candidates = []
@@ -297,6 +351,9 @@ def _fetch_candidate(candidate: dict) -> dict:
             progress=False, threads=False, timeout=25,
         )
         history_extremes = calculate_history_extremes(frame, candidate["score_date"])
+        history_extremes.update(calculate_consolidation_pivot(
+            frame, candidate["score_date"], candidate["candidate_type"]
+        ))
         if candidate["candidate_type"] == "SHORT":
             price = calculate_price_risk(frame, candidate["score_date"])
     except Exception as exc:

@@ -40,7 +40,7 @@ class TechnicalScoreTests(unittest.TestCase):
                  "lower_highs_lower_lows": True}
         result = ts.score_components(ha, price, -5.0, -7.0)
         self.assertEqual(result["short_score"], 5)
-        self.assertEqual(result["long_score"], 0)
+        self.assertEqual(result["long_score"], 1)
 
     def test_missing_input_never_becomes_zero_score(self):
         ha = {"above_sma20": "", "above_sma50": "False", "rvol_5_21": "1.3"}

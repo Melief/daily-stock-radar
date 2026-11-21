@@ -48,5 +48,31 @@ class TradingViewPartialRefreshTests(unittest.TestCase):
             self.assertIn("PGNY,NASDAQ,NASDAQ:PGNY", content)
 
 
+    def test_standalone_screener_symbols_list_is_parsed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with patch.object(tv, "DATA_DIR", root), patch.object(tv, "ROOT", root):
+                output = tv.save_rows("Follow Thrue", ["NASDAQ:CRVL", "NASDAQ:PLMR"])
+            content = output.read_text(encoding="utf-8-sig")
+            self.assertIn("CRVL,NASDAQ,NASDAQ:CRVL", content)
+            self.assertIn("PLMR,NASDAQ,NASDAQ:PLMR", content)
+
+    def test_standalone_screener_raw_values_are_parsed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            rows = [{
+                "id": "TickerUniversal",
+                "rawValues": [
+                    {"name": "CRVL", "exchange": "NASDAQ", "description": "CorVel Corp."},
+                    {"name": "PLMR", "exchange": "NASDAQ", "description": "Palomar Holdings, Inc."},
+                ],
+            }]
+            with patch.object(tv, "DATA_DIR", root), patch.object(tv, "ROOT", root):
+                output = tv.save_rows("Follow Thrue", rows)
+            content = output.read_text(encoding="utf-8-sig")
+            self.assertIn("CRVL,NASDAQ,NASDAQ:CRVL,CorVel Corp.", content)
+            self.assertIn("PLMR,NASDAQ,NASDAQ:PLMR,Palomar Holdings, Inc.", content)
+
+
 if __name__ == "__main__":
     unittest.main()

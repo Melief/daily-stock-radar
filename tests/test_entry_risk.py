@@ -10,7 +10,7 @@ class EntryRiskTests(unittest.TestCase):
         self.assertEqual(result["risk_per_share"], 5)
         self.assertEqual(result["risk_pct"], 5)
         self.assertEqual(result["target_2r"], 110)
-        self.assertEqual(result["breakout_reference_status"], "ONDER_20D_PIVOT")
+        self.assertEqual(result["breakout_reference_status"], "GEEN_BREAKOUT")
         self.assertEqual(result["action"], "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT")
 
     def test_long_buy_zone_is_limited_to_five_percent_above_reference(self):
@@ -25,7 +25,7 @@ class EntryRiskTests(unittest.TestCase):
         self.assertEqual(result["risk_per_share"], 5)
         self.assertEqual(result["risk_pct"], 5)
         self.assertEqual(result["target_2r"], 90)
-        self.assertEqual(result["breakout_reference_status"], "BOVEN_20D_SUPPORT")
+        self.assertEqual(result["breakout_reference_status"], "GEEN_DOORBRAAK")
         self.assertEqual(result["action"], "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT")
 
     def test_long_2r_target_is_compared_with_confirmed_resistance(self):

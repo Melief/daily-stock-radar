@@ -22,5 +22,10 @@
   "pending_components": [
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
     "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
+  ],
+  "non_blocking_components": [
+    "Long fundamentals: CURRENT; PASS=8, FAIL=3, UNKNOWN=1.",
+    "IBKR borrow: status=PARTIAL, unknown=4.",
+    "News/event review: 13 kandidaten; deze reviewstatus blokkeert DSR FULL niet."
   ]
 }

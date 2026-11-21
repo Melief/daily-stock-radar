@@ -7,7 +7,7 @@
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
     "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
   ],
-  "generated_at": "2026-11-21T19:17:16+00:00",
+  "generated_at": "2026-11-21T19:27:55+00:00",
   "unique_tickers": 67,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
@@ -30,5 +30,10 @@
     "short_borrow": "PARTIAL",
     "candidate_risk_news": "FULL",
     "entry_risk": "PARTIAL"
-  }
+  },
+  "non_blocking_components": [
+    "Long fundamentals: CURRENT; PASS=8, FAIL=3, UNKNOWN=1.",
+    "IBKR borrow: status=PARTIAL, unknown=4.",
+    "News/event review: 13 kandidaten; deze reviewstatus blokkeert DSR FULL niet."
+  ]
 }

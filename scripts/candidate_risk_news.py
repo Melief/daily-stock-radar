@@ -221,6 +221,90 @@ def calculate_history_extremes(frame: pd.DataFrame, expected_date: str) -> dict:
         })
     return result
 
+ 
+def calculate_consolidation_pivot(frame: pd.DataFrame, expected_date: str,
+                                  candidate_type: str) -> dict:
+    """Find a confirmed 5–21-session base and its first close-confirmed break.
+
+    The latest completed session is excluded from pivot construction and is
+    evaluated separately by entry_risk. The pivot is the range extreme before
+    the first close beyond that range.
+    """
+    side = candidate_type.upper()
+    if side not in {"LONG", "SHORT"}:
+        raise ValueError("candidate_type moet LONG of SHORT zijn")
+    data = _normalise_price_history(frame)
+    data = data.loc[data.index.strftime("%Y-%m-%d") <= expected_date]
+    if data.empty or data.index[-1].strftime("%Y-%m-%d") != expected_date:
+        raise ValueError("consolidatiepivot gebruikt geen actuele voltooide koerssessie")
+    prior = data.iloc[:-1].tail(21)
+    unknown = {
+        "consolidation_pivot": "",
+        "consolidation_pivot_date": "",
+        "consolidation_sessions": "",
+        "consolidation_pivot_status": "ONBEKEND",
+        "prior_breakout_date": "",
+        "prior_breakout_close": "",
+        "prior_breakout_volume": "",
+    }
+    if len(prior) < 5:
+        return unknown
+
+    highs = prior["High"].tolist()
+    lows = prior["Low"].tolist()
+    eligible = []
+    for i in range(2, len(prior) - 2):
+        is_origin = (
+            lows[i] < min(lows[i - 2:i]) and lows[i] <= min(lows[i + 1:i + 3])
+            if side == "LONG" else
+            highs[i] > max(highs[i - 2:i]) and highs[i] >= max(highs[i + 1:i + 3])
+        )
+        sessions = len(prior) - i
+        if is_origin and 5 <= sessions <= 21:
+            eligible.append(i)
+    if not eligible:
+        return unknown
+
+    index = max(eligible)
+    breakout = None
+    for j in range(index + 5, len(prior)):
+        base = prior.iloc[index:j]
+        pivot = float(base["High"].max() if side == "LONG" else base["Low"].min())
+        close = float(prior["Close"].iloc[j])
+        broken = close > pivot if side == "LONG" else close < pivot
+        if broken:
+            breakout = (j, pivot, base)
+            break
+
+    if breakout is not None:
+        j, level, segment = breakout
+        sessions = j - index
+        breakout_date = prior.index[j].strftime("%Y-%m-%d")
+        breakout_close = float(prior["Close"].iloc[j])
+        breakout_volume = (
+            float(prior["Volume"].iloc[j])
+            if "Volume" in prior.columns and pd.notna(prior["Volume"].iloc[j]) else ""
+        )
+    else:
+        segment = prior.iloc[index:]
+        level = float(segment["High"].max() if side == "LONG" else segment["Low"].min())
+        sessions = len(prior) - index
+        breakout_date = breakout_close = breakout_volume = ""
+
+    level_date = (
+        segment["High"].idxmax() if side == "LONG" else segment["Low"].idxmin()
+    ).strftime("%Y-%m-%d")
+    return {
+        "consolidation_pivot": round(level, 4),
+        "consolidation_pivot_date": level_date,
+        "consolidation_sessions": int(sessions),
+        "consolidation_pivot_status": "OK",
+        "prior_breakout_date": breakout_date,
+        "prior_breakout_close": round(breakout_close, 4) if breakout_close != "" else "",
+        "prior_breakout_volume": int(breakout_volume) if breakout_volume != "" else "",
+    }
+
+
 def _earnings_date(info: dict, today: datetime | None = None) -> str:
     today = (today or datetime.now(timezone.utc)).date()
     candidates = []
@@ -297,6 +381,9 @@ def _fetch_candidate(candidate: dict) -> dict:
             progress=False, threads=False, timeout=25,
         )
         history_extremes = calculate_history_extremes(frame, candidate["score_date"])
+        history_extremes.update(calculate_consolidation_pivot(
+            frame, candidate["score_date"], candidate["candidate_type"]
+        ))
         if candidate["candidate_type"] == "SHORT":
             price = calculate_price_risk(frame, candidate["score_date"])
     except Exception as exc:
@@ -353,6 +440,7 @@ def _fetch_candidate(candidate: dict) -> dict:
         "_short_metrics_ok": short_metrics_ok,
         "_earnings_date_known": earnings_date_known,
         "_history_ok": history_extremes.get("history_extremes_status") == "FULL",
+        "_pivot_ok": history_extremes.get("consolidation_pivot_status") == "OK",
     }
 
 
@@ -443,6 +531,7 @@ def main() -> int:
     unknown = sum(
         row["risk_status"] == "UNKNOWN"
         or not row["_history_ok"]
+        or not row["_pivot_ok"]
         or (row["candidate_type"] == "SHORT" and
             (not row["_info_ok"] or not row["_price_ok"] or not row["_short_metrics_ok"] or not row["_earnings_date_known"]))
         for row in results
@@ -460,6 +549,7 @@ def main() -> int:
         "limitations": [
             "NO_RESULTS betekent geen geïndexeerde Google News RSS-resultaten binnen 7 dagen; het bewijst niet dat er geen nieuws of gebeurtenisrisico bestaat.",
             "Short interest, days-to-cover, ATR en gaps zijn bronafhankelijke ruwe gegevens; er worden geen niet-afgesproken risicodrempels toegepast.",
+            "Een kandidaat zonder bevestigde consolidatiepivot volgens de 5–21-sessieregel blijft ONBEKEND en maakt de risicocontrole PARTIAL.",
         ],
     }
     write_status(payload)

@@ -93,10 +93,16 @@ def load_candidates(path: Path = SCORES) -> pd.DataFrame:
         raise ValueError(f"technical_scores.csv mist kolommen: {sorted(required - set(data.columns))}")
     for column in ("long_score", "close_completed", "sma50"):
         data[column] = pd.to_numeric(data[column], errors="coerce")
+    above_sma20 = data.get("above_sma20_completed", pd.Series(index=data.index, dtype="object"))
+    above_sma50 = data.get("above_sma50_completed", pd.Series(index=data.index, dtype="object"))
+    if above_sma20.isna().any() or above_sma50.isna().any():
+        # Missing trend inputs must not pass the Long pre-screen.
+        pass
     return data[
         (data["score_status"] == "OK")
         & (data["long_score"] >= 3)
-        & (data["close_completed"] > data["sma50"])
+        & (above_sma20.astype(str).str.lower().isin(["true", "1"]))
+        & (above_sma50.astype(str).str.lower().isin(["true", "1"]))
     ].copy()
 
 

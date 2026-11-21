@@ -11,6 +11,8 @@ from zoneinfo import ZoneInfo
 EXPECTED_OFFSETS = {
     "0 2 * * 1-5": "+0200",  # 04:00 CEST
     "0 3 * * 1-5": "+0100",  # 04:00 CET
+    "45 1 * * 1-5": "+0200",  # 03:45 CEST VYUS refresh
+    "45 2 * * 1-5": "+0100",  # 03:45 CET VYUS refresh
 }
 
 

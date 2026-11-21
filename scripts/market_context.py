@@ -61,6 +61,13 @@ def _normalise_frame(frame: pd.DataFrame) -> pd.DataFrame:
     return data.dropna(subset=required)
 
 
+def ema_momentum_status(ema8: float, ema21: float, current_gap: float, previous_gap: float) -> str:
+    """Classify EMA momentum using only completed daily closes."""
+    if ema8 == ema21 or current_gap <= previous_gap:
+        return "BEWARE"
+    return "BULLISH" if ema8 > ema21 else "BEARISH"
+
+
 def analyse_symbol(frame: pd.DataFrame, symbol: str, expected_session: date) -> dict:
     """Calculate reproducible trend and momentum fields from completed closes."""
     data = _normalise_frame(frame)
@@ -79,6 +86,19 @@ def analyse_symbol(frame: pd.DataFrame, symbol: str, expected_session: date) -> 
     sma50 = float(close.rolling(50).mean().iloc[-1])
     if pd.isna(sma20) or pd.isna(sma50) or sma20 <= 0 or sma50 <= 0:
         raise ValueError("SMA20/SMA50 niet betrouwbaar berekenbaar")
+
+    ema8_series = close.ewm(span=8, adjust=False).mean()
+    ema21_series = close.ewm(span=21, adjust=False).mean()
+    ema8 = float(ema8_series.iloc[-1])
+    ema21 = float(ema21_series.iloc[-1])
+    ema_gap = abs(ema8 - ema21)
+    previous_ema_gap = abs(float(ema8_series.iloc[-2]) - float(ema21_series.iloc[-2]))
+    ema_gap_direction = (
+        "WIDENING" if ema_gap > previous_ema_gap
+        else "NARROWING" if ema_gap < previous_ema_gap
+        else "STABLE"
+    )
+    ema_status = ema_momentum_status(ema8, ema21, ema_gap, previous_ema_gap)
 
     above20 = last_close > sma20
     above50 = last_close > sma50
@@ -112,6 +132,11 @@ def analyse_symbol(frame: pd.DataFrame, symbol: str, expected_session: date) -> 
         "close": round(last_close, 4),
         "sma20": round(sma20, 4),
         "sma50": round(sma50, 4),
+        "ema8": round(ema8, 4),
+        "ema21": round(ema21, 4),
+        "ema_gap_pct": round((ema8 / ema21 - 1.0) * 100.0, 3),
+        "ema_gap_direction": ema_gap_direction,
+        "ema_momentum_status": ema_status,
         "close_above_sma20": above20,
         "close_above_sma50": above50,
         "position": position,
@@ -153,10 +178,16 @@ def build_context(expected_session: date, results: dict[str, dict], errors: dict
         relative = round(
             results["QQQ"]["momentum_21d_pct"] - results["SPX"]["momentum_21d_pct"], 2
         )
-        # Risk-on/off thresholds are not defined in DSR_RULES.md; do not infer a regime.
+        positions = [results[label].get("position") for label in ("SPX", "QQQ")]
+        if positions == ["BOVEN_BEIDE", "BOVEN_BEIDE"]:
+            regime = "RISK-ON"
+        elif positions == ["ONDER_BEIDE", "ONDER_BEIDE"]:
+            regime = "RISK-OFF"
+        else:
+            regime = "NEUTRAAL"
 
     return {
-        "status": "PARTIAL",
+        "status": "FULL" if complete else "PARTIAL",
         "data_status": "FULL" if complete else "PARTIAL",
         "session_date": expected_session.isoformat(),
         "symbols": results,
@@ -165,7 +196,7 @@ def build_context(expected_session: date, results: dict[str, dict], errors: dict
         "errors": errors,
         "limitations": [
             "Steun en weerstand zijn afgeleid van bevestigde vijf-sessie swing-pivots; het zijn referentieniveaus, geen automatische entrysignalen.",
-            "Marktregime blijft ONBEKEND; afgesproken risk-on/risk-off criteria ontbreken.",
+            "Marktregime is bepaald op basis van SPX en QQQ ten opzichte van SMA20 en SMA50.",
         ],
     }
 
@@ -180,14 +211,15 @@ def update_run_status(payload: dict) -> None:
     except (OSError, json.JSONDecodeError) as exc:
         raise RuntimeError(f"DSR-runstatus kan niet veilig worden bijgewerkt: {exc}") from exc
 
-    # Price-data completeness is not the same as a complete DSR market assessment.
-    run_status["market_context_status"] = "PARTIAL"
+    run_status["market_context_status"] = payload.get("status", "PARTIAL")
     run_status["market_context_data_status"] = payload.get("data_status", "PARTIAL")
     pending = run_status.get("pending_components", [])
-    component = "SPX/QQQ market context"
-    if component not in pending:
-        run_status["pending_components"] = pending + [component]
-    run_status["status"] = "PARTIAL"
+    obsolete = {
+        "SPX/QQQ market context",
+        "Risk-on/risk-off marktregime: expliciete criteria ontbreken.",
+    }
+    run_status["pending_components"] = [item for item in pending if item not in obsolete]
+    run_status["status"] = "PARTIAL" if run_status["pending_components"] or payload.get("status") != "FULL" else run_status.get("status", "PARTIAL")
     temporary = run_status_path.with_suffix(".json.tmp")
     temporary.write_text(json.dumps(run_status, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     temporary.replace(run_status_path)

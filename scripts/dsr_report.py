@@ -320,11 +320,12 @@ def build_report() -> tuple[str, dict]:
             f"IBKR borrow: status={borrow_status.get('status', 'UNKNOWN')}, "
             f"unknown={borrow_status.get('unknown', 0)}."
         )
-    if risk_status.get("status") != "FULL" or risk_status.get("unknown", 0) or risk_status.get("review_required", 0):
+    if risk_status.get("review_required", 0):
         non_blocking_components.append(
-            f"News/risk: status={risk_status.get('status', 'UNKNOWN')}, "
-            f"unknown={risk_status.get('unknown', 0)}, review={risk_status.get('review_required', 0)}."
+            f"News/event review: {risk_status.get('review_required', 0)} kandidaten; deze reviewstatus blokkeert DSR FULL niet."
         )
+    if risk_status.get("status") != "FULL":
+        pending.append("Historische koersdata voor HA-pivotvalidatie is onvolledig.")
 
     report_status = "FULL" if not pending else "PARTIAL"
     details = {

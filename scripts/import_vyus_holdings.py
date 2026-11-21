@@ -121,7 +121,11 @@ def main():
 
     # The DSR CSV is written before the independent Sheets sync. A Sheets
     # outage must not discard a successfully retrieved source refresh.
-    write_tickers_csv(tickers)
+    try:
+        write_tickers_csv(tickers)
+    except Exception as exc:
+        record_status(SOURCE_ID, "failure", f"Validated holdings could not be written to the DSR CSV: {exc}")
+        raise
     record_status(SOURCE_ID, "success", f"{len(tickers)} gevalideerde VYUS-tickers opgehaald.")
 
     # Google Sheets is a separate downstream destination. Missing Sheets

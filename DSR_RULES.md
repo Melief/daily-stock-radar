@@ -185,6 +185,11 @@ De Short-tabel toont een lege SW-kolom, uitsluitend om de kolommen uit te lijnen
 
 Controleer voor serieuze kandidaten relevante recente informatie, waaronder earnings, outlook/guidance, contracten/orders, M&A, regelgeving, sectorontwikkelingen en analistenwijzigingen. Gebruik betrouwbare bronnen. Scheid bevestigde feiten van speculatie. Geen X als nieuwsbron.
 
+De dagelijkse eerste nieuwscontrole gebruikt Google News RSS over de laatste 7 dagen en bewaart titel, uitgever, publicatiedatum en URL. Een lege RSS-uitkomst betekent uitsluitend dat geen geïndexeerde resultaten zijn gevonden; dit bewijst niet dat er geen nieuws of gebeurtenisrisico is.
+- Long: controleer alleen kandidaten die de fundamentele criteria en SW Financial Health-gate hebben gepasseerd.
+- Short: controleer kandidaten met technische score >=4/5 en bevestigde IBKR-beschikbaarheid.
+- Voor Short worden short % of float, days-to-cover, shares short, earningsdatum, 5-daags momentum, ATR14% en maximale overnight gap over 20 sessies als ruwe risicogegevens vastgelegd. Ontbrekende gegevens blijven ONBEKEND. Pas geen niet-afgesproken squeeze- of gapdrempels toe.
+
 ## 8. Verplichte rapportage en volgorde
 
 Rapporteer compact en conclusiegericht, in deze volgorde:

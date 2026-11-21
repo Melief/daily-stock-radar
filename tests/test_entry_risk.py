@@ -19,6 +19,20 @@ class EntryRiskTests(unittest.TestCase):
         self.assertEqual(within["long_buy_zone_status"], "WITHIN_5PCT")
         self.assertEqual(extended["long_buy_zone_status"], "EXTENDED")
 
+    def test_long_uses_earlier_confirmed_breakout_evidence(self):
+        result = er.calculate_entry_risk(
+            "LONG", 104, 95, 100, "2026-11-20", 1800,
+            consolidation_pivot_status="OK",
+            prior_breakout_date="2026-11-18",
+            prior_breakout_close=102.5,
+            prior_breakout_volume=3200,
+        )
+        self.assertEqual(result["breakout_reference_status"], "BREAKOUT_BEVESTIGD")
+        self.assertEqual(result["breakout_reference_date"], "2026-11-18")
+        self.assertEqual(result["breakout_reference_close"], 102.5)
+        self.assertEqual(result["breakout_reference_volume"], 3200)
+        self.assertEqual(result["long_buy_zone_status"], "WITHIN_5PCT")
+
     def test_short_stop_risk_and_2r_target(self):
         result = er.calculate_entry_risk("SHORT", 100, 105, 95, "2026-11-20", 1000000,
                                          news_status="CHECKED", borrow_status="AVAILABLE", consolidation_pivot_status="OK")

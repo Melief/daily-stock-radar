@@ -175,7 +175,10 @@ def build_report() -> tuple[str, dict]:
             candidate.get("technical_score", ""), f"{candidate.get('financial_health_score')}/6",
             entry.get("entry", tech.get("close_completed", "")), entry.get("stop", ""),
             entry.get("risk_pct", ""), entry.get("target_2r", ""),
-            entry.get("target_feasibility", ""), tech.get("pivot_resistance_20d", ""), entry.get("long_buy_zone_status", ""),
+            entry.get("target_feasibility", ""), entry.get("consolidation_pivot", ""),
+            entry.get("consolidation_pivot_date", ""), entry.get("breakout_reference_status", ""),
+            entry.get("breakout_reference_date", ""), entry.get("breakout_reference_close", ""),
+            entry.get("breakout_reference_volume", ""), entry.get("long_buy_zone_status", ""),
             risk.get("high_52w", ""), proximity_bar(risk.get("distance_to_52w_high_pct"), "52w"),
             risk.get("all_time_high", ""), proximity_bar(risk.get("distance_to_ath_pct"), "ath"),
             tech.get("rvol_5_21", ""), risk.get("risk_status", "ONBEKEND"),
@@ -195,7 +198,10 @@ def build_report() -> tuple[str, dict]:
             candidate.get("short_score", ""), "__EMPTY__",
             entry.get("entry", candidate.get("close_completed", "")), entry.get("stop", ""),
             entry.get("risk_pct", ""), entry.get("target_2r", ""),
-            entry.get("target_feasibility", ""), borrow.get("status", "ONBEKEND"), borrow.get("fee_rate_pct", ""),
+            entry.get("target_feasibility", ""), entry.get("consolidation_pivot", ""),
+            entry.get("consolidation_pivot_date", ""), entry.get("breakout_reference_status", ""),
+            entry.get("breakout_reference_date", ""), entry.get("breakout_reference_close", ""),
+            entry.get("breakout_reference_volume", ""), borrow.get("status", "ONBEKEND"), borrow.get("fee_rate_pct", ""),
             borrow.get("available_shares", ""), risk.get("short_percent_of_float", ""),
             risk.get("days_to_cover", ""), risk.get("high_52w", ""),
             proximity_bar(risk.get("distance_to_52w_high_pct"), "52w"), risk.get("all_time_high", ""),
@@ -262,8 +268,8 @@ def build_report() -> tuple[str, dict]:
 
     pending = [
         "Risk-on/risk-off marktregime: expliciete criteria ontbreken.",
-        "Long-entry: actuele consolidatiepivot en bevestigde breakoutdatum/-slotkoers/-volume; de 20-sessie pivot is alleen een referentie.",
-        "Short-entry: actuele consolidatiepivot en technische haalbaarheid van het 2R-doel; borrow en ruwe squeeze-/gapgegevens zijn afzonderlijk zichtbaar.",
+        "Long-entry: actuele consolidatiepivot, breakoutdatum, officiële slotkoers, volume en koopzone moeten zijn geverifieerd.",
+        "Short-entry: actuele consolidatiepivot, breakdowndatum, officiële slotkoers en volume moeten zijn geverifieerd; borrow en ruwe squeeze-/gapgegevens blijven afzonderlijk zichtbaar.",
     ]
     if borrow_unknown:
         pending.append(f"IBKR-borrowinventaris ontbreekt voor {borrow_unknown} Short-kandidaten.")
@@ -314,12 +320,12 @@ def build_report() -> tuple[str, dict]:
         f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**. "
         f"SW PASS: **{sw_status.get('passed', 0)}**; SW uitgesloten: **{sw_status.get('excluded_sw', 0)}**; "
         f"onbekend: **{sw_status.get('unknown', 0)}**. Goedgekeurd voor verdere Long-beoordeling: **{len(long_candidates)}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "20d pivot-ref", "Koopzone", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Breakoutdatum", "Breakoutslot", "Breakoutvolume", "Koopzone", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
         "",
         "## 4. Short",
         f"Technisch gekwalificeerd: **{short_tech_count}**. IBKR beschikbaar: **{borrow_available}**; "
         f"IBKR onbekend: **{borrow_unknown}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "Nieuws", "Actie"], short_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Doorbraakdatum", "Doorbraakslot", "Doorbraakvolume", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "Nieuws", "Actie"], short_table),
         "",
         "## 5. HA-signalen",
         f"Long-signalen volgens HA 21/8 (HA Low=Open; slotkoers boven SMA20 en SMA50): **{len(ha_long)}**.",

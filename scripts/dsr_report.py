@@ -155,6 +155,8 @@ def build_report() -> tuple[str, dict]:
             ha_long.append(row)
         if as_bool(row.get("ha_strong_down_signal")) and as_bool(row.get("above_sma20")) is False and as_bool(row.get("above_sma50")) is False:
             ha_short.append(row)
+    ha_long.sort(key=lambda row: as_float(row.get("distance_from_low_pct"))
+                    if as_float(row.get("distance_from_low_pct")) is not None else float("inf"))
     ha_short.sort(key=lambda row: (
         ((as_float(row.get("ha_high")) - as_float(row.get("ha_close"))) / as_float(row.get("ha_high")) * 100)
         if as_float(row.get("ha_high")) and as_float(row.get("ha_close")) is not None else float("inf")
@@ -270,7 +272,7 @@ def build_report() -> tuple[str, dict]:
         "",
         "## 5. HA-signalen",
         f"Long-signalen die aan HA Low=Open en SMA20/SMA50 voldoen: **{len(ha_long)}**.",
-        _table(["Ticker", "Sector", "Industry", "Close", "Afstand", "RVOL 5/21"], [
+        _table(["Ticker", "Sector", "Industry", "Close", "Afstand HA Low %", "RVOL 5/21"], [
             [row.get("ticker"), row.get("sector"), row.get("industry"), row.get("close"),
              row.get("distance_from_low_pct"), row.get("rvol_5_21")] for row in ha_long
         ]),

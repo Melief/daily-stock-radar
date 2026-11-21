@@ -26,13 +26,19 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          HOUR=$(TZ=Europe/Amsterdam date +%H)
-          MINUTE=$(TZ=Europe/Amsterdam date +%M)
-          if [ "$HOUR" = "21" ] && [ "$MINUTE" -ge 40 ] && [ "$MINUTE" -le 59 ]; then
+          SCHEDULE="${{ github.event.schedule }}"
+          OFFSET=$(TZ=Europe/Amsterdam date +%z)
+
+          # The two cron entries represent 21:45 Amsterdam in summer and winter.
+          # Use the event's cron expression instead of a narrow execution-time window,
+          # because GitHub Actions may start scheduled workflows hours late.
+          if { [ "$SCHEDULE" = "45 19 * * 1-5" ] && [ "$OFFSET" = "+0200" ]; } ||
+             { [ "$SCHEDULE" = "45 20 * * 1-5" ] && [ "$OFFSET" = "+0100" ]; }; then
             echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Running scheduled TradingView refresh: $SCHEDULE (Amsterdam UTC$OFFSET)."
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping duplicate UTC schedule."
+            echo "Skipping non-matching DST schedule: $SCHEDULE (Amsterdam UTC$OFFSET)."
           fi
 
       - name: Install Python dependencies

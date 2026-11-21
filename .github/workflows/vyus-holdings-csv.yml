@@ -18,6 +18,8 @@ jobs:
         run: python -m pip install requests beautifulsoup4
 
       - name: Fetch holdings and write CSV
+        id: fetch
+        continue-on-error: true
         run: |
           python - <<'PY'
           import csv
@@ -61,19 +63,36 @@ jobs:
           print(", ".join(tickers))
           PY
 
-      - name: Commit updated CSV if changed
+      - name: Record VYUS source refresh status
+        if: always()
+        run: python scripts/source_status.py vyus_holdings "${{ steps.fetch.outcome }}" --detail "Manual VYUS CSV refresh"
+
+      - name: Commit updated CSV and source status if changed
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/vyus_tickers.csv
+          git add data/vyus_tickers.csv data/source_status/vyus_holdings.json
           if git diff --cached --quiet; then
             echo "CSV is unchanged; no commit needed."
           else
             git commit -m "Update VYUS holdings tickers CSV"
-            git push
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                echo "ERROR: Could not push VYUS CSV after 3 attempts."
+                exit 1
+              fi
+              sleep 3
+            done
           fi
 
       - name: Send tickers to Google Sheets
+        if: steps.fetch.outcome == 'success'
         env:
           VYUS_GS_WEBAPP_URL: ${{ vars.VYUS_GS_WEBAPP_URL }}
           VYUS_GS_SECRET: ${{ secrets.VYUS_GS_SECRET }}
@@ -117,3 +136,9 @@ jobs:
           print(f"Response: {response.text[:1000]}")
           print(f"Sent {len(tickers)} tickers to the Google Sheets web app.")
           PY
+
+      - name: Mark failed VYUS source retrieval
+        if: steps.fetch.outcome == 'failure'
+        run: |
+          echo "VYUS source retrieval failed; the prior CSV was retained and status recorded as failure."
+          exit 1

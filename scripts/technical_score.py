@@ -177,7 +177,7 @@ def main() -> int:
                 "last_ha_long_stop", "last_ha_long_stop_date",
                 "last_ha_short_stop", "last_ha_short_stop_date",
                 "above_sma20", "above_sma50",
-                "sma20", "sma50", "rvol_5_21", "volume_trend_3d", "status")}
+                "sma20", "sma50", "daily_volume", "rvol_5_21", "volume_trend_3d", "status")}
         try:
             if not ticker or str(ha_row.get("status", "")).startswith("ONBEKEND"):
                 raise ValueError("HA-marktdata ontbreekt")

@@ -77,5 +77,19 @@ class SwFinancialHealthTests(unittest.TestCase):
         self.assertEqual(row["financial_health_score"], 5)
 
 
+    def test_stale_fundamentals_never_produce_sw_pass(self):
+        fundamentals = pd.DataFrame([
+            {"ticker": "AAA", "fundamental_status": "PASS"},
+            {"ticker": "BBB", "fundamental_status": "UNKNOWN"},
+        ])
+        verified = {
+            "AAA": {"score": 5, "checked_at": "2026-11-21", "source_url": "https://simplywall.st/a"},
+            "BBB": {"score": 2, "checked_at": "2026-11-21", "source_url": "https://simplywall.st/b"},
+        }
+        rows = sw.build_sw_rows(fundamentals, verified, "STALE_FALLBACK")
+        self.assertEqual(rows[0]["sw_status"], "ONBEKEND_FUNDAMENTALS")
+        self.assertEqual(rows[1]["sw_status"], "EXCLUDED")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,7 +1,7 @@
 source,source_id,status,last_attempt_at,last_success_at,age_hours,included,ticker_count,detail
 Sector Top Tickers,sector_top_tickers,MANUAL,,,,True,32,Handmatig beheerde bron; automatische actualiteit niet van toepassing.
-FV Momentum Darvas,fv_momentum_darvas,STALE_FALLBACK,2026-11-21T10:45:38+00:00,2026-11-21T03:33:34+00:00,14.2,True,4,Finviz fetch step; last successful fetch confirmed in GitHub Actions run 44861728262. | Laatste refresh mislukte; vorige succesvolle data gebruikt.
-Simpel Monsters,simpel_monsters,UNKNOWN,,,,True,1,Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.
-Follow Thrue,follow_thrue,UNKNOWN,,,,True,1,Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.
-VYUS holdings,vyus_holdings,UNKNOWN,,,,True,25,Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.
-Blue Sky,blue_sky,STALE_FALLBACK,2026-11-21T10:45:38+00:00,2026-11-21T03:33:41+00:00,14.2,True,9,Blue Sky fetch step; last successful fetch confirmed in GitHub Actions run 44861728262. | Laatste refresh mislukte; vorige succesvolle data gebruikt.
+FV Momentum Darvas,fv_momentum_darvas,CURRENT,2026-11-21T17:47:50+00:00,2026-11-21T17:47:50+00:00,0.0,True,4,Finviz fetch step
+Simpel Monsters,simpel_monsters,FAILED,2026-11-21T17:48:12+00:00,,,False,0,Geen scannerresultaten ontvangen voor 'Simpel Monsters'. CSV is niet overschreven.
+Follow Thrue,follow_thrue,FAILED,2026-11-21T17:48:31+00:00,,,False,0,Geen scannerresultaten ontvangen voor 'Follow Thrue'. CSV is niet overschreven.
+VYUS holdings,vyus_holdings,FAILED,2026-11-21T17:47:36+00:00,,,False,0,StockAnalysis fetch/parse stage failed: HTTP Error 403: Forbidden
+Blue Sky,blue_sky,CURRENT,2026-11-21T17:47:50+00:00,2026-11-21T17:47:50+00:00,0.0,True,9,Blue Sky fetch step

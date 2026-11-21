@@ -3,13 +3,10 @@ ASO,Blue Sky,Consumer Cyclical,Specialty Retail,4,PASS,5,2026-11-21,https://simp
 CBOE,Blue Sky,Financial Services,Financial Data & Stock Exchanges,4,PASS,6,2026-11-21,https://simplywall.st/stocks/us/diversified-financials/bats-cboe/cboe-global-markets,PASS
 CHD,Blue Sky,Consumer Defensive,Household & Personal Products,4,PASS,4,2026-11-21,https://simplywall.st/stocks/us/household/nyse-chd/church-dwight,PASS
 DGX,Blue Sky;FV Momentum Darvas,Healthcare,Diagnostics & Research,4,PASS,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-dgx/quest-diagnostics,EXCLUDED
-EPAM,Simpel Monsters,Technology,Information Technology Services,3,PASS,6,2026-11-21,https://simplywall.st/stocks/us/software/nyse-epam/epam-systems,PASS
-GEN,VYUS holdings,Technology,Software - Infrastructure,3,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 HG,Blue Sky,Financial Services,Insurance - Reinsurance,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 KNSA,Blue Sky;FV Momentum Darvas,Healthcare,Drug Manufacturers - Specialty & Generic,4,PASS,6,2026-11-21,https://simplywall.st/stocks/us/pharmaceuticals-biotech/nasdaq-knsa/kiniksa-pharmaceuticals-international,PASS
 LH,Blue Sky;FV Momentum Darvas,Healthcare,Diagnostics & Research,4,PASS,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-lh/labcorp-holdings,EXCLUDED
 MCK,Sector Top Tickers,Healthcare,Medical Distribution,3,UNKNOWN,,,,ONBEKEND_FUNDAMENTALS
-PGNY,Follow Thrue,Healthcare,Healthcare Plans,4,PASS,6,2026-11-21,https://simplywall.st/stocks/us/healthcare/nasdaq-pgny/progyny,PASS
 PLGO,Blue Sky,Financial Services,Insurance - Diversified,5,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 SPNT,Blue Sky,Financial Services,Insurance - Reinsurance,4,PASS,5,2026-11-21,https://simplywall.st/stocks/us/insurance/nyse-spnt/siriuspoint,PASS
 VLTO,FV Momentum Darvas,Industrials,Pollution & Treatment Controls,4,PASS,4,2026-11-21,https://simplywall.st/stocks/us/commercial-services/nyse-vlto/veralto,PASS

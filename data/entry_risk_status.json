@@ -1,8 +1,8 @@
 {
   "status": "PARTIAL",
-  "candidate_count": 36,
-  "stop_2r_calculated": 31,
-  "target_feasibility_unknown": 17,
-  "unknown_or_invalid": 17,
+  "candidate_count": 24,
+  "stop_2r_calculated": 20,
+  "target_feasibility_unknown": 11,
+  "unknown_or_invalid": 11,
   "note": "Consolidation pivot uses a confirmed swing origin and the following 5–21 completed sessions; the latest completed close is evaluated separately for breakout/breakdown."
 }

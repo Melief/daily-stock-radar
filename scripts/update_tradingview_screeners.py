@@ -22,6 +22,10 @@ DATA_DIR.mkdir(exist_ok=True)
 
 
 def save_rows(label, rows):
+    allow_empty = False
+    if isinstance(rows, dict):
+        allow_empty = rows.get("totalCount") == 0
+        rows = rows.get("symbols") or rows.get("data") or []
     slug = re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_")
     output = DATA_DIR / f"{slug}_tickers.csv"
     retrieved_at = datetime.now(ZoneInfo("Europe/Amsterdam")).isoformat(timespec="seconds")
@@ -68,7 +72,7 @@ def save_rows(label, rows):
         if key not in seen:
             seen.add(key)
             unique.append(item)
-    if not unique:
+    if not unique and not allow_empty:
         raise RuntimeError(f"{label}: TradingView retourneerde {len(rows)} records maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden.")
     with output.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.writer(f)
@@ -100,6 +104,7 @@ def retrieve_screener(browser, label, url):
                 symbols = payload.get("symbols", [])
                 if isinstance(rows, list):
                     detail["row_count"] = len(rows)
+                    detail["total_count"] = payload.get("totalCount")
                     detail["symbols_count"] = len(symbols) if isinstance(symbols, list) else None
                     detail["symbols_preview"] = json.dumps(symbols[:25], ensure_ascii=False, default=str)[:1800] if isinstance(symbols, list) else str(type(symbols).__name__)
                     if rows:
@@ -114,6 +119,8 @@ def retrieve_screener(browser, label, url):
                         ]
                     if isinstance(symbols, list) and symbols:
                         captured.append(symbols)
+                    elif payload.get("totalCount") == 0:
+                        captured.append(payload)
                     elif rows:
                         captured.append(rows)
                 else:
@@ -156,8 +163,10 @@ def retrieve_screener(browser, label, url):
                   f"matching_responses={len(diagnostics)}; body={body_text[:1200]!r}")
             raise RuntimeError(f"Geen scannerresultaten ontvangen voor '{label}'. "
                                f"{len(diagnostics)} scan/screener netwerkreacties gelogd; CSV is niet overschreven.")
-        save_rows(label, captured[-1])
-        record_status(source_id, "success", f"{len(captured[-1])} TradingView-rows opgehaald.")
+        output = save_rows(label, captured[-1])
+        with output.open(encoding="utf-8-sig", newline="") as f:
+            ticker_count = sum(1 for _ in csv.DictReader(f))
+        record_status(source_id, "success", f"{ticker_count} gevalideerde TradingView-tickers opgehaald.")
     except Exception as exc:
         record_status(source_id, "failure", str(exc))
         raise

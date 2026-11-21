@@ -43,8 +43,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dsr.txt
       - name: Calculate Heikin Ashi, SMA20/50 and volume checks
+        id: calculate
+        continue-on-error: true
         run: python scripts/ha_signals.py
       - name: Commit updated signal and source coverage files
+        if: always() && steps.calculate.outcome != 'skipped'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -55,4 +58,9 @@ jobs:
             git commit -m "Update DSR Heikin Ashi and volume signals"
             git pull --rebase origin main
             git push
+      - name: Mark partial DSR run as failed
+        if: steps.calculate.outcome == 'failure'
+        run: |
+          echo "DSR is PARTIAL: one or more source or ticker checks failed. See the source coverage and HA outputs above."
+          exit 1
           fi

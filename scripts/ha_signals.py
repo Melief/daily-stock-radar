@@ -12,6 +12,7 @@ import json
 import re
 import sys
 import time
+from datetime import timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -411,7 +412,7 @@ def calculate(ticker: str, sources: set[str]) -> dict:
 
         # Guard against delayed daily data: indicators must end on the
         # latest NYSE session that has officially closed.
-        calendar_start = today_et - pd.Timedelta(days=14)
+        calendar_start = today_et - timedelta(days=14)
         recent_schedule = calendar.schedule(
             start_date=calendar_start, end_date=today_et
         )

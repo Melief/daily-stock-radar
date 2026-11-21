@@ -6,6 +6,7 @@ on:
     paths:
       - "scripts/ha_signals.py"
       - "scripts/technical_score.py"
+      - "scripts/long_fundamental_screen.py"
       - "scripts/market_context.py"
       - "scripts/technical_score.py"
       - "scripts/source_status.py"

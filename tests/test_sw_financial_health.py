@@ -52,5 +52,30 @@ class SwFinancialHealthTests(unittest.TestCase):
             self.assertEqual(set(data), {"AAA"})
 
 
+    def test_verified_sw_exclusion_applies_even_when_fundamentals_unknown(self):
+        fundamentals = pd.DataFrame([
+            {"ticker": "MCK", "fundamental_status": "UNKNOWN", "sources": "FV",
+             "sector": "Healthcare", "industry": "Health Care Providers", "technical_score": 3}
+        ])
+        verified = {
+            "MCK": {"score": 2, "checked_at": "2026-11-21",
+                    "source_url": "https://simplywall.st/stocks/us/healthcare/nyse-mck/mckesson/health"}
+        }
+        row = sw.build_sw_rows(fundamentals, verified)[0]
+        self.assertEqual(row["sw_status"], "EXCLUDED")
+        self.assertEqual(row["financial_health_score"], 2)
+        self.assertEqual(row["fundamental_status"], "UNKNOWN")
+
+    def test_good_sw_score_does_not_hide_unknown_fundamentals(self):
+        fundamentals = pd.DataFrame([{"ticker": "MCK", "fundamental_status": "UNKNOWN"}])
+        verified = {
+            "MCK": {"score": 5, "checked_at": "2026-11-21",
+                    "source_url": "https://simplywall.st/stocks/us/healthcare/nyse-mck/mckesson/health"}
+        }
+        row = sw.build_sw_rows(fundamentals, verified)[0]
+        self.assertEqual(row["sw_status"], "ONBEKEND_FUNDAMENTALS")
+        self.assertEqual(row["financial_health_score"], 5)
+
+
 if __name__ == "__main__":
     unittest.main()

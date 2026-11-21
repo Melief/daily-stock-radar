@@ -233,6 +233,46 @@ def make_ha(frame: pd.DataFrame):
     return ha_open, ha_high, ha_low, ha_close
 
 
+def latest_ha_stops(frame: pd.DataFrame) -> dict:
+    """Find the latest completed HA Low=Open / HA High=Open stop levels."""
+    if frame is None or frame.empty:
+        return {
+            "last_ha_long_stop": "",
+            "last_ha_long_stop_date": "",
+            "last_ha_short_stop": "",
+            "last_ha_short_stop_date": "",
+        }
+    required = ["Open", "High", "Low", "Close"]
+    if any(column not in frame.columns for column in required):
+        raise ValueError("OHLC ontbreekt voor HA-stopberekening")
+    data = frame[required].dropna()
+    if data.empty:
+        raise ValueError("geen afgeronde OHLC-balken voor HA-stopberekening")
+    ha_open, ha_high, ha_low, ha_close = make_ha(data)
+    long_mask = ((ha_open - ha_low).abs() <= 1e-8) & (ha_close > ha_open)
+    short_mask = ((ha_open - ha_high).abs() <= 1e-8) & (ha_close < ha_open)
+    dates = pd.DatetimeIndex(data.index)
+    if dates.tz is not None:
+        dates = dates.tz_convert("America/New_York").tz_localize(None)
+    result = {
+        "last_ha_long_stop": "",
+        "last_ha_long_stop_date": "",
+        "last_ha_short_stop": "",
+        "last_ha_short_stop_date": "",
+    }
+    long_positions = [i for i, valid in enumerate(long_mask.tolist()) if valid]
+    short_positions = [i for i, valid in enumerate(short_mask.tolist()) if valid]
+    if long_positions:
+        pos = long_positions[-1]
+        result["last_ha_long_stop"] = round(float(ha_low.iloc[pos]), 4)
+        result["last_ha_long_stop_date"] = dates[pos].strftime("%Y-%m-%d")
+    if short_positions:
+        pos = short_positions[-1]
+        result["last_ha_short_stop"] = round(float(ha_high.iloc[pos]), 4)
+        result["last_ha_short_stop_date"] = dates[pos].strftime("%Y-%m-%d")
+    return result
+
+
 def unknown_row(ticker: str, sources: set[str], reason: str) -> dict:
     return {
         "ticker": ticker,
@@ -247,6 +287,10 @@ def unknown_row(ticker: str, sources: set[str], reason: str) -> dict:
         "ha_high": "",
         "ha_low": "",
         "ha_close": "",
+        "last_ha_long_stop": "",
+        "last_ha_long_stop_date": "",
+        "last_ha_short_stop": "",
+        "last_ha_short_stop_date": "",
         "ha_open_equals_low": "",
         "ha_strong_signal": "",
         "ha_open_equals_high": "",
@@ -444,6 +488,8 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             pivot_distance = float("nan")
             pivot_signal = ""
 
+        stop_levels = latest_ha_stops(completed.tail(HA_LOOKBACK))
+
         # RVOL 5/21: compare averages of the latest 5 and 21 fully completed
         # regular sessions. The current/incomplete session is never included.
         daily_volume = float(latest["Volume"])
@@ -490,6 +536,7 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             "ha_high": round(hh, 4),
             "ha_low": round(hl, 4),
             "ha_close": round(hc, 4),
+            **stop_levels,
             "ha_open_equals_low": bool(equal_low),
             "ha_strong_signal": bool(equal_low and day_type == "UP"),
             "ha_open_equals_high": bool(equal_high),

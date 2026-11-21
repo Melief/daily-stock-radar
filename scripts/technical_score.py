@@ -71,6 +71,9 @@ def analyse_price_history(frame: pd.DataFrame, expected_date: str) -> dict:
         raise ValueError(f"koersdata loopt achter: verwacht {expected_date}, ontvangen {actual_date}")
 
     close = data["Close"]
+    sma20 = float(close.rolling(20).mean().iloc[-1])
+    sma50 = float(close.rolling(50).mean().iloc[-1])
+    latest_close = float(close.iloc[-1])
     momentum_21d = (float(close.iloc[-1]) / float(close.iloc[-22]) - 1.0) * 100.0
     recent = data.tail(10)
     prior = data.iloc[-20:-10]
@@ -85,6 +88,9 @@ def analyse_price_history(frame: pd.DataFrame, expected_date: str) -> dict:
     previous_20 = data.iloc[-21:-1]
     return {
         "date": actual_date,
+        "close": round(latest_close, 4),
+        "above_sma20": bool(latest_close > sma20),
+        "above_sma50": bool(latest_close > sma50),
         "momentum_21d_pct": round(momentum_21d, 3),
         "higher_highs_higher_lows": bool(higher_structure),
         "lower_highs_lower_lows": bool(lower_structure),
@@ -94,8 +100,12 @@ def analyse_price_history(frame: pd.DataFrame, expected_date: str) -> dict:
 
 
 def score_components(ha_row: dict, price: dict, spx_momentum: float, qqq_momentum: float) -> dict:
-    above20 = _bool(ha_row.get("above_sma20"))
-    above50 = _bool(ha_row.get("above_sma50"))
+    above20 = price.get("above_sma20")
+    above50 = price.get("above_sma50")
+    if not isinstance(above20, bool):
+        above20 = _bool(ha_row.get("above_sma20"))
+    if not isinstance(above50, bool):
+        above50 = _bool(ha_row.get("above_sma50"))
     rvol = _number(ha_row.get("rvol_5_21"))
     momentum = _number(price.get("momentum_21d_pct"))
     higher = price.get("higher_highs_higher_lows")
@@ -168,12 +178,13 @@ def main() -> int:
         try:
             if not ticker or str(ha_row.get("status", "")).startswith("ONBEKEND"):
                 raise ValueError("HA-marktdata ontbreekt")
-            if str(ha_row.get("date", "")) != session:
-                raise ValueError(f"HA-datum wijkt af van marktcontext: {ha_row.get('date')} vs {session}")
             price = analyse_price_history(download_history(ticker), session)
             scores = score_components(ha_row.to_dict(), price, spx, qqq)
             row = {
                 **base,
+                "close_completed": price["close"],
+                "above_sma20_completed": price["above_sma20"],
+                "above_sma50_completed": price["above_sma50"],
                 "momentum_21d_pct": price["momentum_21d_pct"],
                 "relative_vs_spx_pct": round(price["momentum_21d_pct"] - spx, 3),
                 "relative_vs_qqq_pct": round(price["momentum_21d_pct"] - qqq, 3),
@@ -191,7 +202,8 @@ def main() -> int:
             }
         except Exception as exc:
             errors.append(f"{ticker}: {exc}")
-            row = {**base, "momentum_21d_pct": "", "relative_vs_spx_pct": "", "relative_vs_qqq_pct": "",
+            row = {**base, "close_completed": "", "above_sma20_completed": "",
+                   "above_sma50_completed": "", "momentum_21d_pct": "", "relative_vs_spx_pct": "", "relative_vs_qqq_pct": "",
                    "higher_highs_higher_lows": "", "lower_highs_lower_lows": "",
                    "pivot_resistance_20d": "", "pivot_support_20d": "", "long_score": "", "short_score": "",
                    "long_components": "", "short_components": "", "score_status": "ONBEKEND",

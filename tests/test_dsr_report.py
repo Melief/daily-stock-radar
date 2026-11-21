@@ -252,5 +252,20 @@ class DsrReportTests(unittest.TestCase):
             self.assertTrue(any("STALE_FALLBACK" in item for item in details["pending_components"]))
 
 
+    def test_pivot_and_breakout_status_are_reported_separately(self):
+        cells = report.pivot_audit_cells({
+            "consolidation_pivot": 95,
+            "consolidation_pivot_date": "2026-11-10",
+            "consolidation_pivot_status": "OK",
+            "breakout_reference_status": "BREAKOUT_BEVESTIGD",
+            "breakout_reference_date": "2026-11-20",
+            "breakout_reference_close": 100,
+            "breakout_reference_ha_close": 96,
+            "breakout_reference_volume": 1200,
+        })
+        self.assertEqual(cells, [95, "2026-11-10", "OK", "BREAKOUT_BEVESTIGD",
+                                 "2026-11-20", 100, 96, 1200])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -604,7 +604,7 @@ def main() -> int:
         f"Controle voltooid: {ok} tickers OK, {unknown} ONBEKEND, "
         f"{missing} ontbrekende HA-rijen. Totaal {len(ticker_sources)} unieke tickers."
     )
-    print(f"HA-pipeline-status: {run_state}; overall DSR-status: PARTIAL (required Long/Short and market checks are not yet implemented)."
+    print(f"HA-pipeline-status: {run_state}; overall DSR-status: PARTIAL (required Long/Short and market checks are not yet implemented).")
     print(f"HA-uitvoer: {OUT}")
     print(f"Broncontrole: {COVERAGE_OUT}")
     print(f"Bronactualiteit: {SOURCE_STATUS_OUT}")

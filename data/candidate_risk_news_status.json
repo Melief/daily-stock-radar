@@ -1,8 +1,8 @@
 {
   "status": "PARTIAL",
   "candidate_count": 26,
-  "checked": 4,
-  "unknown": 22,
+  "checked": 2,
+  "unknown": 24,
   "review_required": 9,
   "long_candidates": 8,
   "short_candidates": 18,

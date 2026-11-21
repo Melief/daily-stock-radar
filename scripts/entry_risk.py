@@ -113,7 +113,13 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "2R_DOEL_ONDER_STEUN" if target < support else "2R_DOEL_BOVEN_STEUN"
         )
 
-    if pivot is None or pivot <= 0 or consolidation_pivot_status != "OK":
+    if consolidation_pivot_status == "GEEN_GELDIGE_PIVOT":
+        pivot_status, distance, breakout_date, breakout_close, breakout_ha_close, breakout_volume = (
+            "GEEN_GELDIGE_PIVOT", "", "", "", "", ""
+        )
+        action = "WACHTEN OP GELDIGE CONSOLIDATIEPIVOT"
+        buy_zone = "ONBEKEND"
+    elif pivot is None or pivot <= 0 or consolidation_pivot_status != "OK":
         pivot_status, distance, breakout_date, breakout_close, breakout_ha_close, breakout_volume = (
             "ONBEKEND", "", "", "", "", ""
         )
@@ -284,8 +290,9 @@ def main() -> int:
     pd.DataFrame(rows, columns=columns).to_csv(OUTPUT, index=False)
     stop_unknown = sum(row["entry_status"] != "STOP_2R_BEREKEND" for row in rows)
     feasibility_unknown = sum(row.get("target_feasibility") == "ONBEKEND" for row in rows)
+    invalid = sum(row["entry_status"] in {"ONGELDIGE_STOP", "ONGELDIGE_2R"} for row in rows)
     unknown = sum(
-        row["entry_status"] != "STOP_2R_BEREKEND" or row.get("target_feasibility") == "ONBEKEND"
+        row["entry_status"] == "ONBEKEND_STOP_OF_ENTRY" or row.get("target_feasibility") == "ONBEKEND"
         for row in rows
     )
     status = "FULL" if unknown == 0 else "PARTIAL"
@@ -294,11 +301,13 @@ def main() -> int:
         "candidate_count": len(rows),
         "stop_2r_calculated": len(rows) - stop_unknown,
         "target_feasibility_unknown": feasibility_unknown,
-        "unknown_or_invalid": unknown,
-        "note": "Consolidation pivot uses a confirmed swing origin and the following 5–21 completed sessions; the latest completed close is evaluated separately for breakout/breakdown.",
+        "unknown": unknown,
+        "invalid_stop_or_2r": invalid,
+        "unknown_or_invalid": unknown + invalid,
+        "note": "Consolidation pivot is calculated from completed-session Heikin-Ashi candles; actual close and volume are reported separately for breakout/breakdown confirmation.",
     }
     write_status(payload)
-    print(f"Entry risk: {payload['stop_2r_calculated']} stop/2R berekend, {unknown} onbekend/ongeldig.")
+    print(f"Entry risk: {payload['stop_2r_calculated']} stop/2R berekend, {unknown} onbekend, {invalid} ongeldig.")
     return 0 if status == "FULL" else 1
 
 

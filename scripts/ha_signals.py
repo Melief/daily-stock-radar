@@ -19,8 +19,15 @@ import yfinance as yf
 import pandas_market_calendars as mcal
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from scripts.source_status import evaluate_status
+
 OUT = ROOT / "data" / "ha_signals.csv"
 COVERAGE_OUT = ROOT / "data" / "ha_source_coverage.csv"
+SOURCE_STATUS_OUT = ROOT / "data" / "dsr_source_status.csv"
+RUN_STATUS_OUT = ROOT / "data" / "dsr_run_status.json"
+STATUS_DIR = ROOT / "data" / "source_status"
 HISTORY_PERIOD = "1y"
 HA_LOOKBACK = 30
 
@@ -60,6 +67,37 @@ def load_source_config():
 SOURCES = load_source_config()
 
 
+def load_source_metadata():
+    config = json.loads(SOURCE_CONFIG.read_text(encoding="utf-8"))
+    return {entry["name"]: entry for entry in config["sources"]}
+
+
+SOURCE_METADATA = load_source_metadata()
+
+
+def write_run_status(status: str, source_rows: list[dict], ticker_count: int,
+                     source_errors: dict, source_warnings: dict, missing_rows: int = 0):
+    payload = {
+        "status": status,
+        "generated_at": pd.Timestamp.now(tz="UTC").isoformat(timespec="seconds"),
+        "unique_tickers": ticker_count,
+        "source_count": len(source_rows),
+        "source_errors": source_errors,
+        "source_warnings": source_warnings,
+        "missing_ha_rows": missing_rows,
+    }
+    temporary = RUN_STATUS_OUT.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(payload, indent=2) + "\\n", encoding="utf-8")
+    temporary.replace(RUN_STATUS_OUT)
+
+
+def write_source_status(rows: list[dict]):
+    pd.DataFrame(rows, columns=[
+        "source", "source_id", "status", "last_attempt_at", "last_success_at",
+        "age_hours", "included", "ticker_count", "detail",
+    ]).to_csv(SOURCE_STATUS_OUT, index=False)
+
+
 def read_source(path: Path, fmt: str) -> list[str]:
     if not path.exists():
         raise FileNotFoundError(f"Verplicht bronbestand ontbreekt: {path.relative_to(ROOT)}")
@@ -90,23 +128,65 @@ def read_source(path: Path, fmt: str) -> list[str]:
     return result
 
 
-def load_universe():
+def load_universe(include_status: bool = False):
     ticker_sources: dict[str, set[str]] = {}
     source_counts: dict[str, int] = {}
     source_errors: dict[str, str] = {}
+    source_warnings: dict[str, str] = {}
+    source_status_rows: list[dict] = []
 
     for source_name, path, fmt in SOURCES:
+        metadata = SOURCE_METADATA.get(source_name, {})
         try:
             tickers = read_source(path, fmt)
         except Exception as exc:
             source_errors[source_name] = str(exc)
+            if include_status:
+                source_status_rows.append({
+                    "source": source_name, "source_id": metadata.get("id", ""),
+                    "status": "FILE_ERROR", "last_attempt_at": "",
+                    "last_success_at": "", "age_hours": "", "included": False,
+                    "ticker_count": 0, "detail": str(exc),
+                })
             print(f"BRONFOUT [{source_name}]: {exc}", file=sys.stderr)
+            continue
+
+        status = {
+            "status": "MANUAL", "include": True, "partial": False,
+            "last_attempt_at": "", "last_success_at": "", "age_hours": "",
+            "detail": "Geen automatische statuscontrole.",
+        }
+        if include_status:
+            source_id = metadata.get("id")
+            refresh_mode = metadata.get("refresh_mode", "manual")
+            max_age_hours = int(metadata.get("max_age_hours", 96))
+            status = evaluate_status(source_id, refresh_mode, max_age_hours, STATUS_DIR)
+            if status["partial"]:
+                source_warnings[source_name] = f"{status['status']}: {status['detail']}"
+            if not status["include"]:
+                source_errors[source_name] = f"{status['status']}: {status['detail']}"
+            source_status_rows.append({
+                "source": source_name,
+                "source_id": source_id or "",
+                "status": status["status"],
+                "last_attempt_at": status["last_attempt_at"],
+                "last_success_at": status["last_success_at"],
+                "age_hours": status["age_hours"],
+                "included": status["include"],
+                "ticker_count": len(set(tickers)) if status["include"] else 0,
+                "detail": status["detail"],
+            })
+
+        if not status["include"]:
+            print(f"BRON NIET MEegenomen [{source_name}]: {status['status']}", file=sys.stderr)
             continue
 
         source_counts[source_name] = len(set(tickers))
         for ticker in tickers:
             ticker_sources.setdefault(ticker, set()).add(source_name)
 
+    if include_status:
+        return ticker_sources, source_counts, source_errors, source_warnings, source_status_rows
     return ticker_sources, source_counts, source_errors
 
 

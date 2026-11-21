@@ -266,9 +266,18 @@ def _fetch_candidate(candidate: dict) -> dict:
     if len(ticker) >= 3:
         relevance_terms.append(ticker)
     if company and company != ticker:
-        first_word = re.split(r"\s+", company.strip())[0].strip(".,")
-        if len(first_word) >= 3:
-            relevance_terms.append(first_word)
+        common_name_words = {
+            "the", "a", "an", "inc", "corp", "corporation", "company",
+            "holdings", "group", "plc", "limited", "ltd", "co",
+        }
+        name_words = re.findall(r"[A-Za-z0-9]+", company)
+        distinctive = next(
+            (word for word in name_words
+             if len(word) >= 3 and word.lower() not in common_name_words),
+            "",
+        )
+        if distinctive:
+            relevance_terms.append(distinctive)
     try:
         news = fetch_google_news(query, relevance_terms)
         news_status = "CHECKED" if news else "NO_RESULTS"

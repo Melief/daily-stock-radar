@@ -119,7 +119,7 @@ class DsrReportTests(unittest.TestCase):
                 "long_fundamental_status.json": {"status": "FULL", "unknown": 0, "passed": 0, "failed": 0},
                 "long_sw_status.json": {"status": "FULL", "unknown": 0, "passed": 0, "excluded_sw": 0},
                 "short_borrow_status.json": {"status": "PARTIAL", "unknown": 4},
-                "candidate_risk_news_status.json": {"status": "FULL", "unknown": 0},
+                "candidate_risk_news_status.json": {"status": "PARTIAL", "unknown": 2, "review_required": 3},
                 "entry_risk_status.json": {"status": "FULL", "unknown": 0},
                 "dsr_run_status.json": {},
             }
@@ -131,6 +131,7 @@ class DsrReportTests(unittest.TestCase):
             self.assertEqual(details["status"], "FULL")
             self.assertIn("VOLLEDIGE DSR", rendered)
             self.assertFalse(details["pending_components"])
+            self.assertTrue(any("News/risk" in item for item in details["non_blocking_components"]))
 
 
     def test_unknown_fundamentals_do_not_block_when_candidate_is_excluded_by_sw(self):
@@ -208,8 +209,11 @@ class DsrReportTests(unittest.TestCase):
                 (data / name).write_text(json.dumps(payload), encoding="utf-8")
             with patch.object(report, "DATA", data), patch.object(report, "ROOT", root):
                 _, details = report.build_report()
-            self.assertEqual(details["status"], "PARTIAL")
+            self.assertEqual(details["status"], "FULL")
             self.assertEqual(details["unresolved_fundamental_unknown"], ["MCK"])
+            self.assertFalse(details["pending_components"])
+            self.assertTrue(any("Long fundamentals" in item for item in details["non_blocking_components"]))
+            self.assertTrue(any("Simply Wall St" in item for item in details["non_blocking_components"]))
 
 
     def test_stale_fundamental_fallback_blocks_full_even_when_sw_excludes_one(self):
@@ -247,9 +251,10 @@ class DsrReportTests(unittest.TestCase):
                 (data / name).write_text(json.dumps(payload), encoding="utf-8")
             with patch.object(report, "DATA", data), patch.object(report, "ROOT", root):
                 _, details = report.build_report()
-            self.assertEqual(details["status"], "PARTIAL")
+            self.assertEqual(details["status"], "FULL")
             self.assertEqual(details["long_fundamental_data_status"], "STALE_FALLBACK")
-            self.assertTrue(any("STALE_FALLBACK" in item for item in details["pending_components"]))
+            self.assertFalse(details["pending_components"])
+            self.assertTrue(any("STALE_FALLBACK" in item for item in details["non_blocking_components"]))
 
 
     def test_pivot_and_breakout_status_are_reported_separately(self):
@@ -265,6 +270,46 @@ class DsrReportTests(unittest.TestCase):
         })
         self.assertEqual(cells, [95, "2026-11-10", "OK", "BREAKOUT_BEVESTIGD",
                                  "2026-11-20", 100, 96, 1200])
+
+
+    def test_entry_risk_unknown_still_blocks_full_report(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            data = root / "data"
+            data.mkdir()
+            files = {
+                "technical_scores.csv": "ticker,score_status,long_score,close_completed,sma50,short_score,sma20,above_sma20_completed,above_sma50_completed\n",
+                "ha_signals.csv": "ticker,ha_pivot_up,ha_pivot_down\n",
+                "dsr_source_status.csv": "source,status,ticker_count,last_success_at,age_hours,detail\nManual,MANUAL,1,,,manual\n",
+                "long_fundamentals.csv": "ticker,fundamental_status\n",
+                "long_sw_status.csv": "ticker,fundamental_status,sw_status\n",
+                "short_borrow.csv": "ticker,status\n",
+                "candidate_risk_news.csv": "ticker,candidate_type,risk_status,news_items\n",
+                "entry_risk.csv": "ticker,candidate_type,entry_status,target_feasibility\n",
+            }
+            for name, content in files.items():
+                (data / name).write_text(content, encoding="utf-8")
+            (data / "market_context.json").write_text(
+                '{"status":"FULL","data_status":"FULL","session_date":"2026-11-20","market_regime":"RISK-OFF","symbols":{}}',
+                encoding="utf-8",
+            )
+            statuses = {
+                "technical_score_status.json": {"status": "FULL"},
+                "long_fundamental_status.json": {"status": "PARTIAL", "data_status": "STALE_FALLBACK", "unknown": 10},
+                "long_sw_status.json": {"status": "PARTIAL", "data_status": "STALE_FALLBACK", "unknown": 10},
+                "short_borrow_status.json": {"status": "PARTIAL", "unknown": 4},
+                "candidate_risk_news_status.json": {"status": "PARTIAL", "unknown": 5},
+                "entry_risk_status.json": {"status": "PARTIAL", "unknown": 3},
+                "dsr_run_status.json": {},
+            }
+            import json
+            for name, payload in statuses.items():
+                (data / name).write_text(json.dumps(payload), encoding="utf-8")
+            with patch.object(report, "DATA", data), patch.object(report, "ROOT", root):
+                _, details = report.build_report()
+            self.assertEqual(details["status"], "PARTIAL")
+            self.assertTrue(any("Entry, HA-stop, risico%" in item for item in details["pending_components"]))
+            self.assertTrue(details["non_blocking_components"])
 
 
 if __name__ == "__main__":

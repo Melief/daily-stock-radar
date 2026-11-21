@@ -103,10 +103,11 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
                           nearest_resistance=None, consolidation_pivot_status="ONBEKEND",
                           consolidation_pivot_date="", prior_breakout_date="",
                           prior_breakout_close=None, prior_breakout_volume=None,
-                          current_ha_close=None, prior_breakout_ha_close=None) -> dict:
+                          current_ha_close=None, prior_breakout_ha_close=None, current_close=None) -> dict:
     entry, stop, pivot = number(entry), number(stop), number(pivot)
     volume = number(volume)
     current_ha_close = number(current_ha_close)
+    current_close = number(current_close)
     prior_breakout_ha_close = number(prior_breakout_ha_close)
     prior_breakout_date = clean_text(prior_breakout_date)
     consolidation_pivot_date = clean_text(consolidation_pivot_date)
@@ -119,7 +120,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
     pivot_result = evaluate_pivot_status(
         side, pivot_entry, pivot, score_date, volume, consolidation_pivot_status,
         consolidation_pivot_date, prior_breakout_date, prior_breakout_close,
-        prior_breakout_volume, current_ha_close, prior_breakout_ha_close,
+        prior_breakout_volume, current_close, prior_breakout_ha_close,
     )
     if entry is None or entry <= 0 or stop is None:
         return {
@@ -218,6 +219,7 @@ def build_rows() -> list[dict]:
             risk_row.get("prior_breakout_close"),
             risk_row.get("prior_breakout_volume"),
             risk_row.get("current_ha_close"), risk_row.get("prior_breakout_ha_close"),
+            risk_row.get("current_close"),
         )
         output.append({
             "ticker": ticker,

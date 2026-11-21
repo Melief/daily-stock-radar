@@ -80,11 +80,11 @@ def build_sw_rows(fundamentals: pd.DataFrame, verified: dict[str, dict]) -> list
             "source_url": "",
         }
         item = verified.get(ticker)
-        if item is not None:
+        if item is not None and fundamental_status != "FAIL":
             row["financial_health_score"] = item["score"]
             row["checked_at"] = item["checked_at"]
             row["source_url"] = item["source_url"]
-        if item is not None and item["score"] < 4:
+        if item is not None and fundamental_status != "FAIL" and item["score"] < 4:
             # A verified SW score below 4 is an independent exclusion,
             # even when other fundamental metrics are still unknown.
             row["sw_status"] = "EXCLUDED"

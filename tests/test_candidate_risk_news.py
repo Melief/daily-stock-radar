@@ -102,6 +102,44 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertLess(result["nearest_support"], 105)
         self.assertGreater(result["nearest_resistance"], 105)
 
+    def test_long_consolidation_pivot_uses_confirmed_swing_low_and_prior_range(self):
+        dates = pd.bdate_range(end="2026-11-20", periods=22)
+        lows = [10.0] * 22
+        lows[8:13] = [8.0, 7.0, 4.0, 7.5, 8.0]
+        highs = [value + 2 for value in lows]
+        highs[10:21] = [12.0 + i * 0.1 for i in range(11)]
+        frame = pd.DataFrame({
+            "Open": [9.0] * 22, "High": highs, "Low": lows,
+            "Close": [9.0] * 21 + [13.5],
+        }, index=dates)
+        result = rn.calculate_consolidation_pivot(frame, "2026-11-20", "LONG")
+        self.assertEqual(result["consolidation_pivot_status"], "OK")
+        self.assertEqual(result["consolidation_sessions"], 11)
+        self.assertEqual(result["consolidation_pivot"], max(highs[10:21]))
+
+    def test_short_consolidation_pivot_is_mirrored(self):
+        dates = pd.bdate_range(end="2026-11-20", periods=22)
+        highs = [12.0] * 22
+        highs[8:13] = [14.0, 15.0, 18.0, 15.5, 15.0]
+        lows = [value - 2 for value in highs]
+        lows[10:21] = [8.0 - i * 0.1 for i in range(11)]
+        frame = pd.DataFrame({
+            "Open": [10.0] * 22, "High": highs, "Low": lows,
+            "Close": [10.0] * 21 + [6.5],
+        }, index=dates)
+        result = rn.calculate_consolidation_pivot(frame, "2026-11-20", "SHORT")
+        self.assertEqual(result["consolidation_pivot_status"], "OK")
+        self.assertEqual(result["consolidation_sessions"], 11)
+        self.assertEqual(result["consolidation_pivot"], min(lows[10:21]))
+
+    def test_consolidation_pivot_requires_completed_current_session(self):
+        dates = pd.bdate_range(end="2026-11-20", periods=22)
+        frame = pd.DataFrame({
+            "Open": 10.0, "High": 11.0, "Low": 9.0, "Close": 10.0
+        }, index=dates)
+        with self.assertRaisesRegex(ValueError, "geen actuele voltooide"):
+            rn.calculate_consolidation_pivot(frame, "2026-11-19", "LONG")
+
     def test_short_history_keeps_ath_but_52_week_high_unknown(self):
         dates = pd.bdate_range(end="2026-11-20", periods=30)
         frame = pd.DataFrame({

@@ -64,6 +64,15 @@ Gebruik de meest recente voltooide sessie. Maak duidelijk wanneer een marktindic
 ## 4. Technische basis voor Long en Short
 
 - Technische beoordeling op een schaal van 3/5 tot en met 5/5 voor kandidaten die de selectie halen.
+- De vijf technische scoreonderdelen zijn:
+  1. Trend: Long 1 punt als de slotkoers boven SMA20 én SMA50 ligt; Short 1 punt als de slotkoers onder beide ligt. De onderlinge verhouding SMA20/SMA50 levert voor deze score geen extra eis of punt op.
+  2. Momentum: Long 1 punt bij positief 21-sessiesmomentum; Short 1 punt bij negatief 21-sessiesmomentum.
+  3. Relatieve sterkte: Long 1 punt als het 21-sessiesrendement hoger is dan zowel SPX als QQQ; Short 1 punt als het lager is dan beide.
+  4. Volume: 1 punt bij RVOL 5/21 >=1,25.
+  5. Structuur: Long 1 punt bij hogere toppen én hogere bodems; Short 1 punt bij lagere toppen én lagere bodems. Vergelijk de laatste 10 voltooide sessies met de voorafgaande 10 sessies.
+- De technische score is de som van deze vijf afzonderlijke binaire controles. Een ontbrekende controle blijft ONBEKEND en wordt niet als 0 gerekend; bij ontbrekende invoer wordt geen definitieve score gepubliceerd.
+- Alleen scores van 3/5 t/m 5/5 kwalificeren technisch als kandidaat. De overige Long-/Short-criteria blijven afzonderlijke filters en worden niet door de score vervangen.
+- Voor een technisch pivotreferentiepunt wordt de hoogste High (Long) respectievelijk laagste Low (Short) van de voorafgaande 20 voltooide sessies opgeslagen; dit is niet automatisch een bevestigde breakout of een actieadvies.
 - SMA20 en SMA50 gebruiken; SMA200 niet gebruiken.
 - RVOL-maatstaf is uitsluitend RVOL 5/21: gemiddelde dagomzet over de laatste 5 voltooide sessies gedeeld door het gemiddelde over de laatste 21 voltooide sessies.
 - RVOL-duiding: <1 zwak; 1–<1,25 neutraal; 1,25–<1,50 positief; 1,50–2 sterk; >2 zeer sterk.

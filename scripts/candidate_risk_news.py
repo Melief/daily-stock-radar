@@ -280,7 +280,7 @@ def calculate_consolidation_pivot(frame: pd.DataFrame, expected_date: str,
         if is_origin and 5 <= sessions <= 21:
             eligible.append(i)
     if not eligible:
-        return unknown
+        return {**unknown, "consolidation_pivot_status": "GEEN_GELDIGE_PIVOT"}
 
     index = max(eligible)
     breakout = None
@@ -463,7 +463,7 @@ def _fetch_candidate(candidate: dict) -> dict:
         "_short_metrics_ok": short_metrics_ok,
         "_earnings_date_known": earnings_date_known,
         "_history_ok": history_extremes.get("history_extremes_status") == "FULL",
-        "_pivot_ok": history_extremes.get("consolidation_pivot_status") == "OK",
+        "_pivot_ok": history_extremes.get("consolidation_pivot_status") in {"OK", "GEEN_GELDIGE_PIVOT"},
     }
 
 
@@ -551,7 +551,6 @@ def main() -> int:
 
     unknown = sum(
         not row["_history_ok"]
-        or not row["_pivot_ok"]
         for row in results
     )
     review = sum(row["risk_status"] == "REVIEW" for row in results)

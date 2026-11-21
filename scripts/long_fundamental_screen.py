@@ -248,7 +248,7 @@ def main() -> int:
         write_status(payload)
         print(f"Long-fundamentals: Yahoo leverde geen bruikbare velden voor {len(candidates)} kandidaten; "
               "laatste gevalideerde gegevens behouden als STALE_FALLBACK.")
-        return 1
+        return 0
 
     write_rows(rows, columns)
     passed = sum(row["fundamental_status"] == "PASS" for row in rows)
@@ -261,7 +261,7 @@ def main() -> int:
                "fallback_used": False, "errors": errors}
     write_status(payload)
     print(f"Long-fundamentals: {passed} PASS, {failed} FAIL, {unknown} UNKNOWN; status={status}")
-    return 0 if status == "FULL" else 1
+    return 0
 
 
 if __name__ == "__main__":

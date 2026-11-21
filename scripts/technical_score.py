@@ -173,7 +173,10 @@ def main() -> int:
     for index, ha_row in ha.iterrows():
         ticker = str(ha_row.get("ticker", "")).strip().upper()
         base = {key: ha_row.get(key, "") for key in ("ticker", "sources", "sector", "industry", "date", "close",
-                "ha_day_type", "ha_strong_signal", "ha_strong_down_signal", "above_sma20", "above_sma50",
+                "ha_day_type", "ha_strong_signal", "ha_strong_down_signal",
+                "last_ha_long_stop", "last_ha_long_stop_date",
+                "last_ha_short_stop", "last_ha_short_stop_date",
+                "above_sma20", "above_sma50",
                 "sma20", "sma50", "rvol_5_21", "volume_trend_3d", "status")}
         try:
             if not ticker or str(ha_row.get("status", "")).startswith("ONBEKEND"):

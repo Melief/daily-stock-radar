@@ -1,11 +1,11 @@
 {
-  "status": "PARTIAL",
-  "candidate_count": 23,
-  "checked": 9,
-  "unknown": 14,
-  "review_required": 9,
+  "status": "FULL",
+  "candidate_count": 26,
+  "checked": 26,
+  "unknown": 0,
+  "review_required": 11,
   "long_candidates": 6,
-  "short_candidates": 17,
+  "short_candidates": 20,
   "errors": [],
   "limitations": [
     "NO_RESULTS betekent geen geïndexeerde Google News RSS-resultaten binnen 7 dagen; het bewijst niet dat er geen nieuws of gebeurtenisrisico bestaat.",

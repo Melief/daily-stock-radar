@@ -5,7 +5,7 @@
   "long_fundamental_status": "PARTIAL",
   "sw_financial_health_status": "PARTIAL",
   "short_borrow_status": "PARTIAL",
-  "candidate_risk_news_status": "PARTIAL",
+  "candidate_risk_news_status": "FULL",
   "entry_risk_status": "PARTIAL",
   "long_technical_candidates": 12,
   "long_approved_candidates": 6,
@@ -15,13 +15,9 @@
   "ha_long_signals": 0,
   "ha_short_signals": 3,
   "pending_components": [
-    "Long-entry: actuele consolidatiepivot, breakoutdatum, officiële slotkoers, volume en koopzone moeten zijn geverifieerd.",
-    "Short-entry: actuele consolidatiepivot, breakdowndatum, officiële slotkoers en volume moeten zijn geverifieerd; borrow en ruwe squeeze-/gapgegevens blijven afzonderlijk zichtbaar.",
-    "IBKR-borrowinventaris ontbreekt voor 4 Short-kandidaten.",
-    "Bronverversing/dekking bevat waarschuwingen of onbekende statussen.",
-    "Nieuws- en Short-risicocontrole is gedeeltelijk of bevat onbekende gegevens.",
-    "HA-stop, risico% en 2R zijn niet voor alle kandidaten betrouwbaar berekend.",
-    "Fundamentele gegevens ontbreken voor een of meer Long-kandidaten.",
-    "SW Financial Health ontbreekt voor een of meer Long-kandidaten."
+    "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
+    "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig.",
+    "Long-fundamentalgegevens bevatten onbekende criteria; deze kandidaten blijven uitgesloten.",
+    "Simply Wall St Financial Health bevat onbekende scores; deze kandidaten blijven uitgesloten."
   ]
 }

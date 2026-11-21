@@ -4,16 +4,12 @@
   "source_status": "PARTIAL",
   "analysis_status": "FULL",
   "pending_components": [
-    "Long-entry: actuele consolidatiepivot, breakoutdatum, officiële slotkoers, volume en koopzone moeten zijn geverifieerd.",
-    "Short-entry: actuele consolidatiepivot, breakdowndatum, officiële slotkoers en volume moeten zijn geverifieerd; borrow en ruwe squeeze-/gapgegevens blijven afzonderlijk zichtbaar.",
-    "IBKR-borrowinventaris ontbreekt voor 4 Short-kandidaten.",
-    "Bronverversing/dekking bevat waarschuwingen of onbekende statussen.",
-    "Nieuws- en Short-risicocontrole is gedeeltelijk of bevat onbekende gegevens.",
-    "HA-stop, risico% en 2R zijn niet voor alle kandidaten betrouwbaar berekend.",
-    "Fundamentele gegevens ontbreken voor een of meer Long-kandidaten.",
-    "SW Financial Health ontbreekt voor een of meer Long-kandidaten."
+    "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
+    "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig.",
+    "Long-fundamentalgegevens bevatten onbekende criteria; deze kandidaten blijven uitgesloten.",
+    "Simply Wall St Financial Health bevat onbekende scores; deze kandidaten blijven uitgesloten."
   ],
-  "generated_at": "2026-11-21T18:11:59+00:00",
+  "generated_at": "2026-11-21T18:48:59+00:00",
   "unique_tickers": 67,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
@@ -34,7 +30,7 @@
     "long_fundamentals": "PARTIAL",
     "sw_financial_health": "PARTIAL",
     "short_borrow": "PARTIAL",
-    "candidate_risk_news": "PARTIAL",
+    "candidate_risk_news": "FULL",
     "entry_risk": "PARTIAL"
   }
 }

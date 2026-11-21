@@ -12,7 +12,6 @@ on:
     workflows:
       - "Refresh Finviz tickers and sync to Google Sheets"
       - "Update TradingView screener tickers"
-      - "Import VYUS Top 25 Holdings"
       - "VYUS holdings to CSV"
     types: [completed]
     branches: [main]

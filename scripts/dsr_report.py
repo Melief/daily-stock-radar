@@ -297,16 +297,35 @@ def build_report() -> tuple[str, dict]:
     }
     nonblocking_fundamental_unknown = sorted(fundamental_unknown_tickers & sw_excluded_tickers)
     unresolved_fundamental_unknown = sorted(fundamental_unknown_tickers - sw_excluded_tickers)
-    if fundamental_status.get("data_status") == "STALE_FALLBACK":
-        pending.append("Yahoo Finance leverde geen actuele Long-fundamentalvelden; de laatste gevalideerde waarden zijn alleen als STALE_FALLBACK bewaard.")
-    elif unresolved_fundamental_unknown:
-        pending.append("Long-fundamentalgegevens blijven ONBEKEND voor niet anderszins uitgesloten kandidaten: "
-                       + ", ".join(unresolved_fundamental_unknown) + ".")
+    # External financial, borrow and news data remain visible as non-blocking
+    # enrichments. UNKNOWN never becomes PASS and therefore cannot approve a Long.
+    non_blocking_components = []
+    if (fundamental_status.get("status") != "FULL"
+            or fundamental_status.get("data_status", "CURRENT") != "CURRENT"
+            or fundamental_status.get("unknown", 0)
+            or unresolved_fundamental_unknown):
+        non_blocking_components.append(
+            "Long fundamentals: " + str(fundamental_status.get("data_status", "UNKNOWN"))
+            + f"; PASS={fundamental_status.get('passed', 0)}, FAIL={fundamental_status.get('failed', 0)}, "
+              f"UNKNOWN={fundamental_status.get('unknown', 0)}."
+        )
     if sw_status.get("status") != "FULL" or sw_status.get("unknown", 0):
-        pending.append("Simply Wall St Financial Health bevat onbekende scores; deze kandidaten blijven uitgesloten.")
+        non_blocking_components.append(
+            f"Simply Wall St: status={sw_status.get('status', 'UNKNOWN')}, "
+            f"PASS={sw_status.get('passed', 0)}, excluded={sw_status.get('excluded_sw', 0)}, "
+            f"UNKNOWN={sw_status.get('unknown', 0)}."
+        )
+    if borrow_status.get("status") != "FULL" or borrow_status.get("unknown", 0):
+        non_blocking_components.append(
+            f"IBKR borrow: status={borrow_status.get('status', 'UNKNOWN')}, "
+            f"unknown={borrow_status.get('unknown', 0)}."
+        )
+    if risk_status.get("status") != "FULL" or risk_status.get("unknown", 0) or risk_status.get("review_required", 0):
+        non_blocking_components.append(
+            f"News/risk: status={risk_status.get('status', 'UNKNOWN')}, "
+            f"unknown={risk_status.get('unknown', 0)}, review={risk_status.get('review_required', 0)}."
+        )
 
-    # Borrow inventory and news/event feeds remain visible, but are optional
-    # enrichments and do not determine DSR completeness.
     report_status = "FULL" if not pending else "PARTIAL"
     details = {
         "status": report_status,
@@ -328,6 +347,7 @@ def build_report() -> tuple[str, dict]:
         "ha_long_signals": len(ha_long),
         "ha_short_signals": len(ha_short),
         "pending_components": pending,
+        "non_blocking_components": non_blocking_components,
     }
 
     long_summary = (
@@ -338,6 +358,7 @@ def build_report() -> tuple[str, dict]:
     )
     if nonblocking_fundamental_unknown:
         long_summary += " Fundamenteel ONBEKEND maar al uitgesloten door SW: " + ", ".join(nonblocking_fundamental_unknown) + "."
+    long_summary += " Externe financiële gegevens zijn aanvullend; ONBEKEND blijft ONBEKEND en geeft geen Long-goedkeuring."
     lines = [
         f"# DAILY STOCK RADAR — {'VOLLEDIGE DSR' if report_status == 'FULL' else 'GEDEELTELIJKE DSR'}",
         f"**Gegevensdatum:** {session}  ",
@@ -373,8 +394,11 @@ def build_report() -> tuple[str, dict]:
         ]),
         "",
         "## 6. Nieuws-/eventsignalen",
-        f"Status: **{clean(risk_status.get('status'))}**; gecontroleerd: {clean(risk_status.get('checked'))}; "
+        f"News/risk: **{clean(risk_status.get('status'))}**; gecontroleerd: {clean(risk_status.get('checked'))}; "
         f"onbekend: {clean(risk_status.get('unknown'))}; review vereist: {clean(risk_status.get('review_required'))}.",
+        f"Long fundamentals: **{clean(fundamental_status.get('data_status', 'UNKNOWN'))}**; "
+        f"SW Financial Health: **{clean(sw_status.get('status'))}**; "
+        f"IBKR borrow: **{clean(borrow_status.get('status'))}**. Deze externe verrijkingen blokkeren DSR FULL niet; UNKNOWN wordt niet als PASS gebruikt.",
         *(risk_review if risk_review else ["_Geen nieuwsitems met de ingestelde event-zoektermen aangetroffen. Dit is geen bewijs dat er geen risico bestaat._"]),
         "",
         "## 7. Nog niet volledig uitgevoerd",
@@ -400,6 +424,7 @@ def update_run_status(details: dict):
         "entry_risk": details["entry_risk_status"],
     }
     current["pending_components"] = details["pending_components"]
+    current["non_blocking_components"] = details.get("non_blocking_components", [])
     temporary = RUN_STATUS.with_suffix(".json.tmp")
     temporary.write_text(json.dumps(current, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     temporary.replace(RUN_STATUS)

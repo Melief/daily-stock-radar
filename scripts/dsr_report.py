@@ -137,8 +137,9 @@ def build_report() -> tuple[str, dict]:
             candidate.get("technical_score", ""), f"{candidate.get('financial_health_score')}/6",
             entry.get("entry", tech.get("close_completed", "")), entry.get("stop", ""),
             entry.get("risk_pct", ""), entry.get("target_2r", ""),
-            tech.get("pivot_resistance_20d", ""), tech.get("rvol_5_21", ""),
-            risk.get("risk_status", "ONBEKEND"), entry.get("action", "ONBEKEND"),
+            tech.get("pivot_resistance_20d", ""), entry.get("long_buy_zone_status", ""),
+            tech.get("rvol_5_21", ""), risk.get("risk_status", "ONBEKEND"),
+            entry.get("action", "ONBEKEND"),
         ])
 
     short_table = []
@@ -280,7 +281,7 @@ def build_report() -> tuple[str, dict]:
         f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**. "
         f"SW PASS: **{sw_status.get('passed', 0)}**; SW uitgesloten: **{sw_status.get('excluded_sw', 0)}**; "
         f"onbekend: **{sw_status.get('unknown', 0)}**. Goedgekeurd voor verdere Long-beoordeling: **{len(long_candidates)}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "20d pivot-ref", "RVOL 5/21", "Nieuws", "Actie"], long_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "20d pivot-ref", "Koopzone", "RVOL 5/21", "Nieuws", "Actie"], long_table),
         "",
         "## 4. Short",
         f"Technisch gekwalificeerd: **{short_tech_count}**. IBKR beschikbaar: **{borrow_available}**; "

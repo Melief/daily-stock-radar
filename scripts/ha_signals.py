@@ -488,7 +488,7 @@ def calculate(ticker: str, sources: set[str]) -> dict:
             pivot_distance = float("nan")
             pivot_signal = ""
 
-        stop_levels = latest_ha_stops(completed.tail(HA_LOOKBACK))
+        stop_levels = latest_ha_stops(completed)
 
         # RVOL 5/21: compare averages of the latest 5 and 21 fully completed
         # regular sessions. The current/incomplete session is never included.

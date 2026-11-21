@@ -139,7 +139,7 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertEqual(result["prior_breakout_date"], dates[15].strftime("%Y-%m-%d"))
         self.assertEqual(result["prior_breakout_close"], 13.0)
         self.assertEqual(result["prior_breakout_volume"], 2500)
-    def test_regular_close_alone_does_not_confirm_ha_pivot_breakout(self):
+    def test_official_close_confirms_ohlc_pivot_breakout(self):
         dates = pd.bdate_range(end="2026-11-20", periods=22)
         lows = [10.0] * 22
         lows[8:13] = [8.0, 7.0, 4.0, 7.5, 8.0]

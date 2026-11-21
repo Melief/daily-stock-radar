@@ -1,8 +1,6 @@
 {
   "status": "PARTIAL",
-  "candidate_count": 36,
-  "stop_2r_calculated": 31,
-  "target_feasibility_unknown": 17,
-  "unknown_or_invalid": 17,
-  "note": "20-session pivot is a reference only; it is not asserted to be the current consolidation pivot or a confirmed breakout."
+  "errors": [
+    "type NoneType doesn't define __round__ method"
+  ]
 }

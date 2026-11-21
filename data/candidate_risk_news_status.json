@@ -1,16 +1,15 @@
 {
   "status": "PARTIAL",
   "candidate_count": 26,
-  "checked": 9,
-  "unknown": 17,
+  "checked": 11,
+  "unknown": 15,
   "review_required": 9,
   "long_candidates": 8,
   "short_candidates": 18,
-  "errors": [
-    "PGNY: HTTP Error 429: Too Many Requests"
-  ],
+  "errors": [],
   "limitations": [
     "NO_RESULTS betekent geen geïndexeerde Google News RSS-resultaten binnen 7 dagen; het bewijst niet dat er geen nieuws of gebeurtenisrisico bestaat.",
-    "Short interest, days-to-cover, ATR en gaps zijn bronafhankelijke ruwe gegevens; er worden geen niet-afgesproken risicodrempels toegepast."
+    "Short interest, days-to-cover, ATR en gaps zijn bronafhankelijke ruwe gegevens; er worden geen niet-afgesproken risicodrempels toegepast.",
+    "Een kandidaat zonder bevestigde consolidatiepivot volgens de 5–21-sessieregel blijft ONBEKEND en maakt de risicocontrole PARTIAL."
   ]
 }

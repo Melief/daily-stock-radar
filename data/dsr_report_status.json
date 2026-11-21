@@ -16,8 +16,8 @@
   "ha_short_signals": 3,
   "pending_components": [
     "Risk-on/risk-off marktregime: expliciete criteria ontbreken.",
-    "Long-entry: actuele consolidatiepivot en bevestigde breakoutdatum/-slotkoers/-volume; de 20-sessie pivot is alleen een referentie.",
-    "Short-entry: actuele consolidatiepivot en technische haalbaarheid van het 2R-doel; borrow en ruwe squeeze-/gapgegevens zijn afzonderlijk zichtbaar.",
+    "Long-entry: actuele consolidatiepivot, breakoutdatum, officiële slotkoers, volume en koopzone moeten zijn geverifieerd.",
+    "Short-entry: actuele consolidatiepivot, breakdowndatum, officiële slotkoers en volume moeten zijn geverifieerd; borrow en ruwe squeeze-/gapgegevens blijven afzonderlijk zichtbaar.",
     "IBKR-borrowinventaris ontbreekt voor 4 Short-kandidaten.",
     "Bronverversing/dekking bevat waarschuwingen of onbekende statussen.",
     "Nieuws- en Short-risicocontrole is gedeeltelijk of bevat onbekende gegevens.",

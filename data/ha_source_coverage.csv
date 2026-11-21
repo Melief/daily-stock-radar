@@ -37,7 +37,31 @@ FV Momentum Darvas,LH,True,OK
 FV Momentum Darvas,VLTO,True,OK
 Simpel Monsters,,False,BRONFOUT: FAILED: Geen scannerresultaten ontvangen voor 'Simpel Monsters'. CSV is niet overschreven.
 Follow Thrue,,False,BRONFOUT: FAILED: Geen scannerresultaten ontvangen voor 'Follow Thrue'. CSV is niet overschreven.
-VYUS holdings,,False,BRONFOUT: FAILED: StockAnalysis fetch/parse stage failed: HTTP Error 403: Forbidden
+VYUS holdings,ADBE,True,OK
+VYUS holdings,CART,True,OK
+VYUS holdings,COKE,True,OK
+VYUS holdings,CRM,True,OK
+VYUS holdings,DELL,True,OK
+VYUS holdings,DOCU,True,OK
+VYUS holdings,GDDY,True,OK
+VYUS holdings,GEN,True,OK
+VYUS holdings,HCA,True,OK
+VYUS holdings,HPQ,True,OK
+VYUS holdings,HUBS,True,OK
+VYUS holdings,INTU,True,OK
+VYUS holdings,IT,True,OK
+VYUS holdings,MTCH,True,OK
+VYUS holdings,PAYC,True,OK
+VYUS holdings,PTC,True,OK
+VYUS holdings,REXR,True,OK
+VYUS holdings,ROP,True,OK
+VYUS holdings,SWKS,True,OK
+VYUS holdings,TEAM,True,OK
+VYUS holdings,THC,True,OK
+VYUS holdings,UHS,True,OK
+VYUS holdings,WDAY,True,OK
+VYUS holdings,ZBRA,True,OK
+VYUS holdings,ZM,True,OK
 Blue Sky,ASO,True,OK
 Blue Sky,CBOE,True,OK
 Blue Sky,CHD,True,OK

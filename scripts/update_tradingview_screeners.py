@@ -155,7 +155,7 @@ def retrieve_screener(context, label, url):
             print(f"TradingView network request failed {label}: {json.dumps(detail, ensure_ascii=False)}")
 
     try:
-        page = browser.new_page()
+        page = context.new_page()
         page.on("response", on_response)
         page.on("requestfailed", on_request_failed)
         print(f"Openen: {label} ({url})")

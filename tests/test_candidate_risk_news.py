@@ -86,6 +86,22 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertLess(result["distance_to_ath_pct"], 0)
         self.assertEqual(result["all_time_high_date"], "2026-11-19")
 
+    def test_confirmed_stock_swing_support_and_resistance_are_returned(self):
+        dates = pd.bdate_range(end="2026-11-20", periods=260)
+        cycle = [100, 105, 110, 105, 100, 95, 100, 105, 110, 105]
+        close = (cycle * 26)[:260]
+        frame = pd.DataFrame({
+            "Open": close,
+            "High": [value + 1 for value in close],
+            "Low": [value - 1 for value in close],
+            "Close": close,
+        }, index=dates)
+        result = rn.calculate_history_extremes(frame, "2026-11-20")
+        self.assertNotEqual(result["nearest_support"], "")
+        self.assertNotEqual(result["nearest_resistance"], "")
+        self.assertLess(result["nearest_support"], 105)
+        self.assertGreater(result["nearest_resistance"], 105)
+
     def test_short_history_keeps_ath_but_52_week_high_unknown(self):
         dates = pd.bdate_range(end="2026-11-20", periods=30)
         frame = pd.DataFrame({

@@ -4,14 +4,17 @@
   "source_status": "PARTIAL",
   "analysis_status": "FULL",
   "pending_components": [
-    "SPX/QQQ market context",
-    "Long technical and fundamental selection",
-    "Simply Wall St Financial Health verification for Long",
-    "Short technical selection and borrow/locate risk checks",
-    "News and event checks",
-    "Consolidated daily Long/Short report"
+    "Risk-on/risk-off marktregime: expliciete criteria ontbreken.",
+    "Long-entry: actuele consolidatiepivot en bevestigde breakoutdatum/-slotkoers/-volume; de 20-sessie pivot is alleen een referentie.",
+    "Short-entry: actuele consolidatiepivot en technische haalbaarheid van het 2R-doel; borrow en ruwe squeeze-/gapgegevens zijn afzonderlijk zichtbaar.",
+    "IBKR-borrowinventaris ontbreekt voor 4 Short-kandidaten.",
+    "Bronverversing/dekking bevat waarschuwingen of onbekende statussen.",
+    "Nieuws- en Short-risicocontrole is gedeeltelijk of bevat onbekende gegevens.",
+    "HA-stop, risico% en 2R zijn niet voor alle kandidaten betrouwbaar berekend.",
+    "Fundamentele gegevens ontbreken voor een of meer Long-kandidaten.",
+    "SW Financial Health ontbreekt voor een of meer Long-kandidaten."
   ],
-  "generated_at": "2026-11-21T14:48:53+00:00",
+  "generated_at": "2026-11-21T15:04:12+00:00",
   "unique_tickers": 69,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
@@ -25,5 +28,14 @@
   },
   "missing_ha_rows": 0,
   "market_context_status": "PARTIAL",
-  "market_context_data_status": "FULL"
+  "market_context_data_status": "FULL",
+  "report_status": "PARTIAL",
+  "component_status": {
+    "technical_scores": "FULL",
+    "long_fundamentals": "PARTIAL",
+    "sw_financial_health": "PARTIAL",
+    "short_borrow": "PARTIAL",
+    "candidate_risk_news": "PARTIAL",
+    "entry_risk": "PARTIAL"
+  }
 }

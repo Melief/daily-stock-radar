@@ -1,12 +1,21 @@
 {
   "status": "PARTIAL",
   "candidate_count": 26,
-  "checked": 22,
-  "unknown": 4,
-  "review_required": 8,
+  "checked": 4,
+  "unknown": 22,
+  "review_required": 9,
   "long_candidates": 8,
   "short_candidates": 18,
-  "errors": [],
+  "errors": [
+    "ASO: geen afgeronde sessies tot de verwachte datum",
+    "CBOE: geen afgeronde sessies tot de verwachte datum",
+    "CHD: geen afgeronde sessies tot de verwachte datum",
+    "EPAM: geen afgeronde sessies tot de verwachte datum",
+    "KNSA: geen afgeronde sessies tot de verwachte datum",
+    "PGNY: geen afgeronde sessies tot de verwachte datum",
+    "SPNT: geen afgeronde sessies tot de verwachte datum",
+    "VLTO: geen afgeronde sessies tot de verwachte datum"
+  ],
   "limitations": [
     "NO_RESULTS betekent geen geïndexeerde Google News RSS-resultaten binnen 7 dagen; het bewijst niet dat er geen nieuws of gebeurtenisrisico bestaat.",
     "Short interest, days-to-cover, ATR en gaps zijn bronafhankelijke ruwe gegevens; er worden geen niet-afgesproken risicodrempels toegepast."

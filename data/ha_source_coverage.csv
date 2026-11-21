@@ -31,10 +31,10 @@ Sector Top Tickers,SBAC,True,OK
 Sector Top Tickers,TRMD,True,OK
 Sector Top Tickers,VLO,True,OK
 Sector Top Tickers,VST,True,OK
-Finviz,DGX,True,OK
-Finviz,KNSA,True,OK
-Finviz,LH,True,OK
-Finviz,VLTO,True,OK
+FV Momentum Darvas,DGX,True,OK
+FV Momentum Darvas,KNSA,True,OK
+FV Momentum Darvas,LH,True,OK
+FV Momentum Darvas,VLTO,True,OK
 Simpel Monsters,EPAM,True,OK
 Follow Thrue,PGNY,True,OK
 VYUS holdings,ADBE,True,OK
@@ -62,3 +62,12 @@ VYUS holdings,UHS,True,OK
 VYUS holdings,WDAY,True,OK
 VYUS holdings,ZBRA,True,OK
 VYUS holdings,ZM,True,OK
+Blue Sky,ASO,True,OK
+Blue Sky,CBOE,True,OK
+Blue Sky,CHD,True,OK
+Blue Sky,DGX,True,OK
+Blue Sky,HG,True,OK
+Blue Sky,KNSA,True,OK
+Blue Sky,LH,True,OK
+Blue Sky,PLGO,True,OK
+Blue Sky,SPNT,True,OK

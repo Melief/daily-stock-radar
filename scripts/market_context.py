@@ -118,8 +118,6 @@ def build_context(expected_session: date, results: dict[str, dict], errors: dict
         relative = round(
             results["QQQ"]["momentum_21d_pct"] - results["SPX"]["momentum_21d_pct"], 2
         )
-        spx = results["SPX"]
-        qqq = results["QQQ"]
         # Risk-on/off thresholds are not defined in DSR_RULES.md; do not infer a regime.
 
     return {
@@ -132,7 +130,7 @@ def build_context(expected_session: date, results: dict[str, dict], errors: dict
         "errors": errors,
         "limitations": [
             "Steun- en weerstandsniveaus zijn niet automatisch vastgesteld.",
-            "Marktregime is een samenvattende indicatie, geen individueel handelsadvies.",
+            "Marktregime blijft ONBEKEND; afgesproken risk-on/risk-off criteria ontbreken.",
         ],
     }
 

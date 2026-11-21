@@ -279,8 +279,19 @@ def build_report() -> tuple[str, dict]:
         pending.append("Historische koersdata of HA-consolidatiepivotcontrole is onvolledig.")
     if entry_risk_status.get("status") != "FULL":
         pending.append("Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig.")
-    if fundamental_status.get("status") != "FULL" or fundamental_status.get("unknown", 0):
-        pending.append("Long-fundamentalgegevens bevatten onbekende criteria; deze kandidaten blijven uitgesloten.")
+    fundamental_unknown_tickers = {
+        str(row.get("ticker", "")).strip().upper()
+        for row in fundamentals if str(row.get("fundamental_status", "")).upper() == "UNKNOWN"
+    }
+    sw_excluded_tickers = {
+        str(row.get("ticker", "")).strip().upper()
+        for row in sw_rows if str(row.get("sw_status", "")).upper() == "EXCLUDED"
+    }
+    nonblocking_fundamental_unknown = sorted(fundamental_unknown_tickers & sw_excluded_tickers)
+    unresolved_fundamental_unknown = sorted(fundamental_unknown_tickers - sw_excluded_tickers)
+    if unresolved_fundamental_unknown:
+        pending.append("Long-fundamentalgegevens blijven ONBEKEND voor niet anderszins uitgesloten kandidaten: "
+                       + ", ".join(unresolved_fundamental_unknown) + ".")
     if sw_status.get("status") != "FULL" or sw_status.get("unknown", 0):
         pending.append("Simply Wall St Financial Health bevat onbekende scores; deze kandidaten blijven uitgesloten.")
 
@@ -292,6 +303,8 @@ def build_report() -> tuple[str, dict]:
         "session_date": session,
         "technical_score_status": tech_status.get("status", "ONBEKEND"),
         "long_fundamental_status": fundamental_status.get("status", "ONBEKEND"),
+        "fundamental_unknown_excluded_by_sw": nonblocking_fundamental_unknown,
+        "unresolved_fundamental_unknown": unresolved_fundamental_unknown,
         "sw_financial_health_status": sw_status.get("status", "ONBEKEND"),
         "short_borrow_status": borrow_status.get("status", "ONBEKEND"),
         "candidate_risk_news_status": risk_status.get("status", "ONBEKEND"),
@@ -306,6 +319,14 @@ def build_report() -> tuple[str, dict]:
         "pending_components": pending,
     }
 
+    long_summary = (
+        f"Technisch gekwalificeerd: **{long_tech_count}**. Fundamenteel PASS: **{fundamental_status.get('passed', 0)}**; "
+        f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**. "
+        f"SW PASS: **{sw_status.get('passed', 0)}**; SW uitgesloten: **{sw_status.get('excluded_sw', 0)}**; "
+        f"onbekend: **{sw_status.get('unknown', 0)}**. Goedgekeurd voor verdere Long-beoordeling: **{len(long_candidates)}**."
+    )
+    if nonblocking_fundamental_unknown:
+        long_summary += " Fundamenteel ONBEKEND maar al uitgesloten door SW: " + ", ".join(nonblocking_fundamental_unknown) + "."
     lines = [
         f"# DAILY STOCK RADAR — {'VOLLEDIGE DSR' if report_status == 'FULL' else 'GEDEELTELIJKE DSR'}",
         f"**Gegevensdatum:** {session}  ",
@@ -318,10 +339,7 @@ def build_report() -> tuple[str, dict]:
         _table(["Bron", "Status", "Tickers", "Laatste succes", "Leeftijd (uur)", "Detail"], source_table_rows),
         "",
         "## 3. Long",
-        f"Technisch gekwalificeerd: **{long_tech_count}**. Fundamenteel PASS: **{fundamental_status.get('passed', 0)}**; "
-        f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**. "
-        f"SW PASS: **{sw_status.get('passed', 0)}**; SW uitgesloten: **{sw_status.get('excluded_sw', 0)}**; "
-        f"onbekend: **{sw_status.get('unknown', 0)}**. Goedgekeurd voor verdere Long-beoordeling: **{len(long_candidates)}**.",
+        long_summary,
         _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Breakoutdatum", "Officieel slot", "HA-slot", "Volume", "Koopzone", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
         "",
         "## 4. Short",

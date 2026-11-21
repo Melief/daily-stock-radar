@@ -37,6 +37,66 @@ def clean_text(value, default: str = "") -> str:
     return default if result.lower() in {"", "nan", "none"} else result
 
 
+def evaluate_pivot_status(side, entry, pivot, score_date, volume,
+                         consolidation_pivot_status, consolidation_pivot_date,
+                         prior_breakout_date, prior_breakout_close,
+                         prior_breakout_volume, current_ha_close,
+                         prior_breakout_ha_close):
+    pivot_status = "ONBEKEND"
+    distance = ""
+    breakout_date = ""
+    breakout_close = ""
+    breakout_ha_close = ""
+    breakout_volume = ""
+    buy_zone = "ONBEKEND"
+    action = "WACHTEN OP PIVOTVERIFICATIE"
+
+    if consolidation_pivot_status == "GEEN_GELDIGE_PIVOT":
+        pivot_status = "GEEN_GELDIGE_PIVOT"
+        action = "WACHTEN OP GELDIGE CONSOLIDATIEPIVOT"
+    elif pivot is not None and pivot > 0 and consolidation_pivot_status == "OK":
+        if side == "LONG":
+            distance = (entry / pivot - 1) * 100 if entry is not None else ""
+            broken = current_ha_close is not None and current_ha_close > pivot
+            prior_broken = bool(prior_breakout_date)
+            pivot_status = ("BREAKOUT_BEVESTIGD" if broken else
+                            "BREAKOUT_TERUGGEVALLEN" if prior_broken else "GEEN_BREAKOUT")
+            breakout_date = prior_breakout_date or (score_date if broken else "")
+            breakout_close = number(prior_breakout_close) if prior_breakout_date else (entry if broken else "")
+            breakout_ha_close = prior_breakout_ha_close if prior_breakout_date else (current_ha_close if broken else "")
+            breakout_volume = number(prior_breakout_volume) if prior_breakout_date else (volume if broken and volume is not None else "")
+            buy_zone = ("ONBEKEND" if distance == "" else
+                        "NOT_BROKEN" if not broken else
+                        "WITHIN_5PCT" if distance <= 5 else "EXTENDED")
+        else:
+            distance = (pivot / entry - 1) * 100 if entry is not None and entry > 0 else ""
+            broken = current_ha_close is not None and current_ha_close < pivot
+            prior_broken = bool(prior_breakout_date)
+            pivot_status = ("DOORBRAAK_BEVESTIGD" if broken else
+                            "DOORBRAAK_TERUGGEVALLEN" if prior_broken else "GEEN_DOORBRAAK")
+            breakout_date = prior_breakout_date or (score_date if broken else "")
+            breakout_close = number(prior_breakout_close) if prior_breakout_date else (entry if broken else "")
+            breakout_ha_close = prior_breakout_ha_close if prior_breakout_date else (current_ha_close if broken else "")
+            breakout_volume = number(prior_breakout_volume) if prior_breakout_date else (volume if broken and volume is not None else "")
+            buy_zone = "NVT"
+        action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
+
+    return {
+        "pivot_reference_20d": pivot if pivot is not None else "",
+        "consolidation_pivot": pivot if pivot is not None else "",
+        "consolidation_pivot_date": consolidation_pivot_date or "",
+        "consolidation_pivot_status": consolidation_pivot_status,
+        "distance_to_pivot_pct": round(distance, 2) if distance != "" else "",
+        "long_buy_zone_status": buy_zone,
+        "breakout_reference_status": pivot_status,
+        "breakout_reference_date": breakout_date,
+        "breakout_reference_close": breakout_close,
+        "breakout_reference_ha_close": breakout_ha_close,
+        "breakout_reference_volume": breakout_volume,
+        "action": action,
+    }
+
+
 def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: str,
                           volume, news_status: str = "ONBEKEND",
                           borrow_status: str = "NVT", nearest_support=None,
@@ -54,53 +114,35 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
     side = candidate_type.upper()
     if side not in {"LONG", "SHORT"}:
         raise ValueError("candidate_type moet LONG of SHORT zijn")
+
+    pivot_result = evaluate_pivot_status(
+        side, entry, pivot, score_date, volume, consolidation_pivot_status,
+        consolidation_pivot_date, prior_breakout_date, prior_breakout_close,
+        prior_breakout_volume, current_ha_close, prior_breakout_ha_close,
+    )
     if entry is None or entry <= 0 or stop is None:
         return {
-            "entry": entry if entry is not None else "",
-            "stop": stop if stop is not None else "",
-            "risk_per_share": "",
-            "risk_pct": "",
-            "target_2r": "",
-            "pivot_reference_20d": pivot if pivot is not None else "",
-            "consolidation_pivot": pivot if pivot is not None else "",
-            "consolidation_pivot_date": consolidation_pivot_date or "",
-            "consolidation_pivot_status": consolidation_pivot_status,
-            "distance_to_pivot_pct": "",
-            "long_buy_zone_status": "ONBEKEND",
-            "breakout_reference_status": "ONBEKEND",
-            "target_feasibility": "ONBEKEND",
-            "breakout_reference_date": "",
-            "breakout_reference_close": "",
-            "breakout_reference_ha_close": "",
-            "breakout_reference_volume": "",
-            "entry_status": "ONBEKEND_STOP_OF_ENTRY",
-            "action": "WACHTEN OP BEVESTIGING",
+            "entry": entry if entry is not None else "", "stop": stop if stop is not None else "",
+            "risk_per_share": "", "risk_pct": "", "target_2r": "",
+            **pivot_result, "target_feasibility": "ONBEKEND",
+            "entry_status": "ONBEKEND_STOP_OF_ENTRY", "action": "WACHTEN OP BEVESTIGING",
         }
+
     risk = entry - stop if side == "LONG" else stop - entry
     if risk <= 0:
         return {
             "entry": entry, "stop": stop, "risk_per_share": round(risk, 4),
-            "risk_pct": "", "target_2r": "", "pivot_reference_20d": pivot or "",
-            "consolidation_pivot": pivot if pivot is not None else "",
-            "consolidation_pivot_date": consolidation_pivot_date or "",
-            "consolidation_pivot_status": consolidation_pivot_status,
-            "distance_to_pivot_pct": "", "long_buy_zone_status": "ONBEKEND",
-            "breakout_reference_status": "ONBEKEND", "target_feasibility": "NVT_STOP_ONGELDIG",
-            "breakout_reference_date": "", "breakout_reference_close": "", "breakout_reference_ha_close": "", "breakout_reference_volume": "",
+            "risk_pct": "", "target_2r": "", **pivot_result,
+            "target_feasibility": "NVT_STOP_ONGELDIG",
             "entry_status": "ONGELDIGE_STOP", "action": "VERMIJDEN TOT STOP HERSTELD",
         }
+
     target = entry + 2 * risk if side == "LONG" else entry - 2 * risk
     if target <= 0:
         return {
             "entry": entry, "stop": stop, "risk_per_share": round(risk, 4),
             "risk_pct": round(risk / entry * 100, 2), "target_2r": "",
-            "pivot_reference_20d": pivot or "", "consolidation_pivot": pivot or "",
-            "consolidation_pivot_date": consolidation_pivot_date or "",
-            "consolidation_pivot_status": consolidation_pivot_status,
-            "distance_to_pivot_pct": "",
-            "long_buy_zone_status": "ONBEKEND", "breakout_reference_status": "ONBEKEND",
-            "target_feasibility": "ONBEKEND", "breakout_reference_date": "",
-            "breakout_reference_close": "", "breakout_reference_ha_close": "", "breakout_reference_volume": "",
+            **pivot_result, "target_feasibility": "ONBEKEND",
             "entry_status": "ONGELDIGE_2R", "action": "VERMIJDEN TOT 2R HERSTELD",
         }
 
@@ -116,81 +158,12 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "2R_DOEL_ONDER_STEUN" if target < support else "2R_DOEL_BOVEN_STEUN"
         )
 
-    if consolidation_pivot_status == "GEEN_GELDIGE_PIVOT":
-        pivot_status, distance, breakout_date, breakout_close, breakout_ha_close, breakout_volume = (
-            "GEEN_GELDIGE_PIVOT", "", "", "", "", ""
-        )
-        action = "WACHTEN OP GELDIGE CONSOLIDATIEPIVOT"
-        buy_zone = "ONBEKEND"
-    elif pivot is None or pivot <= 0 or consolidation_pivot_status != "OK":
-        pivot_status, distance, breakout_date, breakout_close, breakout_ha_close, breakout_volume = (
-            "ONBEKEND", "", "", "", "", ""
-        )
-        action = "WACHTEN OP PIVOTVERIFICATIE"
-        buy_zone = "ONBEKEND"
-    elif side == "LONG":
-        distance = (entry / pivot - 1) * 100
-        broken = current_ha_close is not None and current_ha_close > pivot
-        prior_broken = bool(prior_breakout_date)
-        pivot_status = ("BREAKOUT_BEVESTIGD" if broken else
-                        "BREAKOUT_TERUGGEVALLEN" if prior_broken else "GEEN_BREAKOUT")
-        breakout_date = prior_breakout_date or (score_date if current_ha_close is not None and current_ha_close > pivot else "")
-        breakout_close = (
-            number(prior_breakout_close) if prior_breakout_date
-            else entry if current_ha_close is not None and current_ha_close > pivot else ""
-        )
-        breakout_ha_close = (
-            prior_breakout_ha_close if prior_breakout_date
-            else current_ha_close if current_ha_close is not None and current_ha_close > pivot else ""
-        )
-        breakout_volume = (
-            number(prior_breakout_volume) if prior_breakout_date
-            else volume if current_ha_close is not None and current_ha_close > pivot and volume is not None else ""
-        )
-        buy_zone = "NOT_BROKEN" if not broken else ("WITHIN_5PCT" if distance <= 5 else "EXTENDED")
-        action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
-    else:
-        distance = (pivot / entry - 1) * 100
-        broken = current_ha_close is not None and current_ha_close < pivot
-        prior_broken = bool(prior_breakout_date)
-        pivot_status = ("DOORBRAAK_BEVESTIGD" if broken else
-                        "DOORBRAAK_TERUGGEVALLEN" if prior_broken else "GEEN_DOORBRAAK")
-        breakout_date = prior_breakout_date or (score_date if current_ha_close is not None and current_ha_close < pivot else "")
-        breakout_close = (
-            number(prior_breakout_close) if prior_breakout_date
-            else entry if current_ha_close is not None and current_ha_close < pivot else ""
-        )
-        breakout_ha_close = (
-            prior_breakout_ha_close if prior_breakout_date
-            else current_ha_close if current_ha_close is not None and current_ha_close < pivot else ""
-        )
-        breakout_volume = (
-            number(prior_breakout_volume) if prior_breakout_date
-            else volume if current_ha_close is not None and current_ha_close < pivot and volume is not None else ""
-        )
-        buy_zone = "NVT"
-        action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
-
     return {
-        "entry": round(entry, 4),
-        "stop": round(stop, 4),
-        "risk_per_share": round(risk, 4),
-        "risk_pct": round(risk / entry * 100, 2),
-        "target_2r": round(target, 4),
-        "pivot_reference_20d": round(pivot, 4) if pivot is not None else "",
-        "consolidation_pivot": round(pivot, 4) if pivot is not None else "",
-        "consolidation_pivot_date": consolidation_pivot_date or "",
-        "consolidation_pivot_status": consolidation_pivot_status,
-        "distance_to_pivot_pct": round(distance, 2) if distance != "" else "",
-        "long_buy_zone_status": buy_zone if side == "LONG" else "NVT",
-        "breakout_reference_status": pivot_status,
+        "entry": round(entry, 4), "stop": round(stop, 4),
+        "risk_per_share": round(risk, 4), "risk_pct": round(risk / entry * 100, 2),
+        "target_2r": round(target, 4), **pivot_result,
         "target_feasibility": target_feasibility,
-        "breakout_reference_date": breakout_date,
-        "breakout_reference_close": round(breakout_close, 4) if breakout_close is not None and breakout_close != "" else "",
-        "breakout_reference_ha_close": round(breakout_ha_close, 4) if breakout_ha_close is not None and breakout_ha_close != "" else "",
-        "breakout_reference_volume": int(breakout_volume) if breakout_volume is not None and breakout_volume != "" else "",
-        "entry_status": "STOP_2R_BEREKEND",
-        "action": action,
+        "entry_status": "STOP_2R_BEREKEND", "action": pivot_result["action"],
     }
 
 

@@ -96,9 +96,20 @@ def write_run_status(status: str, source_rows: list[dict], ticker_count: int,
     source_state = "PARTIAL" if source_errors or source_warnings else "FULL"
     analysis_state = "PARTIAL" if unknown_tickers or missing_rows or ticker_count == 0 else "FULL"
     payload = {
-        "status": status,
+        # This repository currently produces the HA pipeline, not the complete
+        # DSR defined in DSR_RULES.md. Never label the full DSR as FULL yet.
+        "status": "PARTIAL",
+        "ha_pipeline_status": status,
         "source_status": source_state,
         "analysis_status": analysis_state,
+        "pending_components": [
+            "SPX/QQQ market context",
+            "Long technical and fundamental selection",
+            "Simply Wall St Financial Health verification for Long",
+            "Short technical selection and borrow/locate risk checks",
+            "News and event checks",
+            "Consolidated daily Long/Short report",
+        ],
         "generated_at": pd.Timestamp.now(tz="UTC").isoformat(timespec="seconds"),
         "unique_tickers": ticker_count,
         "unknown_market_data_tickers": unknown_tickers,

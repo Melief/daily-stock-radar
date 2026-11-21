@@ -3,12 +3,12 @@
   "session_date": "2026-11-20",
   "technical_score_status": "FULL",
   "long_fundamental_status": "PARTIAL",
-  "sw_financial_health_status": "PARTIAL",
+  "sw_financial_health_status": "FULL",
   "short_borrow_status": "PARTIAL",
   "candidate_risk_news_status": "FULL",
   "entry_risk_status": "PARTIAL",
-  "long_technical_candidates": 15,
-  "long_approved_candidates": 0,
+  "long_technical_candidates": 12,
+  "long_approved_candidates": 6,
   "short_technical_candidates": 27,
   "short_borrow_available": 23,
   "short_borrow_unknown": 4,
@@ -17,7 +17,6 @@
   "pending_components": [
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
     "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig.",
-    "Long-fundamentalgegevens bevatten onbekende criteria; deze kandidaten blijven uitgesloten.",
-    "Simply Wall St Financial Health bevat onbekende scores; deze kandidaten blijven uitgesloten."
+    "Long-fundamentalgegevens bevatten onbekende criteria; deze kandidaten blijven uitgesloten."
   ]
 }

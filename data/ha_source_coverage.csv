@@ -35,10 +35,8 @@ FV Momentum Darvas,DGX,True,OK
 FV Momentum Darvas,KNSA,True,OK
 FV Momentum Darvas,LH,True,OK
 FV Momentum Darvas,VLTO,True,OK
-Simpel Monsters,,False,BRONFOUT: Bron bevat geen tickers: data/simpel_monsters_tickers.csv
-Follow Thrue,CRVL,True,OK
-Follow Thrue,EXPO,True,OK
-Follow Thrue,PLMR,True,OK
+Simpel Monsters,,False,BRONFOUT: STALE: TradingView page requires login to view registered-user filters; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur.
+Follow Thrue,,False,BRONFOUT: STALE: TradingView page requires login to view registered-user filters; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur.
 VYUS holdings,ADBE,True,OK
 VYUS holdings,CART,True,OK
 VYUS holdings,COKE,True,OK

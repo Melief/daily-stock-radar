@@ -1,14 +1,18 @@
 {
   "status": "FULL",
-  "candidate_count": 27,
-  "checked": 27,
+  "candidate_count": 33,
+  "checked": 33,
   "unknown": 0,
-  "review_required": 7,
-  "long_candidates": 0,
+  "review_required": 12,
+  "long_candidates": 6,
   "short_candidates": 27,
   "errors": [
-    "P: geen betrouwbare bedrijfsnaam/ticker voor nieuwsrelevantie",
-    "ZM: geen betrouwbare bedrijfsnaam/ticker voor nieuwsrelevantie"
+    "ASO: HTTP Error 429: Too Many Requests",
+    "CHD: HTTP Error 429: Too Many Requests",
+    "ADBE: HTTP Error 429: Too Many Requests",
+    "DELL: HTTP Error 429: Too Many Requests",
+    "DHT: HTTP Error 429: Too Many Requests",
+    "PARR: HTTP Error 429: Too Many Requests"
   ],
   "limitations": [
     "NO_RESULTS betekent geen geïndexeerde Google News RSS-resultaten binnen 7 dagen; het bewijst niet dat er geen nieuws of gebeurtenisrisico bestaat.",

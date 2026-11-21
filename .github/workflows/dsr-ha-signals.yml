@@ -9,7 +9,9 @@ on:
     - cron: "15 4 * * 1-5"
   workflow_run:
     # Refresh HA immediately after the Finviz CSV workflow has completed.
-    workflows: ["Refresh Finviz tickers and sync to Google Sheets"]
+    workflows:
+      - "Refresh Finviz tickers and sync to Google Sheets"
+      - "Update TradingView screener tickers"
     types: [completed]
     branches: [main]
   push:
@@ -18,6 +20,8 @@ on:
     paths:
       - ".github/workflows/dsr-ha-signals.yml"
       - "scripts/ha_signals.py"
+      - "scripts/source_status.py"
+      - "data/dsr_ticker_sources.json"
 
 permissions:
   contents: write
@@ -28,7 +32,6 @@ concurrency:
 
 jobs:
   calculate-ha:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -51,13 +54,23 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/ha_signals.csv data/ha_source_coverage.csv
+          git add data/ha_signals.csv data/ha_source_coverage.csv data/dsr_source_status.csv data/dsr_run_status.json
           if git diff --cached --quiet; then
             echo "Geen wijzigingen in DSR-signalen."
           else
             git commit -m "Update DSR Heikin Ashi and volume signals"
-            git pull --rebase origin main
-            git push
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                echo "ERROR: Could not push DSR outputs after 3 attempts."
+                exit 1
+              fi
+              sleep 3
+            done
           fi
       - name: Mark partial DSR run as failed
         if: steps.calculate.outcome == 'failure'

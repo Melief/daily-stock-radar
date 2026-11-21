@@ -15,17 +15,20 @@ Doel: een betrouwbare, compacte dagelijkse beleggingsanalyse. De markt, kandidat
 
 ## 2. Vaste tickerbronnen
 
-De DSR-universum wordt gevormd door deze vijf bronnen, samengevoegd en ontdubbeld:
+De DSR-universum wordt gevormd door deze zes bronnen, samengevoegd en ontdubbeld:
 
 1. Sector Top Tickers — `tickers.txt`
-2. FV Momentum Darvas — bestaande Finviz-bronbestanden en URL; bestandsnamen/URL niet hernoemen
-3. VYUS holdings — `data/vyus_tickers.csv`
-4. Simpel Monsters — `data/simpel_monsters_tickers.csv`
-5. Follow Thrue — `data/follow_thrue_tickers.csv`
+2. FV Momentum Darvas — `finviz_tickers.csv` en `finviz_url.txt`; bestandsnamen/URL niet hernoemen
+3. Blue Sky — `data/blue_sky_tickers.csv` en `blue_sky_url.txt`
+4. VYUS holdings — `data/vyus_tickers.csv`
+5. Simpel Monsters — `data/simpel_monsters_tickers.csv`
+6. Follow Thrue — `data/follow_thrue_tickers.csv`
 
-Geen TradingView-bron toevoegen. Blue Sky is geen zesde bron in de canonieke DSR-universum, tenzij dit later uitdrukkelijk wordt afgesproken.
+Geen TradingView-bron toevoegen. Blue Sky is de expliciet afgesproken zesde bron en wordt als afzonderlijke bron getoond; het is geen vervanging van FV Momentum Darvas.
 
-Toon per ticker altijd de bron of alle bronnen waaruit de ticker afkomstig is. Gebruik in de presentatie de naam **FV Momentum Darvas** voor Finviz.
+De repository bevat de Blue Sky-URL en tickerdata, maar `data/dsr_ticker_sources.json` bevat op dit moment nog vijf bronnen. De opname van Blue Sky in de uitvoerende merge/selectieworkflow is dus nog niet geïmplementeerd; deze PR legt de afspraak alleen vast.
+
+Toon per ticker altijd de bron of alle bronnen waaruit de ticker afkomstig is. Gebruik in de presentatie de namen **FV Momentum Darvas** en **Blue Sky** voor de twee afzonderlijke Finviz-bronnen.
 
 Toon per ticker altijd:
 - Ticker
@@ -120,7 +123,7 @@ Voor de Long-watchlist geldt: instapkoers = actuele koers; stop-loss = laatste H
 
 ## 6. Short-selectie — afzonderlijk en onafhankelijk
 
-Gebruik dezelfde vijf tickerbronnen, maar voer de technische Short-selectie onafhankelijk uit.
+Gebruik dezelfde zes tickerbronnen, maar voer de technische Short-selectie onafhankelijk uit.
 
 Technische kenmerken:
 - koers onder SMA20 en SMA50;
@@ -150,7 +153,7 @@ Mogelijke acties:
 
 Voor de Short-watchlist geldt dezelfde 2R-benadering gespiegeld voor een shortpositie: instap actuele koers; stop op de laatste HA High waarbij HA High = HA Open; risk = afstand instap tot stop; koersdoel op 2R. Beoordeel R/R en technische haalbaarheid, daarna Risk %, daarna Entry Score.
 
-De Short-tabel bevat geen SW-kolom en er worden geen SW-scores voor Short opgehaald.
+De Short-tabel toont een lege SW-kolom, uitsluitend om de kolommen uit te lijnen met de Long-tabel. Haal geen SW-scores op, bereken of beoordeel ze niet voor Short.
 
 ## 7. Nieuws en gebeurtenissen
 
@@ -182,7 +185,7 @@ Rood uitsluitend bij concrete verslechtering, risico of reden om te vermijden. V
 Een rapport mag alleen **VOLLEDIGE DSR** heten als de verplichte onderdelen daadwerkelijk zijn uitgevoerd.
 
 Controleer vóór publicatie:
-- [ ] Vijf bronnen verwerkt; bronfouten en dekking gemeld.
+- [ ] Zes bronnen verwerkt; bronfouten en dekking gemeld.
 - [ ] Bron, sector en industry voor iedere ticker vermeld of expliciet ONBEKEND.
 - [ ] Marktbeeld SPX/QQQ gecontroleerd.
 - [ ] Long technische selectie uitgevoerd.

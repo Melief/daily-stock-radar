@@ -21,6 +21,19 @@ DATA_DIR = ROOT / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
 
+def ensure_results_visible(label, visible_text):
+    text = str(visible_text or "").lower()
+    restricted = (
+        "log in to see the results" in text
+        or "this screen is using some filters for registered users only" in text
+    )
+    if restricted:
+        raise RuntimeError(
+            f"{label}: TradingView verbergt screenerresultaten achter een login; "
+            "laatste gevalideerde CSV blijft behouden."
+        )
+
+
 def save_rows(label, rows):
     allow_empty = False
     if isinstance(rows, dict):
@@ -153,6 +166,7 @@ def retrieve_screener(browser, label, url):
             visible_text = f"body niet leesbaar: {exc}"
         print(f"TradingView page summary {label}: title={page.title()!r}; "
               f"url={urllib.parse.urlsplit(page.url).path}; body={visible_text[:1400]!r}")
+        ensure_results_visible(label, visible_text)
         if not captured:
             try:
                 body_text = page.locator("body").inner_text(timeout=5000)

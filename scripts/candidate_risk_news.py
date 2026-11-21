@@ -189,13 +189,15 @@ def _fetch_candidate(candidate: dict) -> dict:
     info, info_error = {}, ""
     try:
         info = yf.Ticker(ticker).info or {}
+        if not info:
+            info_error = "Yahoo Finance info is empty or unavailable"
     except Exception as exc:
         info_error = str(exc)
 
     company = str(info.get("longName") or info.get("shortName") or ticker).strip()
     query = company if company and company != ticker else ticker
     relevance_terms = []
-    if len(ticker) >= 2:
+    if len(ticker) >= 3:
         relevance_terms.append(ticker)
     if company and company != ticker:
         first_word = re.split(r"\s+", company.strip())[0].strip(".,")

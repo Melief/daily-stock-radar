@@ -6,5 +6,5 @@
   "unknown": 3,
   "invalid_stop_or_2r": 4,
   "unknown_or_invalid": 7,
-  "note": "Consolidation pivot is calculated from completed-session Heikin-Ashi candles; actual close and volume are reported separately for breakout/breakdown confirmation."
+  "note": "Consolidation pivot is calculated from completed-session regular OHLC candles; official close and volume confirm breakout/breakdown. HA close is supplemental audit data."
 }

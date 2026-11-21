@@ -2,6 +2,11 @@ name: Import VYUS Top 25 Holdings
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/import-vyus-holdings.yml"
+      - "scripts/import_vyus_holdings.py"
   schedule:
     # Run at 03:45 Amsterdam: 01:45 UTC in summer, 02:45 UTC in winter.
     - cron: "45 1 * * 1-5"

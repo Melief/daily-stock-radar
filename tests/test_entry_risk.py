@@ -44,6 +44,10 @@ class EntryRiskTests(unittest.TestCase):
         self.assertEqual(result["target_2r"], 90)
         self.assertEqual(result["target_feasibility"], "2R_DOEL_ONDER_STEUN")
 
+    def test_missing_swing_level_keeps_target_feasibility_unknown(self):
+        result = er.calculate_entry_risk("LONG", 100, 95, 102, "2026-11-20", 1000000)
+        self.assertEqual(result["target_feasibility"], "ONBEKEND")
+
     def test_invalid_stop_is_not_used(self):
         result = er.calculate_entry_risk("LONG", 100, 105, 110, "2026-11-20", 1000)
         self.assertEqual(result["entry_status"], "ONGELDIGE_STOP")

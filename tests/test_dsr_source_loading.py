@@ -100,6 +100,94 @@ class LoadUniverseTests(unittest.TestCase):
             self.assertEqual(set(coverage["source"]), {"Missing A", "Missing B"})
             self.assertTrue(coverage["ha_status"].str.startswith("BRONFOUT:").all())
 
+    def test_unknown_automatic_source_is_included_only_as_partial_fallback(self):
+        with tempfile.TemporaryDirectory(dir=ha_signals.ROOT) as temp:
+            root = Path(temp)
+            source = root / "auto.csv"
+            source.write_text("Ticker\nAAPL\n", encoding="utf-8")
+            with (
+                patch.object(ha_signals, "SOURCES", [("Auto source", source, "csv")]),
+                patch.object(ha_signals, "SOURCE_METADATA", {
+                    "Auto source": {"id": "auto_source", "refresh_mode": "automatic", "max_age_hours": 24}
+                }),
+                patch.object(ha_signals, "STATUS_DIR", root / "statuses"),
+            ):
+                tickers, counts, errors, warnings, status_rows = ha_signals.load_universe(include_status=True)
+
+            self.assertEqual(set(tickers), {"AAPL"})
+            self.assertEqual(counts, {"Auto source": 1})
+            self.assertFalse(errors)
+            self.assertIn("Auto source", warnings)
+            self.assertEqual(status_rows[0]["status"], "UNKNOWN")
+            self.assertTrue(status_rows[0]["included"])
+
+    def test_expired_automatic_source_is_excluded_from_universe(self):
+        from datetime import datetime, timedelta, timezone
+        from scripts.source_status import record_status
+
+        with tempfile.TemporaryDirectory(dir=ha_signals.ROOT) as temp:
+            root = Path(temp)
+            source = root / "auto.csv"
+            source.write_text("Ticker\nAAPL\n", encoding="utf-8")
+            status_dir = root / "statuses"
+            now = datetime.now(timezone.utc)
+            record_status("auto_source", "success", status_dir=status_dir, now=now - timedelta(hours=30))
+            with (
+                patch.object(ha_signals, "SOURCES", [("Auto source", source, "csv")]),
+                patch.object(ha_signals, "SOURCE_METADATA", {
+                    "Auto source": {"id": "auto_source", "refresh_mode": "automatic", "max_age_hours": 24}
+                }),
+                patch.object(ha_signals, "STATUS_DIR", status_dir),
+            ):
+                tickers, counts, errors, warnings, status_rows = ha_signals.load_universe(include_status=True)
+
+            self.assertFalse(tickers)
+            self.assertFalse(counts)
+            self.assertIn("Auto source", errors)
+            self.assertEqual(status_rows[0]["status"], "STALE")
+            self.assertFalse(status_rows[0]["included"])
+
+
+
+class DSRRunStatusTests(unittest.TestCase):
+    def test_source_and_analysis_completeness_are_reported_separately(self):
+        import json
+
+        with tempfile.TemporaryDirectory(dir=ha_signals.ROOT) as temp:
+            output = Path(temp) / "dsr_run_status.json"
+            with patch.object(ha_signals, "RUN_STATUS_OUT", output):
+                ha_signals.write_run_status(
+                    "PARTIAL",
+                    [{"source": "Finviz", "status": "STALE_FALLBACK"}],
+                    4,
+                    {},
+                    {"Finviz": "STALE_FALLBACK"},
+                    missing_rows=0,
+                    unknown_tickers=2,
+                )
+            payload = json.loads(output.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["status"], "PARTIAL")
+        self.assertEqual(payload["ha_pipeline_status"], "PARTIAL")
+        self.assertEqual(payload["source_status"], "PARTIAL")
+        self.assertEqual(payload["analysis_status"], "PARTIAL")
+        self.assertEqual(payload["unknown_market_data_tickers"], 2)
+
+
+
+    def test_ha_pipeline_full_does_not_claim_full_dsr_before_required_components_exist(self):
+        import json
+
+        with tempfile.TemporaryDirectory(dir=ha_signals.ROOT) as temp:
+            output = Path(temp) / "dsr_run_status.json"
+            with patch.object(ha_signals, "RUN_STATUS_OUT", output):
+                ha_signals.write_run_status("FULL", [], 5, {}, {}, 0, 0)
+            payload = json.loads(output.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["ha_pipeline_status"], "FULL")
+        self.assertEqual(payload["status"], "PARTIAL")
+        self.assertTrue(payload["pending_components"])
+
 
 if __name__ == "__main__":
     unittest.main()

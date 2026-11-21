@@ -5,6 +5,14 @@ on:
     branches: [main]
     paths:
       - "scripts/ha_signals.py"
+      - "scripts/source_status.py"
+      - "scripts/import_vyus_holdings.py"
+      - "scripts/update_tradingview_screeners.py"
+      - ".github/workflows/dsr-ha-signals.yml"
+      - ".github/workflows/test-finviz.yml"
+      - ".github/workflows/test-tradingview-screener.yml"
+      - ".github/workflows/import-vyus-holdings.yml"
+      - ".github/workflows/vyus-holdings-csv.yml"
       - "data/dsr_ticker_sources.json"
       - "tests/**"
       - "requirements-dsr.txt"
@@ -13,7 +21,15 @@ on:
     branches: [main]
     paths:
       - "scripts/ha_signals.py"
+      - "scripts/source_status.py"
+      - "scripts/import_vyus_holdings.py"
+      - "scripts/update_tradingview_screeners.py"
       - "data/dsr_ticker_sources.json"
+      - ".github/workflows/dsr-ha-signals.yml"
+      - ".github/workflows/test-finviz.yml"
+      - ".github/workflows/test-tradingview-screener.yml"
+      - ".github/workflows/import-vyus-holdings.yml"
+      - ".github/workflows/vyus-holdings-csv.yml"
       - "tests/**"
       - "requirements-dsr.txt"
       - ".github/workflows/dsr-source-validation.yml"

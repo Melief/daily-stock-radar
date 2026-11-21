@@ -40,6 +40,18 @@ Ontbrekende sector- of industrygegevens worden als ONBEKEND getoond, niet weggel
 
 Broncontrole vermeldt aantallen per bron, totaal ingelezen tickers, aantal unieke tickers na ontdubbelen, overlaps en eventuele bronfouten. Als één bron faalt, ga door met de overige bronnen en markeer de DSR als onvolledig.
 
+### Bronactualiteit en volledigheid
+
+- Iedere automatisch ververste bron heeft een afzonderlijk statusbestand onder `data/source_status/` met laatste poging, resultaat, laatste succesvolle verversing en foutmelding.
+- De maximale ouderdom voor automatische bronnen is configureerbaar per bron; de huidige grens is 96 uur.
+- Een ontbrekende status wordt `UNKNOWN`: een bestaand bronbestand mag alleen als expliciete fallback worden gebruikt en maakt de DSR PARTIAL.
+- Na een mislukte verversing mag de vorige succesvolle brondata alleen worden gebruikt zolang die binnen de ingestelde ouderdomsgrens valt; de DSR blijft dan PARTIAL.
+- Een verlopen of nooit succesvol opgehaalde automatische bron wordt uitgesloten. Andere geldige bronnen blijven verwerkt.
+- Sector Top Tickers is handmatig beheerd en wordt als `MANUAL` weergegeven; er wordt geen automatische verversingstijd verzonnen.
+- `data/dsr_source_status.csv` rapporteert bronactualiteit; `data/dsr_run_status.json` rapporteert afzonderlijk bronstatus, HA-pipeline, technische analysebeschikbaarheid en de DSR-status.
+- Zolang marktcontext, volledige Long-/Short-selectie, SW-controle, short-risicocontrole, nieuwscontrole en het geconsolideerde dagrapport niet zijn geïmplementeerd, blijft de totale DSR-status PARTIAL. Een volledig geslaagde HA-pipeline mag nooit als VOLLEDIGE DSR worden aangeduid.
+- De geplande VYUS-verversing loopt op werkdagen om 03:45 UTC, vóór de bestaande HA-ochtendrun van 04:15 UTC. De dagelijkse frequentie blijft gelijk.
+
 ## 3. Marktbeeld
 
 Begin het rapport met een korte marktconclusie op basis van SPX en QQQ:

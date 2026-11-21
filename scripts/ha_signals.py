@@ -19,8 +19,15 @@ import yfinance as yf
 import pandas_market_calendars as mcal
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from scripts.source_status import evaluate_status
+
 OUT = ROOT / "data" / "ha_signals.csv"
 COVERAGE_OUT = ROOT / "data" / "ha_source_coverage.csv"
+SOURCE_STATUS_OUT = ROOT / "data" / "dsr_source_status.csv"
+RUN_STATUS_OUT = ROOT / "data" / "dsr_run_status.json"
+STATUS_DIR = ROOT / "data" / "source_status"
 HISTORY_PERIOD = "1y"
 HA_LOOKBACK = 30
 
@@ -44,7 +51,22 @@ def load_source_config():
             f"gevonden: {sorted(str(name) for name in names)}"
         )
     sources = []
+    source_ids = set()
     for entry in entries:
+        source_id = entry.get("id")
+        refresh_mode = entry.get("refresh_mode")
+        if not source_id or source_id in source_ids:
+            raise ValueError(f"Ontbrekende of dubbele bron-id voor {entry.get('name')}.")
+        source_ids.add(source_id)
+        if refresh_mode not in {"manual", "automatic"}:
+            raise ValueError(f"Ongeldige refresh_mode voor {entry.get('name')}: {refresh_mode}")
+        if refresh_mode == "automatic":
+            try:
+                max_age_hours = int(entry.get("max_age_hours", 0))
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"Ongeldige max_age_hours voor {entry.get('name')}.") from exc
+            if max_age_hours <= 0:
+                raise ValueError(f"max_age_hours moet positief zijn voor {entry.get('name')}.")
         fmt = entry.get("format")
         if fmt == "whitespace":
             fmt = "text"
@@ -58,6 +80,54 @@ def load_source_config():
 
 
 SOURCES = load_source_config()
+
+
+def load_source_metadata():
+    config = json.loads(SOURCE_CONFIG.read_text(encoding="utf-8"))
+    return {entry["name"]: entry for entry in config["sources"]}
+
+
+SOURCE_METADATA = load_source_metadata()
+
+
+def write_run_status(status: str, source_rows: list[dict], ticker_count: int,
+                     source_errors: dict, source_warnings: dict, missing_rows: int = 0,
+                     unknown_tickers: int = 0):
+    source_state = "PARTIAL" if source_errors or source_warnings else "FULL"
+    analysis_state = "PARTIAL" if unknown_tickers or missing_rows or ticker_count == 0 else "FULL"
+    payload = {
+        # This repository currently produces the HA pipeline, not the complete
+        # DSR defined in DSR_RULES.md. Never label the full DSR as FULL yet.
+        "status": "PARTIAL",
+        "ha_pipeline_status": status,
+        "source_status": source_state,
+        "analysis_status": analysis_state,
+        "pending_components": [
+            "SPX/QQQ market context",
+            "Long technical and fundamental selection",
+            "Simply Wall St Financial Health verification for Long",
+            "Short technical selection and borrow/locate risk checks",
+            "News and event checks",
+            "Consolidated daily Long/Short report",
+        ],
+        "generated_at": pd.Timestamp.now(tz="UTC").isoformat(timespec="seconds"),
+        "unique_tickers": ticker_count,
+        "unknown_market_data_tickers": unknown_tickers,
+        "source_count": len(source_rows),
+        "source_errors": source_errors,
+        "source_warnings": source_warnings,
+        "missing_ha_rows": missing_rows,
+    }
+    temporary = RUN_STATUS_OUT.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(RUN_STATUS_OUT)
+
+
+def write_source_status(rows: list[dict]):
+    pd.DataFrame(rows, columns=[
+        "source", "source_id", "status", "last_attempt_at", "last_success_at",
+        "age_hours", "included", "ticker_count", "detail",
+    ]).to_csv(SOURCE_STATUS_OUT, index=False)
 
 
 def read_source(path: Path, fmt: str) -> list[str]:
@@ -90,23 +160,65 @@ def read_source(path: Path, fmt: str) -> list[str]:
     return result
 
 
-def load_universe():
+def load_universe(include_status: bool = False):
     ticker_sources: dict[str, set[str]] = {}
     source_counts: dict[str, int] = {}
     source_errors: dict[str, str] = {}
+    source_warnings: dict[str, str] = {}
+    source_status_rows: list[dict] = []
 
     for source_name, path, fmt in SOURCES:
+        metadata = SOURCE_METADATA.get(source_name, {})
         try:
             tickers = read_source(path, fmt)
         except Exception as exc:
             source_errors[source_name] = str(exc)
+            if include_status:
+                source_status_rows.append({
+                    "source": source_name, "source_id": metadata.get("id", ""),
+                    "status": "FILE_ERROR", "last_attempt_at": "",
+                    "last_success_at": "", "age_hours": "", "included": False,
+                    "ticker_count": 0, "detail": str(exc),
+                })
             print(f"BRONFOUT [{source_name}]: {exc}", file=sys.stderr)
+            continue
+
+        status = {
+            "status": "MANUAL", "include": True, "partial": False,
+            "last_attempt_at": "", "last_success_at": "", "age_hours": "",
+            "detail": "Geen automatische statuscontrole.",
+        }
+        if include_status:
+            source_id = metadata.get("id")
+            refresh_mode = metadata.get("refresh_mode", "manual")
+            max_age_hours = int(metadata.get("max_age_hours", 96))
+            status = evaluate_status(source_id, refresh_mode, max_age_hours, STATUS_DIR)
+            if status["partial"]:
+                source_warnings[source_name] = f"{status['status']}: {status['detail']}"
+            if not status["include"]:
+                source_errors[source_name] = f"{status['status']}: {status['detail']}"
+            source_status_rows.append({
+                "source": source_name,
+                "source_id": source_id or "",
+                "status": status["status"],
+                "last_attempt_at": status["last_attempt_at"],
+                "last_success_at": status["last_success_at"],
+                "age_hours": status["age_hours"],
+                "included": status["include"],
+                "ticker_count": len(set(tickers)) if status["include"] else 0,
+                "detail": status["detail"],
+            })
+
+        if not status["include"]:
+            print(f"BRON NIET MEegenomen [{source_name}]: {status['status']}", file=sys.stderr)
             continue
 
         source_counts[source_name] = len(set(tickers))
         for ticker in tickers:
             ticker_sources.setdefault(ticker, set()).add(source_name)
 
+    if include_status:
+        return ticker_sources, source_counts, source_errors, source_warnings, source_status_rows
     return ticker_sources, source_counts, source_errors
 
 
@@ -408,13 +520,15 @@ def calculate(ticker: str, sources: set[str]) -> dict:
 
 def main() -> int:
     try:
-        ticker_sources, source_counts, source_errors = load_universe()
+        ticker_sources, source_counts, source_errors, source_warnings, source_status_rows = load_universe(
+            include_status=True
+        )
     except Exception as exc:
         print(f"Bronconfiguratie mislukt: {exc}", file=sys.stderr)
         return 1
+
+    write_source_status(source_status_rows)
     if not ticker_sources:
-        # Persist an empty but schema-compatible signal file and one error row
-        # per failed source, so a fully unavailable source set is still diagnosable.
         empty_columns = list(unknown_row("", set(), "").keys())
         pd.DataFrame(columns=empty_columns).to_csv(OUT, index=False)
         coverage_rows = [
@@ -430,17 +544,20 @@ def main() -> int:
             coverage_rows,
             columns=["source", "ticker", "ha_row_present", "ha_status"],
         ).to_csv(COVERAGE_OUT, index=False)
-        print("Geen bruikbare tickers uit de DSR-bronnen; lege uitvoer en bronfouten opgeslagen.", file=sys.stderr)
+        write_run_status("PARTIAL", source_status_rows, 0, source_errors, source_warnings)
+        print("Geen bruikbare tickers uit de DSR-bronnen; lege uitvoer en bronstatus opgeslagen.", file=sys.stderr)
         return 1
 
     print("Broncontrole:")
     for source_name, _, _ in SOURCES:
         if source_name in source_errors:
-            print(f"  {source_name}: BRONFOUT")
+            print(f"  {source_name}: UITGESLOTEN")
+        elif source_name in source_warnings:
+            print(f"  {source_name}: {source_warnings[source_name]}")
         else:
             print(f"  {source_name}: {source_counts[source_name]} unieke tickers")
     print(f"Gecombineerd: {len(ticker_sources)} unieke tickers")
-    print(f"Bronfouten: {len(source_errors)}")
+    print(f"Bronfouten: {len(source_errors)}; bronwaarschuwingen: {len(source_warnings)}")
 
     rows = []
     for i, ticker in enumerate(sorted(ticker_sources), 1):
@@ -451,8 +568,7 @@ def main() -> int:
     results = pd.DataFrame(rows)
     results.to_csv(OUT, index=False)
 
-    # Explicit coverage audit: ticker rows plus one diagnostic row for each
-    # failed source. Keep the existing four-column output schema unchanged.
+    # Preserve the established four-column ticker coverage schema.
     coverage_rows = []
     result_tickers = set(results["ticker"].astype(str))
     for source_name, _, _ in SOURCES:
@@ -480,15 +596,21 @@ def main() -> int:
     ok = int(results["status"].astype(str).str.startswith("OK").sum())
     unknown = len(results) - ok
     missing = len(ticker_sources) - len(result_tickers)
+    partial = bool(source_errors or source_warnings or missing or unknown)
+    run_state = "PARTIAL" if partial else "FULL"
+    write_run_status(run_state, source_status_rows, len(ticker_sources),
+                     source_errors, source_warnings, missing, unknown)
     print(
         f"Controle voltooid: {ok} tickers OK, {unknown} ONBEKEND, "
         f"{missing} ontbrekende HA-rijen. Totaal {len(ticker_sources)} unieke tickers."
     )
+    print(f"HA-pipeline-status: {run_state}; overall DSR-status: PARTIAL (required Long/Short and market checks are not yet implemented).")
     print(f"HA-uitvoer: {OUT}")
     print(f"Broncontrole: {COVERAGE_OUT}")
-    # A failed source or missing result row makes this run PARTIAL.
-    # Unknown market data remains visible in the output and does not change source coverage.
-    return 1 if source_errors or missing else 0
+    print(f"Bronactualiteit: {SOURCE_STATUS_OUT}")
+    # Source freshness and technical-data availability are reported separately.
+    # Either incomplete source coverage or unknown ticker analysis makes the run PARTIAL.
+    return 1 if partial else 0
 
 
 if __name__ == "__main__":

@@ -10,6 +10,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: tradingview-screener-refresh
+  cancel-in-progress: false
+
 jobs:
   update-tradingview-tickers:
     runs-on: ubuntu-latest
@@ -48,19 +52,40 @@ jobs:
           python -m playwright install --with-deps chromium
 
       - name: Retrieve both TradingView screeners
+        id: retrieve
         if: steps.schedule.outputs.run == 'true'
         run: python scripts/update_tradingview_screeners.py
 
-      - name: Commit updated ticker lists
-        if: success() && steps.schedule.outputs.run == 'true'
+      - name: Commit successfully retrieved ticker lists
+        if: always() && steps.schedule.outputs.run == 'true'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+users.noreply.github.com"
           git add data/simpel_monsters_tickers.csv data/follow_thrue_tickers.csv
+          if compgen -G "data/source_status/*.json" > /dev/null; then
+            git add data/source_status/*.json
+          fi
           if git diff --cached --quiet; then
             echo "Ticker lists unchanged; no commit needed."
           else
             git commit -m "Update both TradingView screener ticker lists"
-            git push
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then
+                echo "ERROR: Could not push TradingView source files after 3 attempts."
+                exit 1
+              fi
+              sleep 3
+            done
           fi
+
+      - name: Mark incomplete TradingView refresh as failed
+        if: steps.retrieve.outcome == 'failure'
+        run: |
+          echo "TradingView refresh is PARTIAL: at least one screener failed. Any successfully retrieved source CSV was committed; inspect the logs."
+          exit 1

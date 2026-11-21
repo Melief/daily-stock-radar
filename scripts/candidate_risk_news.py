@@ -363,15 +363,23 @@ def load_candidates() -> list[dict]:
     long_sw = pd.read_csv(LONG_SW, dtype={"ticker": str})
     borrow = pd.read_csv(BORROW, dtype={"ticker": str})
     candidates = []
+    technical_map = {
+        str(row["ticker"]).upper(): row for _, row in technical.iterrows()
+    }
 
     for _, row in long_sw.iterrows():
         if str(row.get("sw_status", "")) != "PASS" or str(row.get("fundamental_status", "")) != "PASS":
             continue
+        ticker = str(row["ticker"]).upper()
+        technical_row = technical_map.get(ticker, {})
+        score_date = str(technical_row.get("score_date", "")).strip()
+        if score_date.lower() in {"", "nan", "none"}:
+            score_date = ""
         candidates.append({
-            "candidate_type": "LONG", "ticker": str(row["ticker"]).upper(),
+            "candidate_type": "LONG", "ticker": ticker,
             "sector": row.get("sector", ""), "industry": row.get("industry", ""),
             "technical_score": row.get("technical_score", ""),
-            "score_date": str(row.get("score_date", "")),
+            "score_date": score_date,
         })
 
     borrow_map = {str(row["ticker"]).upper(): row for _, row in borrow.iterrows()}

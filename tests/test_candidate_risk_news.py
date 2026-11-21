@@ -155,10 +155,10 @@ class CandidateRiskNewsTests(unittest.TestCase):
         }, index=dates)
         result = rn.calculate_consolidation_pivot(frame, "2026-11-20", "LONG")
         self.assertEqual(result["consolidation_pivot_status"], "OK")
-        self.assertEqual(result["consolidation_pivot"], 14.0)
-        self.assertEqual(result["prior_breakout_date"], "")
-        self.assertEqual(result["prior_breakout_close"], "")
-        self.assertEqual(result["prior_breakout_volume"], "")
+        self.assertEqual(result["consolidation_pivot"], 12.4)
+        self.assertEqual(result["prior_breakout_date"], dates[15].strftime("%Y-%m-%d"))
+        self.assertEqual(result["prior_breakout_close"], 13.0)
+        self.assertEqual(result["prior_breakout_volume"], 2500)
 
     def test_short_consolidation_pivot_is_mirrored(self):
         dates = pd.bdate_range(end="2026-11-20", periods=22)

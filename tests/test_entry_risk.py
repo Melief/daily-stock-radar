@@ -13,6 +13,12 @@ class EntryRiskTests(unittest.TestCase):
         self.assertEqual(result["breakout_reference_status"], "ONDER_20D_PIVOT")
         self.assertEqual(result["action"], "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT")
 
+    def test_long_buy_zone_is_limited_to_five_percent_above_reference(self):
+        within = er.calculate_entry_risk("LONG", 104, 95, 100, "2026-11-20", 1000000)
+        extended = er.calculate_entry_risk("LONG", 106, 95, 100, "2026-11-20", 1000000)
+        self.assertEqual(within["long_buy_zone_status"], "WITHIN_5PCT")
+        self.assertEqual(extended["long_buy_zone_status"], "EXTENDED")
+
     def test_short_stop_risk_and_2r_target(self):
         result = er.calculate_entry_risk("SHORT", 100, 105, 95, "2026-11-20", 1000000,
                                          news_status="CHECKED", borrow_status="AVAILABLE")

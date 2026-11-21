@@ -177,6 +177,16 @@ def main() -> int:
         session = latest_completed_session()
     except Exception as exc:
         print(f"MARKTCONTEXT ONBEKEND: {exc}", file=sys.stderr)
+        payload = {
+            "status": "PARTIAL",
+            "session_date": None,
+            "symbols": {},
+            "qqq_minus_spx_momentum_21d_pct": None,
+            "market_regime": "ONBEKEND",
+            "errors": {"session_calendar": str(exc)},
+            "limitations": ["Geen marktbeoordeling mogelijk zonder betrouwbare laatste voltooide sessie."],
+        }
+        write_context(payload)
         return 1
 
     results: dict[str, dict] = {}

@@ -70,6 +70,20 @@ class VYUSMainTests(unittest.TestCase):
             with output.open(newline="", encoding="utf-8") as handle:
                 self.assertEqual(len(list(csv.DictReader(handle))), 25)
 
+    def test_validated_csv_is_written_even_when_sheets_credentials_are_missing(self):
+        tickers = [f"T{i:02d}" for i in range(25)]
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "vyus_tickers.csv"
+            with (
+                patch.dict("os.environ", {}, clear=True),
+                patch.object(vyus, "fetch_tickers", return_value=tickers),
+                patch.object(vyus, "OUTPUT_FILE", output),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "CSV refreshed"):
+                    vyus.main()
+            with output.open(newline="", encoding="utf-8") as handle:
+                self.assertEqual(len(list(csv.DictReader(handle))), 25)
+
     def test_validated_csv_remains_when_sheets_post_fails(self):
         tickers = [f"T{i:02d}" for i in range(25)]
         with tempfile.TemporaryDirectory() as directory:

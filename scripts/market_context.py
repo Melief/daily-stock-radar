@@ -156,14 +156,14 @@ def update_run_status(payload: dict) -> None:
         run_status["pending_components"] = pending + [component]
     run_status["status"] = "PARTIAL"
     temporary = run_status_path.with_suffix(".json.tmp")
-    temporary.write_text(json.dumps(run_status, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8")
+    temporary.write_text(json.dumps(run_status, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     temporary.replace(run_status_path)
 
 
 def write_context(payload: dict, output: Path = OUTPUT) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix(output.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8")
+    temporary.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     temporary.replace(output)
     update_run_status(payload)
 

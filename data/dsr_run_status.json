@@ -9,17 +9,17 @@
     "Long-fundamentalgegevens bevatten onbekende criteria; deze kandidaten blijven uitgesloten.",
     "Simply Wall St Financial Health bevat onbekende scores; deze kandidaten blijven uitgesloten."
   ],
-  "generated_at": "2026-11-21T18:53:32+00:00",
+  "generated_at": "2026-11-21T18:56:20+00:00",
   "unique_tickers": 67,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
   "source_errors": {
-    "Simpel Monsters": "STALE: TradingView returned rows but ticker fields could not be parsed; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur.",
-    "Follow Thrue": "STALE: TradingView returned rows but ticker fields could not be parsed; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur."
+    "Simpel Monsters": "STALE: Simpel Monsters: TradingView retourneerde 12 rijen maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.",
+    "Follow Thrue": "STALE: Follow Thrue: TradingView retourneerde 17 rijen maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "source_warnings": {
-    "Simpel Monsters": "STALE: TradingView returned rows but ticker fields could not be parsed; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur.",
-    "Follow Thrue": "STALE: TradingView returned rows but ticker fields could not be parsed; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur."
+    "Simpel Monsters": "STALE: Simpel Monsters: TradingView retourneerde 12 rijen maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.",
+    "Follow Thrue": "STALE: Follow Thrue: TradingView retourneerde 17 rijen maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "missing_ha_rows": 0,
   "market_context_status": "FULL",

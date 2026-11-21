@@ -35,8 +35,8 @@ FV Momentum Darvas,DGX,True,OK
 FV Momentum Darvas,KNSA,True,OK
 FV Momentum Darvas,LH,True,OK
 FV Momentum Darvas,VLTO,True,OK
-Simpel Monsters,,False,BRONFOUT: STALE: TradingView returned rows but ticker fields could not be parsed; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur.
-Follow Thrue,,False,BRONFOUT: STALE: TradingView returned rows but ticker fields could not be parsed; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur.
+Simpel Monsters,,False,BRONFOUT: STALE: Simpel Monsters: TradingView retourneerde 12 rijen maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
+Follow Thrue,,False,BRONFOUT: STALE: Follow Thrue: TradingView retourneerde 17 rijen maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
 VYUS holdings,ADBE,True,OK
 VYUS holdings,CART,True,OK
 VYUS holdings,COKE,True,OK

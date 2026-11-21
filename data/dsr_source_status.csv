@@ -1,7 +1,7 @@
 source,source_id,status,last_attempt_at,last_success_at,age_hours,included,ticker_count,detail
 Sector Top Tickers,sector_top_tickers,MANUAL,,,,True,32,Handmatig beheerde bron; automatische actualiteit niet van toepassing.
 FV Momentum Darvas,fv_momentum_darvas,CURRENT,2026-11-21T17:47:50+00:00,2026-11-21T17:47:50+00:00,1.1,True,4,Finviz fetch step
-Simpel Monsters,simpel_monsters,STALE,2026-11-21T18:48:52+00:00,2026-11-08T07:46:03+00:00,323.1,False,0,TradingView returned rows but ticker fields could not be parsed; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur.
-Follow Thrue,follow_thrue,STALE,2026-11-21T18:49:10+00:00,2026-11-08T07:46:03+00:00,323.1,False,0,TradingView returned rows but ticker fields could not be parsed; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur.
-VYUS holdings,vyus_holdings,CURRENT,2026-11-21T17:50:25+00:00,2026-11-21T17:50:25+00:00,1.0,True,25,25 gevalideerde VYUS-tickers opgehaald.
+Simpel Monsters,simpel_monsters,STALE,2026-11-21T18:52:55+00:00,2026-11-08T07:46:03+00:00,323.1,False,0,Simpel Monsters: TradingView retourneerde 12 rijen maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
+Follow Thrue,follow_thrue,STALE,2026-11-21T18:53:14+00:00,2026-11-08T07:46:03+00:00,323.1,False,0,Follow Thrue: TradingView retourneerde 17 rijen maar geen herkenbare tickers; bestaand CSV-bestand blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
+VYUS holdings,vyus_holdings,CURRENT,2026-11-21T17:50:25+00:00,2026-11-21T17:50:25+00:00,1.1,True,25,25 gevalideerde VYUS-tickers opgehaald.
 Blue Sky,blue_sky,CURRENT,2026-11-21T17:47:50+00:00,2026-11-21T17:47:50+00:00,1.1,True,9,Blue Sky fetch step

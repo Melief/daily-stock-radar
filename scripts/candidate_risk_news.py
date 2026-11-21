@@ -161,10 +161,10 @@ def _earnings_date(info: dict) -> str:
 
 
 def derive_risk_status(news_status: str, flags: list[str], short_metrics_ok: bool = True,
-                       price_ok: bool = True) -> str:
+                       price_ok: bool = True, earnings_date_known: bool = True) -> str:
     if flags:
         return "REVIEW"
-    if news_status == "UNKNOWN" or not short_metrics_ok or not price_ok:
+    if news_status == "UNKNOWN" or not short_metrics_ok or not price_ok or not earnings_date_known:
         return "UNKNOWN"
     if news_status == "NO_RESULTS":
         return "NO_RESULTS"
@@ -217,7 +217,9 @@ def _fetch_candidate(candidate: dict) -> dict:
         or (short_float_pct is not None and short_ratio is not None)
     )
     price_ok = candidate["candidate_type"] != "SHORT" or bool(price)
-    risk_status = derive_risk_status(news_status, all_flags, short_metrics_ok, price_ok)
+    earnings_date = _earnings_date(info)
+    earnings_date_known = candidate["candidate_type"] != "SHORT" or bool(earnings_date)
+    risk_status = derive_risk_status(news_status, all_flags, short_metrics_ok, price_ok, earnings_date_known)
     errors = [value for value in (info_error, news_error, price_error) if value]
     return {
         "candidate_type": candidate["candidate_type"],
@@ -232,7 +234,7 @@ def _fetch_candidate(candidate: dict) -> dict:
         "days_to_cover": short_ratio if short_ratio is not None else "",
         "shares_short": shares_short if shares_short is not None else "",
         "shares_short_prior_month": shares_short_prior if shares_short_prior is not None else "",
-        "earnings_date": _earnings_date(info),
+        "earnings_date": earnings_date,
         "close": price.get("close", ""),
         "momentum_5d_pct": price.get("momentum_5d_pct", ""),
         "atr14_pct": price.get("atr14_pct", ""),
@@ -247,6 +249,7 @@ def _fetch_candidate(candidate: dict) -> dict:
         "_info_ok": not bool(info_error),
         "_price_ok": not bool(price_error) if candidate["candidate_type"] == "SHORT" else True,
         "_short_metrics_ok": short_metrics_ok,
+        "_earnings_date_known": earnings_date_known,
     }
 
 
@@ -329,7 +332,7 @@ def main() -> int:
     unknown = sum(
         row["risk_status"] == "UNKNOWN"
         or (row["candidate_type"] == "SHORT" and
-            (not row["_info_ok"] or not row["_price_ok"] or not row["_short_metrics_ok"]))
+            (not row["_info_ok"] or not row["_price_ok"] or not row["_short_metrics_ok"] or not row["_earnings_date_known"]))
         for row in results
     )
     review = sum(row["risk_status"] == "REVIEW" for row in results)

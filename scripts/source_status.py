@@ -43,11 +43,17 @@ def record_status(
     path = status_path(source_id, status_dir)
     previous = {}
     if path.exists():
-        try:
-            previous = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            previous = {}
-    last_success = now.isoformat(timespec="seconds") if outcome == "success" else previous.get("last_success_at")
+        previous = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(previous, dict) or previous.get("source_id") != source_id:
+            raise ValueError(f"Existing source status is invalid for {source_id}; refusing to overwrite it.")
+        previous_success = previous.get("last_success_at")
+        if previous_success:
+            parsed_success = parse_timestamp(previous_success)
+            if parsed_success is None or parsed_success > now + timedelta(minutes=5):
+                raise ValueError(f"Existing last_success_at is invalid for {source_id}; refusing to overwrite it.")
+    else:
+        previous_success = None
+    last_success = now.isoformat(timespec="seconds") if outcome == "success" else previous_success
     payload = {
         "source_id": source_id,
         "last_attempt_status": outcome,

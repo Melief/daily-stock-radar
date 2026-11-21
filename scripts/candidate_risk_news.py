@@ -176,9 +176,28 @@ def calculate_history_extremes(frame: pd.DataFrame, expected_date: str) -> dict:
         raise ValueError("geen voorafgaande sessies voor high-referenties")
     ath_position = int(prior["High"].to_numpy().argmax())
     ath = float(prior["High"].iloc[ath_position])
+    recent_swings = data.tail(126)
+    highs = recent_swings["High"].tolist()
+    lows = recent_swings["Low"].tolist()
+    swing_highs = []
+    swing_lows = []
+    for i in range(2, len(recent_swings) - 2):
+        if highs[i] > max(highs[i - 2:i]) and highs[i] >= max(highs[i + 1:i + 3]):
+            swing_highs.append((float(highs[i]), recent_swings.index[i].strftime("%Y-%m-%d")))
+        if lows[i] < min(lows[i - 2:i]) and lows[i] <= min(lows[i + 1:i + 3]):
+            swing_lows.append((float(lows[i]), recent_swings.index[i].strftime("%Y-%m-%d")))
+    support_levels = [level for level in swing_lows if level[0] < close]
+    resistance_levels = [level for level in swing_highs if level[0] > close]
+    nearest_support = max(support_levels, key=lambda item: item[0]) if support_levels else None
+    nearest_resistance = min(resistance_levels, key=lambda item: item[0]) if resistance_levels else None
+
     result = {
         "history_date": actual_date,
         "history_sessions": int(len(data)),
+        "nearest_support": round(nearest_support[0], 4) if nearest_support else "",
+        "nearest_support_date": nearest_support[1] if nearest_support else "",
+        "nearest_resistance": round(nearest_resistance[0], 4) if nearest_resistance else "",
+        "nearest_resistance_date": nearest_resistance[1] if nearest_resistance else "",
         "high_52w": "",
         "high_52w_date": "",
         "low_52w": "",

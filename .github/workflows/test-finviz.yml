@@ -14,6 +14,7 @@ on:
       - "scripts/test_finviz.py"
       - "scripts/test_blue_sky.py"
       - "blue_sky_url.txt"
+      - "finviz_url.txt"
       - "scripts/sync_finviz_to_sheets.py"
       - "scripts/is_finviz_refresh_time.py"
       - ".github/workflows/test-finviz.yml"

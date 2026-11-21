@@ -97,7 +97,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "distance_to_pivot_pct": "",
             "long_buy_zone_status": "ONBEKEND", "breakout_reference_status": "ONBEKEND",
             "target_feasibility": "ONBEKEND", "breakout_reference_date": "",
-            "breakout_reference_close": "", "breakout_reference_volume": "",
+            "breakout_reference_close": "", "breakout_reference_ha_close": "", "breakout_reference_volume": "",
             "entry_status": "ONGELDIGE_2R", "action": "VERMIJDEN TOT 2R HERSTELD",
         }
 
@@ -115,7 +115,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
 
     if pivot is None or pivot <= 0 or consolidation_pivot_status != "OK":
         pivot_status, distance, breakout_date, breakout_close, breakout_volume = (
-            "ONBEKEND", "", "", "", ""
+            "ONBEKEND", "", "", "", "", ""
         )
         action = "WACHTEN OP PIVOTVERIFICATIE"
         buy_zone = "ONBEKEND"
@@ -123,7 +123,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         distance = (entry / pivot - 1) * 100
         broken = bool(prior_breakout_date) or (current_ha_close is not None and current_ha_close > pivot)
         pivot_status = "BREAKOUT_BEVESTIGD" if broken else "GEEN_BREAKOUT"
-        breakout_date = prior_breakout_date or (score_date if entry > pivot else "")
+        breakout_date = prior_breakout_date or (score_date if current_ha_close is not None and current_ha_close > pivot else "")
         breakout_close = (
             number(prior_breakout_close) if prior_breakout_date
             else entry if current_ha_close is not None and current_ha_close > pivot else ""
@@ -142,7 +142,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         distance = (pivot / entry - 1) * 100
         broken = bool(prior_breakout_date) or (current_ha_close is not None and current_ha_close < pivot)
         pivot_status = "DOORBRAAK_BEVESTIGD" if broken else "GEEN_DOORBRAAK"
-        breakout_date = prior_breakout_date or (score_date if entry < pivot else "")
+        breakout_date = prior_breakout_date or (score_date if current_ha_close is not None and current_ha_close < pivot else "")
         breakout_close = (
             number(prior_breakout_close) if prior_breakout_date
             else entry if current_ha_close is not None and current_ha_close < pivot else ""

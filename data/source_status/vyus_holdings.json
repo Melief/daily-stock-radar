@@ -1,7 +1,7 @@
 {
   "source_id": "vyus_holdings",
-  "last_attempt_status": "failure",
-  "last_attempt_at": "2026-11-21T17:47:36+00:00",
-  "last_success_at": null,
-  "detail": "StockAnalysis fetch/parse stage failed: HTTP Error 403: Forbidden"
+  "last_attempt_status": "success",
+  "last_attempt_at": "2026-11-21T17:50:25+00:00",
+  "last_success_at": "2026-11-21T17:50:25+00:00",
+  "detail": "25 gevalideerde VYUS-tickers opgehaald."
 }

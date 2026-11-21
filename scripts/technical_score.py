@@ -114,14 +114,14 @@ def score_components(ha_row: dict, price: dict, spx_momentum: float, qqq_momentu
     long_parts = {
         "trend": (above20 is True and above50 is True) if above20 is not None and above50 is not None else None,
         "momentum": momentum > 0 if momentum is not None else None,
-        "relative_strength": (momentum > spx_momentum and momentum > qqq_momentum) if momentum is not None else None,
+        "relative_strength": momentum > qqq_momentum if momentum is not None and qqq_momentum is not None else None,
         "volume": rvol >= 1.25 if rvol is not None else None,
         "structure": higher if isinstance(higher, bool) else None,
     }
     short_parts = {
         "trend": (above20 is False and above50 is False) if above20 is not None and above50 is not None else None,
         "momentum": momentum < 0 if momentum is not None else None,
-        "relative_strength": (momentum < spx_momentum and momentum < qqq_momentum) if momentum is not None else None,
+        "relative_strength": momentum < qqq_momentum if momentum is not None and qqq_momentum is not None else None,
         "volume": rvol >= 1.25 if rvol is not None else None,
         "structure": lower if isinstance(lower, bool) else None,
     }

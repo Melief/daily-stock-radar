@@ -3,8 +3,9 @@ name: Import VYUS Top 25 Holdings
 on:
   workflow_dispatch:
   schedule:
-    # Run before the 04:15 UTC DSR morning calculation; weekday frequency unchanged.
-    - cron: "45 3 * * 1-5"
+    # Run at 03:45 Amsterdam: 01:45 UTC in summer, 02:45 UTC in winter.
+    - cron: "45 1 * * 1-5"
+    - cron: "45 2 * * 1-5"
 
 permissions:
   contents: write
@@ -22,8 +23,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Check Amsterdam schedule time
+        id: schedule
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+        run: python scripts/dsr_schedule_guard.py >> "$GITHUB_OUTPUT"
       - name: Import VYUS holdings
         id: import
+        if: steps.schedule.outputs.run == 'true'
         continue-on-error: true
         env:
           VYUS_GS_WEBAPP_URL: ${{ vars.VYUS_GS_WEBAPP_URL }}
@@ -31,7 +38,7 @@ jobs:
         run: python scripts/import_vyus_holdings.py
 
       - name: Commit validated VYUS CSV even if Sheets sync fails
-        if: always()
+        if: always() && steps.schedule.outputs.run == 'true'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -59,7 +66,7 @@ jobs:
           fi
 
       - name: Mark VYUS import failure
-        if: steps.import.outcome == 'failure'
+        if: steps.schedule.outputs.run == 'true' && steps.import.outcome == 'failure'
         run: |
           echo "VYUS import failed. A validated CSV refresh, if completed before the failure, was preserved; inspect the stage-specific logs."
           exit 1

@@ -117,7 +117,7 @@ class EntryRiskTests(unittest.TestCase):
             consolidation_pivot_status="OK",
             prior_breakout_date="2026-11-18",
             prior_breakout_close=None,
-            prior_breakout_volume=None, current_ha_close=101, prior_breakout_ha_close=101.5,
+            prior_breakout_volume=None, current_ha_close=101, prior_breakout_ha_close=101.5, current_close=101,
         )
         self.assertEqual(result["breakout_reference_status"], "BREAKOUT_BEVESTIGD")
         self.assertEqual(result["breakout_reference_date"], "2026-11-18")

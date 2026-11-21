@@ -44,9 +44,9 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "pivot_reference_20d": pivot if pivot is not None else "",
             "distance_to_pivot_pct": "",
             "breakout_reference_status": "ONBEKEND",
-            "breakout_date": "",
-            "breakout_close": "",
-            "breakout_volume": "",
+            "breakout_reference_date": "",
+            "breakout_reference_close": "",
+            "breakout_reference_volume": "",
             "entry_status": "ONBEKEND_STOP_OF_ENTRY",
             "action": "WACHTEN OP BEVESTIGING",
         }
@@ -55,8 +55,9 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         return {
             "entry": entry, "stop": stop, "risk_per_share": round(risk, 4),
             "risk_pct": "", "target_2r": "", "pivot_reference_20d": pivot or "",
-            "distance_to_pivot_pct": "", "breakout_reference_status": "ONBEKEND",
-            "breakout_date": "", "breakout_close": "", "breakout_volume": "",
+            "distance_to_pivot_pct": "", "long_buy_zone_status": "ONBEKEND",
+            "breakout_reference_status": "ONBEKEND",
+            "breakout_reference_date": "", "breakout_reference_close": "", "breakout_reference_volume": "",
             "entry_status": "ONGELDIGE_STOP", "action": "VERMIJDEN TOT STOP HERSTELD",
         }
     target = entry + 2 * risk if side == "LONG" else entry - 2 * risk
@@ -65,8 +66,8 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "entry": entry, "stop": stop, "risk_per_share": round(risk, 4),
             "risk_pct": round(risk / entry * 100, 2), "target_2r": "",
             "pivot_reference_20d": pivot or "", "distance_to_pivot_pct": "",
-            "breakout_reference_status": "ONBEKEND", "breakout_date": "",
-            "breakout_close": "", "breakout_volume": "",
+            "breakout_reference_status": "ONBEKEND", "breakout_reference_date": "",
+            "breakout_reference_close": "", "breakout_reference_volume": "",
             "entry_status": "ONGELDIGE_2R", "action": "VERMIJDEN TOT 2R HERSTELD",
         }
 
@@ -75,6 +76,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "ONBEKEND", "", "", "", ""
         )
         action = "WACHTEN OP PIVOTVERIFICATIE"
+        buy_zone = "ONBEKEND"
     elif side == "LONG":
         distance = (entry / pivot - 1) * 100
         broken = entry > pivot
@@ -82,6 +84,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         breakout_date = score_date if broken else ""
         breakout_close = entry if broken else ""
         breakout_volume = volume if broken and volume is not None else ""
+        buy_zone = "NOT_BROKEN" if not broken else ("WITHIN_5PCT" if distance <= 5 else "EXTENDED")
         action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
     else:
         distance = (pivot / entry - 1) * 100
@@ -90,6 +93,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         breakout_date = score_date if broken else ""
         breakout_close = entry if broken else ""
         breakout_volume = volume if broken and volume is not None else ""
+        buy_zone = "NVT"
         action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
 
     if news_status in {"REVIEW", "UNKNOWN"}:
@@ -105,10 +109,11 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         "target_2r": round(target, 4),
         "pivot_reference_20d": round(pivot, 4) if pivot is not None else "",
         "distance_to_pivot_pct": round(distance, 2) if distance != "" else "",
+        "long_buy_zone_status": buy_zone if side == "LONG" else "NVT",
         "breakout_reference_status": pivot_status,
-        "breakout_date": breakout_date,
-        "breakout_close": round(breakout_close, 4) if breakout_close != "" else "",
-        "breakout_volume": int(breakout_volume) if breakout_volume != "" else "",
+        "breakout_reference_date": breakout_date,
+        "breakout_reference_close": round(breakout_close, 4) if breakout_close != "" else "",
+        "breakout_reference_volume": int(breakout_volume) if breakout_volume != "" else "",
         "entry_status": "STOP_2R_BEREKEND",
         "action": action,
     }
@@ -188,8 +193,8 @@ def main() -> int:
         "ticker", "candidate_type", "sector", "industry", "sources", "technical_score",
         "ha_day_type", "stop_date", "entry", "stop", "risk_per_share", "risk_pct",
         "target_2r", "pivot_reference_20d", "distance_to_pivot_pct",
-        "breakout_reference_status", "breakout_date", "breakout_close",
-        "breakout_volume", "borrow_status", "news_status", "entry_status", "action", "score_date",
+        "long_buy_zone_status", "breakout_reference_status", "breakout_reference_date",
+        "breakout_reference_close", "breakout_reference_volume", "borrow_status", "news_status", "entry_status", "action", "score_date",
     ]
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(rows, columns=columns).to_csv(OUTPUT, index=False)

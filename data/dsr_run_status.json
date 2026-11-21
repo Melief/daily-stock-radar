@@ -8,17 +8,17 @@
     "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig.",
     "Long-fundamentalgegevens bevatten onbekende criteria; deze kandidaten blijven uitgesloten."
   ],
-  "generated_at": "2026-11-21T19:01:18+00:00",
+  "generated_at": "2026-11-21T19:03:34+00:00",
   "unique_tickers": 67,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
   "source_errors": {
-    "Simpel Monsters": "STALE: TradingView page requires login to view registered-user filters; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur.",
-    "Follow Thrue": "STALE: TradingView page requires login to view registered-user filters; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur."
+    "Simpel Monsters": "STALE: name 'browser' is not defined | Laatste succesvolle refresh ouder dan 96 uur.",
+    "Follow Thrue": "STALE: name 'browser' is not defined | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "source_warnings": {
-    "Simpel Monsters": "STALE: TradingView page requires login to view registered-user filters; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur.",
-    "Follow Thrue": "STALE: TradingView page requires login to view registered-user filters; last validated CSV restored. | Laatste succesvolle refresh ouder dan 96 uur."
+    "Simpel Monsters": "STALE: name 'browser' is not defined | Laatste succesvolle refresh ouder dan 96 uur.",
+    "Follow Thrue": "STALE: name 'browser' is not defined | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "missing_ha_rows": 0,
   "market_context_status": "FULL",

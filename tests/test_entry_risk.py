@@ -21,7 +21,7 @@ class EntryRiskTests(unittest.TestCase):
 
     def test_short_stop_risk_and_2r_target(self):
         result = er.calculate_entry_risk("SHORT", 100, 105, 95, "2026-11-20", 1000000,
-                                         news_status="CHECKED", borrow_status="AVAILABLE")
+                                         news_status="CHECKED", borrow_status="AVAILABLE", consolidation_pivot_status="OK")
         self.assertEqual(result["risk_per_share"], 5)
         self.assertEqual(result["risk_pct"], 5)
         self.assertEqual(result["target_2r"], 90)

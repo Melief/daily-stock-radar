@@ -320,9 +320,14 @@ def build_report() -> tuple[str, dict]:
             f"IBKR borrow: status={borrow_status.get('status', 'UNKNOWN')}, "
             f"unknown={borrow_status.get('unknown', 0)}."
         )
-    if risk_status.get("review_required", 0):
+    if (risk_status.get("risk_unknown", 0) or risk_status.get("news_unknown", 0)
+            or risk_status.get("review_required", 0)):
         non_blocking_components.append(
-            f"News/event review: {risk_status.get('review_required', 0)} kandidaten; deze reviewstatus blokkeert DSR FULL niet."
+            "News/event review en risicoverrijking: "
+            f"risk UNKNOWN={risk_status.get('risk_unknown', 0)}, "
+            f"news UNKNOWN={risk_status.get('news_unknown', 0)}, "
+            f"REVIEW={risk_status.get('review_required', 0)}; "
+            "deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
         )
     if risk_status.get("status") != "FULL":
         pending.append("Historische koersdata voor HA-pivotvalidatie is onvolledig.")
@@ -339,6 +344,9 @@ def build_report() -> tuple[str, dict]:
         "sw_financial_health_status": sw_status.get("status", "ONBEKEND"),
         "short_borrow_status": borrow_status.get("status", "ONBEKEND"),
         "candidate_risk_news_status": risk_status.get("status", "ONBEKEND"),
+        "candidate_risk_unknown": risk_status.get("risk_unknown", 0),
+        "candidate_news_unknown": risk_status.get("news_unknown", 0),
+        "history_pivot_unknown": risk_status.get("history_pivot_unknown", risk_status.get("unknown", 0)),
         "entry_risk_status": entry_risk_status.get("status", "ONBEKEND"),
         "long_technical_candidates": long_tech_count,
         "long_approved_candidates": len(long_candidates),
@@ -395,8 +403,11 @@ def build_report() -> tuple[str, dict]:
         ]),
         "",
         "## 6. Nieuws-/eventsignalen",
-        f"News/risk: **{clean(risk_status.get('status'))}**; gecontroleerd: {clean(risk_status.get('checked'))}; "
-        f"onbekend: {clean(risk_status.get('unknown'))}; review vereist: {clean(risk_status.get('review_required'))}.",
+        f"Historische koers-/pivotcontrole: **{clean(risk_status.get('status'))}**; "
+        f"historie/pivot UNKNOWN: {clean(risk_status.get('history_pivot_unknown', risk_status.get('unknown')))}; "
+        f"risk UNKNOWN: {clean(risk_status.get('risk_unknown', 0))}; "
+        f"news UNKNOWN: {clean(risk_status.get('news_unknown', 0))}; "
+        f"review vereist: {clean(risk_status.get('review_required'))}.",
         f"Long fundamentals: **{clean(fundamental_status.get('data_status', 'UNKNOWN'))}**; "
         f"SW Financial Health: **{clean(sw_status.get('status'))}**; "
         f"IBKR borrow: **{clean(borrow_status.get('status'))}**. Deze externe verrijkingen blokkeren DSR FULL niet; UNKNOWN wordt niet als PASS gebruikt.",

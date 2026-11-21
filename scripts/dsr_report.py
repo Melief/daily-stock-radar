@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from scripts.selection_rules import is_qualified_short_candidate
+
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 OUTPUT = DATA / "dsr_report.md"
@@ -84,14 +86,7 @@ def select_long_candidates(sw_rows: list[dict]) -> list[dict]:
 
 
 def select_short_candidates(technical_rows: list[dict]) -> list[dict]:
-    result = []
-    for row in technical_rows:
-        short_score = as_float(row.get("short_score"))
-        sma20, sma50 = as_float(row.get("sma20")), as_float(row.get("sma50"))
-        if row.get("score_status") == "OK" and short_score is not None and short_score >= 3:
-            if sma20 is not None and sma50 is not None and sma20 < sma50:
-                result.append(row)
-    return result
+    return [row for row in technical_rows if is_qualified_short_candidate(row)]
 
 
 def select_long_technical_candidates(technical_rows: list[dict]) -> list[dict]:

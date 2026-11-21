@@ -42,9 +42,12 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
                           borrow_status: str = "NVT", nearest_support=None,
                           nearest_resistance=None, consolidation_pivot_status="ONBEKEND",
                           consolidation_pivot_date="", prior_breakout_date="",
-                          prior_breakout_close=None, prior_breakout_volume=None) -> dict:
+                          prior_breakout_close=None, prior_breakout_volume=None,
+                          current_ha_close=None, prior_breakout_ha_close=None) -> dict:
     entry, stop, pivot = number(entry), number(stop), number(pivot)
     volume = number(volume)
+    current_ha_close = number(current_ha_close)
+    prior_breakout_ha_close = number(prior_breakout_ha_close)
     prior_breakout_date = clean_text(prior_breakout_date)
     consolidation_pivot_date = clean_text(consolidation_pivot_date)
     consolidation_pivot_status = clean_text(consolidation_pivot_status, "ONBEKEND")
@@ -68,6 +71,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "target_feasibility": "ONBEKEND",
             "breakout_reference_date": "",
             "breakout_reference_close": "",
+            "breakout_reference_ha_close": "",
             "breakout_reference_volume": "",
             "entry_status": "ONBEKEND_STOP_OF_ENTRY",
             "action": "WACHTEN OP BEVESTIGING",
@@ -79,7 +83,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "risk_pct": "", "target_2r": "", "pivot_reference_20d": pivot or "",
             "distance_to_pivot_pct": "", "long_buy_zone_status": "ONBEKEND",
             "breakout_reference_status": "ONBEKEND", "target_feasibility": "ONBEKEND",
-            "breakout_reference_date": "", "breakout_reference_close": "", "breakout_reference_volume": "",
+            "breakout_reference_date": "", "breakout_reference_close": "", "breakout_reference_ha_close": "", "breakout_reference_volume": "",
             "entry_status": "ONGELDIGE_STOP", "action": "VERMIJDEN TOT STOP HERSTELD",
         }
     target = entry + 2 * risk if side == "LONG" else entry - 2 * risk
@@ -117,39 +121,42 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         buy_zone = "ONBEKEND"
     elif side == "LONG":
         distance = (entry / pivot - 1) * 100
-        broken = bool(prior_breakout_date) or entry > pivot
+        broken = bool(prior_breakout_date) or (current_ha_close is not None and current_ha_close > pivot)
         pivot_status = "BREAKOUT_BEVESTIGD" if broken else "GEEN_BREAKOUT"
         breakout_date = prior_breakout_date or (score_date if entry > pivot else "")
         breakout_close = (
             number(prior_breakout_close) if prior_breakout_date
-            else entry if entry > pivot else ""
+            else entry if current_ha_close is not None and current_ha_close > pivot else ""
+        )
+        breakout_ha_close = (
+            prior_breakout_ha_close if prior_breakout_date
+            else current_ha_close if current_ha_close is not None and current_ha_close > pivot else ""
         )
         breakout_volume = (
             number(prior_breakout_volume) if prior_breakout_date
-            else volume if entry > pivot and volume is not None else ""
+            else volume if current_ha_close is not None and current_ha_close > pivot and volume is not None else ""
         )
         buy_zone = "NOT_BROKEN" if not broken else ("WITHIN_5PCT" if distance <= 5 else "EXTENDED")
         action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
     else:
         distance = (pivot / entry - 1) * 100
-        broken = bool(prior_breakout_date) or entry < pivot
+        broken = bool(prior_breakout_date) or (current_ha_close is not None and current_ha_close < pivot)
         pivot_status = "DOORBRAAK_BEVESTIGD" if broken else "GEEN_DOORBRAAK"
         breakout_date = prior_breakout_date or (score_date if entry < pivot else "")
         breakout_close = (
             number(prior_breakout_close) if prior_breakout_date
-            else entry if entry < pivot else ""
+            else entry if current_ha_close is not None and current_ha_close < pivot else ""
+        )
+        breakout_ha_close = (
+            prior_breakout_ha_close if prior_breakout_date
+            else current_ha_close if current_ha_close is not None and current_ha_close < pivot else ""
         )
         breakout_volume = (
             number(prior_breakout_volume) if prior_breakout_date
-            else volume if entry < pivot and volume is not None else ""
+            else volume if current_ha_close is not None and current_ha_close < pivot and volume is not None else ""
         )
         buy_zone = "NVT"
         action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
-
-    if news_status in {"REVIEW", "UNKNOWN"}:
-        action = "WACHTEN OP NIEUWS-/RISICOCONTROLE"
-    if side == "SHORT" and borrow_status != "AVAILABLE":
-        action = "GEEN BEVESTIGDE BORROW"
 
     return {
         "entry": round(entry, 4),
@@ -167,6 +174,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         "target_feasibility": target_feasibility,
         "breakout_reference_date": breakout_date,
         "breakout_reference_close": round(breakout_close, 4) if breakout_close is not None and breakout_close != "" else "",
+        "breakout_reference_ha_close": round(breakout_ha_close, 4) if breakout_ha_close is not None and breakout_ha_close != "" else "",
         "breakout_reference_volume": int(breakout_volume) if breakout_volume is not None and breakout_volume != "" else "",
         "entry_status": "STOP_2R_BEREKEND",
         "action": action,
@@ -222,6 +230,7 @@ def build_rows() -> list[dict]:
             str(risk_row.get("prior_breakout_date", "")),
             risk_row.get("prior_breakout_close"),
             risk_row.get("prior_breakout_volume"),
+            risk_row.get("current_ha_close"), risk_row.get("prior_breakout_ha_close"),
         )
         output.append({
             "ticker": ticker,

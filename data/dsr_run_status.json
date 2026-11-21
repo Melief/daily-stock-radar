@@ -5,20 +5,19 @@
   "analysis_status": "FULL",
   "pending_components": [
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
-    "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig.",
-    "Long-fundamentalgegevens bevatten onbekende criteria; deze kandidaten blijven uitgesloten."
+    "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
   ],
-  "generated_at": "2026-11-21T19:03:34+00:00",
+  "generated_at": "2026-11-21T19:05:59+00:00",
   "unique_tickers": 67,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
   "source_errors": {
-    "Simpel Monsters": "STALE: name 'browser' is not defined | Laatste succesvolle refresh ouder dan 96 uur.",
-    "Follow Thrue": "STALE: name 'browser' is not defined | Laatste succesvolle refresh ouder dan 96 uur."
+    "Simpel Monsters": "STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.",
+    "Follow Thrue": "STALE: Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "source_warnings": {
-    "Simpel Monsters": "STALE: name 'browser' is not defined | Laatste succesvolle refresh ouder dan 96 uur.",
-    "Follow Thrue": "STALE: name 'browser' is not defined | Laatste succesvolle refresh ouder dan 96 uur."
+    "Simpel Monsters": "STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.",
+    "Follow Thrue": "STALE: Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "missing_ha_rows": 0,
   "market_context_status": "FULL",

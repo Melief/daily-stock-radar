@@ -3,6 +3,10 @@
   "session_date": "2026-11-20",
   "technical_score_status": "FULL",
   "long_fundamental_status": "PARTIAL",
+  "fundamental_unknown_excluded_by_sw": [
+    "MCK"
+  ],
+  "unresolved_fundamental_unknown": [],
   "sw_financial_health_status": "FULL",
   "short_borrow_status": "PARTIAL",
   "candidate_risk_news_status": "FULL",
@@ -16,7 +20,6 @@
   "ha_short_signals": 3,
   "pending_components": [
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
-    "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig.",
-    "Long-fundamentalgegevens bevatten onbekende criteria; deze kandidaten blijven uitgesloten."
+    "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
   ]
 }

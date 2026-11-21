@@ -40,12 +40,13 @@ class VYUSMainTests(unittest.TestCase):
     def test_csv_is_persisted_before_sheets_post(self):
         tickers = [f"T{i:02d}" for i in range(25)]
         events = []
+        real_write = vyus.write_tickers_csv
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "vyus_tickers.csv"
 
             def persist(values):
                 events.append("csv")
-                vyus.write_tickers_csv(values, output)
+                real_write(values, output)
 
             response = MagicMock()
             response.__enter__.return_value.read.return_value = json.dumps({
@@ -60,7 +61,6 @@ class VYUSMainTests(unittest.TestCase):
             with (
                 self._environment(),
                 patch.object(vyus, "fetch_tickers", return_value=tickers),
-                patch.object(vyus, "OUTPUT_FILE", output),
                 patch.object(vyus, "write_tickers_csv", side_effect=persist),
                 patch.object(vyus, "urlopen", side_effect=post),
             ):
@@ -72,12 +72,13 @@ class VYUSMainTests(unittest.TestCase):
 
     def test_validated_csv_is_written_even_when_sheets_credentials_are_missing(self):
         tickers = [f"T{i:02d}" for i in range(25)]
+        real_write = vyus.write_tickers_csv
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "vyus_tickers.csv"
             with (
                 patch.dict("os.environ", {}, clear=True),
                 patch.object(vyus, "fetch_tickers", return_value=tickers),
-                patch.object(vyus, "OUTPUT_FILE", output),
+                patch.object(vyus, "write_tickers_csv", side_effect=lambda values: real_write(values, output)),
             ):
                 with self.assertRaisesRegex(RuntimeError, "CSV refreshed"):
                     vyus.main()
@@ -86,12 +87,13 @@ class VYUSMainTests(unittest.TestCase):
 
     def test_validated_csv_remains_when_sheets_post_fails(self):
         tickers = [f"T{i:02d}" for i in range(25)]
+        real_write = vyus.write_tickers_csv
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "vyus_tickers.csv"
             with (
                 self._environment(),
                 patch.object(vyus, "fetch_tickers", return_value=tickers),
-                patch.object(vyus, "OUTPUT_FILE", output),
+                patch.object(vyus, "write_tickers_csv", side_effect=lambda values: real_write(values, output)),
                 patch.object(vyus, "urlopen", side_effect=OSError("Sheets unavailable")),
             ):
                 with self.assertRaisesRegex(RuntimeError, "Google Apps Script POST stage failed"):

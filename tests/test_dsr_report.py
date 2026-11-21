@@ -27,6 +27,12 @@ class DsrReportTests(unittest.TestCase):
         ]
         self.assertEqual([r["ticker"] for r in report.select_short_candidates(rows)], ["AAA"])
 
+    def test_52_week_and_ath_proximity_thresholds(self):
+        self.assertTrue(report.proximity_bar(4, "52w").startswith("🟠 96.0%"))
+        self.assertTrue(report.proximity_bar(-2, "52w").startswith("🟢 102.0%"))
+        self.assertTrue(report.proximity_bar(12, "ath").startswith("🟠 88.0%"))
+        self.assertTrue(report.proximity_bar(20, "ath").startswith("🔴 80.0%"))
+
     def test_empty_table_is_explicit(self):
         self.assertEqual(report._table(["Ticker"], []), "_Geen kandidaten._")
 

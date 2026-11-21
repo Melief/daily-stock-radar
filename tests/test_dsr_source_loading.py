@@ -104,7 +104,7 @@ class LoadUniverseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=ha_signals.ROOT) as temp:
             root = Path(temp)
             source = root / "auto.csv"
-            source.write_text("Ticker\\nAAPL\\n", encoding="utf-8")
+            source.write_text("Ticker\nAAPL\n", encoding="utf-8")
             with (
                 patch.object(ha_signals, "SOURCES", [("Auto source", source, "csv")]),
                 patch.object(ha_signals, "SOURCE_METADATA", {
@@ -128,7 +128,7 @@ class LoadUniverseTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=ha_signals.ROOT) as temp:
             root = Path(temp)
             source = root / "auto.csv"
-            source.write_text("Ticker\\nAAPL\\n", encoding="utf-8")
+            source.write_text("Ticker\nAAPL\n", encoding="utf-8")
             status_dir = root / "statuses"
             now = datetime.now(timezone.utc)
             record_status("auto_source", "success", status_dir=status_dir, now=now - timedelta(hours=30))

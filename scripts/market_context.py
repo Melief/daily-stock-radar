@@ -120,15 +120,11 @@ def build_context(expected_session: date, results: dict[str, dict], errors: dict
         )
         spx = results["SPX"]
         qqq = results["QQQ"]
-        if spx["position"] == "BOVEN_BEIDE" and qqq["position"] == "BOVEN_BEIDE" and relative > 0:
-            regime = "RISK_ON"
-        elif spx["position"] == "ONDER_BEIDE" and qqq["position"] == "ONDER_BEIDE" and relative < 0:
-            regime = "RISK_OFF"
-        else:
-            regime = "GEMENGD"
+        # Risk-on/off thresholds are not defined in DSR_RULES.md; do not infer a regime.
 
     return {
-        "status": "FULL" if complete else "PARTIAL",
+        "status": "PARTIAL",
+        "data_status": "FULL" if complete else "PARTIAL",
         "session_date": expected_session.isoformat(),
         "symbols": results,
         "qqq_minus_spx_momentum_21d_pct": relative,

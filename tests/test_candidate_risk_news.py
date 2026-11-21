@@ -133,12 +133,12 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertEqual(result["consolidation_pivot"], min(lows[10:21]))
 
     def test_consolidation_pivot_requires_completed_current_session(self):
-        dates = pd.bdate_range(end="2026-11-20", periods=22)
+        dates = pd.bdate_range(end="2026-11-19", periods=22)
         frame = pd.DataFrame({
             "Open": 10.0, "High": 11.0, "Low": 9.0, "Close": 10.0
         }, index=dates)
-        with self.assertRaisesRegex(ValueError, "geen actuele voltooide"):
-            rn.calculate_consolidation_pivot(frame, "2026-11-19", "LONG")
+        with self.assertRaisesRegex(ValueError, "koersdata loopt achter"):
+            rn.calculate_consolidation_pivot(frame, "2026-11-20", "LONG")
 
     def test_short_history_keeps_ath_but_52_week_high_unknown(self):
         dates = pd.bdate_range(end="2026-11-20", periods=30)

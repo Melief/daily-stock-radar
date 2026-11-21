@@ -166,7 +166,7 @@ jobs:
             sleep 3
           done
       - name: Mark partial DSR pipeline as failed
-        if: steps.schedule.outputs.run == 'true' && (steps.calculate.outcome == 'failure' || steps.market_context.outcome == 'failure' || steps.technical_score.outcome == 'failure' || steps.short_borrow.outcome == 'failure' || steps.long_fundamentals.outcome == 'failure' || steps.sw_financial_health.outcome == 'failure' || steps.candidate_risk_news.outcome == 'failure' || steps.entry_risk.outcome == 'failure' || steps.dsr_report.outcome == 'failure' || steps.commit_outputs.outcome == 'failure')
+        if: steps.schedule.outputs.run == 'true' && (steps.calculate.outcome == 'failure' || steps.market_context.outcome == 'failure' || steps.technical_score.outcome == 'failure' || steps.long_fundamentals.outcome == 'failure' || steps.sw_financial_health.outcome == 'failure' || steps.candidate_risk_news.outcome == 'failure' || steps.entry_risk.outcome == 'failure' || steps.dsr_report.outcome == 'failure' || steps.commit_outputs.outcome == 'failure')
         run: |
-          echo "HA pipeline is PARTIAL: source freshness, source coverage, market context, Long/Short screening, SW, borrow, news/risk or report controls are incomplete. See status files and outputs."
+          echo "DSR is PARTIAL: one or more mandatory source, market, technical, fundamental, pivot, entry-risk or report checks are incomplete. Borrow and news are optional enrichments. See status files and outputs."
           exit 1

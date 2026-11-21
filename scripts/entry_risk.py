@@ -82,17 +82,17 @@ def evaluate_pivot_status(side, entry, pivot, score_date, volume,
         action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
 
     return {
-        "pivot_reference_20d": pivot if pivot is not None else "",
-        "consolidation_pivot": pivot if pivot is not None else "",
+        "pivot_reference_20d": round(pivot, 4) if pivot is not None else "",
+        "consolidation_pivot": round(pivot, 4) if pivot is not None else "",
         "consolidation_pivot_date": consolidation_pivot_date or "",
         "consolidation_pivot_status": consolidation_pivot_status,
         "distance_to_pivot_pct": round(distance, 2) if distance != "" else "",
         "long_buy_zone_status": buy_zone,
         "breakout_reference_status": pivot_status,
         "breakout_reference_date": breakout_date,
-        "breakout_reference_close": breakout_close,
-        "breakout_reference_ha_close": breakout_ha_close,
-        "breakout_reference_volume": breakout_volume,
+        "breakout_reference_close": round(breakout_close, 4) if breakout_close is not None and breakout_close != "" else "",
+        "breakout_reference_ha_close": round(breakout_ha_close, 4) if breakout_ha_close is not None and breakout_ha_close != "" else "",
+        "breakout_reference_volume": int(breakout_volume) if breakout_volume is not None and breakout_volume != "" else "",
         "action": action,
     }
 
@@ -115,8 +115,9 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
     if side not in {"LONG", "SHORT"}:
         raise ValueError("candidate_type moet LONG of SHORT zijn")
 
+    pivot_entry = entry if entry is not None and entry > 0 else None
     pivot_result = evaluate_pivot_status(
-        side, entry, pivot, score_date, volume, consolidation_pivot_status,
+        side, pivot_entry, pivot, score_date, volume, consolidation_pivot_status,
         consolidation_pivot_date, prior_breakout_date, prior_breakout_close,
         prior_breakout_volume, current_ha_close, prior_breakout_ha_close,
     )

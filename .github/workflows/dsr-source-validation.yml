@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "scripts/ha_signals.py"
+      - "scripts/import_vyus_holdings.py"
+      - ".github/workflows/import-vyus-holdings.yml"
       - "data/dsr_ticker_sources.json"
       - "tests/**"
       - "requirements-dsr.txt"

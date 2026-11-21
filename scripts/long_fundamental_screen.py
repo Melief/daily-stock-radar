@@ -129,7 +129,8 @@ def build_stale_fallback_rows(candidates, previous_rows, checked_at, reason):
             row["industry"] = candidate.get("industry", "") or "ONBEKEND"
             row["technical_score"] = int(candidate["long_score"])
             row["score_date"] = candidate.get("score_date", "")
-            row["data_source"] = f"{row.get('data_source', 'Yahoo Finance quoteSummary')} (STALE_FALLBACK)"
+            previous_source = str(row.get("data_source", "Yahoo Finance quoteSummary"))
+            row["data_source"] = previous_source if "STALE_FALLBACK" in previous_source else f"{previous_source} (STALE_FALLBACK)"
             row["error"] = reason
         else:
             row = {

@@ -132,6 +132,7 @@ def _normalise_price_history(frame: pd.DataFrame) -> pd.DataFrame:
 
 def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
     data = _normalise_price_history(frame)
+    data = data.loc[data.index.strftime("%Y-%m-%d") <= expected_date]
     if len(data) < 22:
         raise ValueError(f"onvoldoende historie voor ATR/gap: {len(data)} sessies")
     actual_date = data.index[-1].strftime("%Y-%m-%d")
@@ -161,6 +162,9 @@ def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
 
 def calculate_history_extremes(frame: pd.DataFrame, expected_date: str) -> dict:
     data = _normalise_price_history(frame)
+    data = data.loc[data.index.strftime("%Y-%m-%d") <= expected_date]
+    if data.empty:
+        raise ValueError("geen afgeronde sessies tot de verwachte datum")
     actual_date = data.index[-1].strftime("%Y-%m-%d")
     if actual_date != expected_date:
         raise ValueError(f"koersdata loopt achter: verwacht {expected_date}, ontvangen {actual_date}")

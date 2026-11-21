@@ -30,6 +30,10 @@ class DsrReportTests(unittest.TestCase):
     def test_empty_table_is_explicit(self):
         self.assertEqual(report._table(["Ticker"], []), "_Geen kandidaten._")
 
+    def test_short_sw_alignment_cell_can_remain_blank(self):
+        rendered = report._table(["Ticker", "SW", "Borrow"], [["AAA", "__EMPTY__", "AVAILABLE"]])
+        self.assertIn("| AAA |  | AVAILABLE |", rendered)
+
     def test_report_never_claims_full_when_market_regime_is_unknown(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

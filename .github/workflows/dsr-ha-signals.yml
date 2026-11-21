@@ -74,8 +74,8 @@ jobs:
               sleep 3
             done
           fi
-      - name: Mark partial DSR run as failed
+      - name: Mark partial HA pipeline as failed
         if: steps.calculate.outcome == 'failure'
         run: |
-          echo "DSR is PARTIAL: one or more source or ticker checks failed. See the source coverage and HA outputs above."
+          echo "HA pipeline is PARTIAL: source freshness, source coverage or ticker analysis is incomplete. See the source status and HA outputs above."
           exit 1

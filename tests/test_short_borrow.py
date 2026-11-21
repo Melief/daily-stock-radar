@@ -37,15 +37,18 @@ class ShortBorrowTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "mist"):
             sb.parse_ftp_payload("ABCD|USD|x\n")
 
-    def test_short_candidate_requires_score_and_sma_alignment(self):
+    def test_short_candidate_requires_score_close_below_both_smas_and_sma_alignment(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "scores.csv"
             path.write_text(
-                "ticker,score_status,short_score,sma20,sma50\n"
-                "AAA,OK,4,90,100\n"
-                "BBB,OK,4,110,100\n"
-                "CCC,ONBEKEND,5,90,100\n"
-                "DDD,OK,2,90,100\n",
+                "ticker,score_status,short_score,sma20,sma50,above_sma20_completed,above_sma50_completed\\n"
+                "AAA,OK,4,90,100,False,False\\n"
+                "ABOVE20,OK,5,90,100,True,False\\n"
+                "ABOVE50,OK,5,90,100,False,True\\n"
+                "MISALIGNED,OK,5,110,100,False,False\\n"
+                "UNKNOWN,OK,5,90,100,,False\\n"
+                "LOW_SCORE,OK,2,90,100,False,False\\n"
+                "BAD_STATUS,ONBEKEND,5,90,100,False,False\\n",
                 encoding="utf-8",
             )
             self.assertEqual(sb.qualified_short_candidates(path), ["AAA"])

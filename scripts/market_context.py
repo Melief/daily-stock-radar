@@ -218,8 +218,15 @@ def update_run_status(payload: dict) -> None:
         "SPX/QQQ market context",
         "Risk-on/risk-off marktregime: expliciete criteria ontbreken.",
     }
-    run_status["pending_components"] = [item for item in pending if item not in obsolete]
-    run_status["status"] = "PARTIAL" if run_status["pending_components"] or payload.get("status") != "FULL" else run_status.get("status", "PARTIAL")
+    market_assessment_complete = (
+        payload.get("status") == "FULL"
+        and payload.get("market_regime") in {"RISK-ON", "RISK-OFF", "NEUTRAAL"}
+    )
+    if market_assessment_complete:
+        run_status["pending_components"] = [item for item in pending if item not in obsolete]
+    elif "SPX/QQQ market context" not in pending:
+        run_status["pending_components"] = pending + ["SPX/QQQ market context"]
+    run_status["status"] = "PARTIAL"
     temporary = run_status_path.with_suffix(".json.tmp")
     temporary.write_text(json.dumps(run_status, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     temporary.replace(run_status_path)

@@ -36,7 +36,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/vyus_tickers.csv data/source_status/vyus_holdings.json
+          git add data/vyus_tickers.csv
+          if [ -f data/source_status/vyus_holdings.json ]; then
+            git add data/source_status/vyus_holdings.json
+          fi
           if git diff --cached --quiet; then
             echo "VYUS CSV unchanged or no validated refresh was produced."
           else

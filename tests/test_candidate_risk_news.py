@@ -71,6 +71,30 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertGreater(result["max_overnight_gap_20d_pct"], 0)
         self.assertLess(result["momentum_5d_pct"], 0)
 
+    def test_history_extremes_require_252_sessions_for_52_week_high(self):
+        dates = pd.bdate_range(end="2026-11-20", periods=260)
+        frame = pd.DataFrame({
+            "Open": [99 + i for i in range(260)],
+            "High": [100 + i for i in range(260)],
+            "Low": [98 + i for i in range(260)],
+            "Close": [99.5 + i for i in range(260)],
+        }, index=dates)
+        result = rn.calculate_history_extremes(frame, "2026-11-20")
+        self.assertEqual(result["history_extremes_status"], "FULL")
+        self.assertEqual(result["high_52w"], 359)
+        self.assertEqual(result["all_time_high"], 359)
+        self.assertEqual(result["all_time_high_date"], "2026-11-20")
+
+    def test_short_history_keeps_ath_but_52_week_high_unknown(self):
+        dates = pd.bdate_range(end="2026-11-20", periods=30)
+        frame = pd.DataFrame({
+            "Open": 10, "High": 12, "Low": 9, "Close": 11
+        }, index=dates)
+        result = rn.calculate_history_extremes(frame, "2026-11-20")
+        self.assertEqual(result["history_extremes_status"], "PARTIAL")
+        self.assertEqual(result["all_time_high"], 12)
+        self.assertEqual(result["high_52w"], "")
+
     def test_rejects_stale_price_risk_data(self):
         dates = pd.bdate_range(end="2026-11-19", periods=30)
         frame = pd.DataFrame({

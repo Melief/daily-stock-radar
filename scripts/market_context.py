@@ -141,11 +141,35 @@ def build_context(expected_session: date, results: dict[str, dict], errors: dict
     }
 
 
+def update_run_status(payload: dict) -> None:
+    """Keep the aggregate DSR partial until every required component exists."""
+    run_status_path = ROOT / "data" / "dsr_run_status.json"
+    if not run_status_path.exists():
+        return
+    try:
+        run_status = json.loads(run_status_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"DSR-runstatus kan niet veilig worden bijgewerkt: {exc}") from exc
+
+    run_status["market_context_status"] = payload["status"]
+    pending = run_status.get("pending_components", [])
+    component = "SPX/QQQ market context"
+    if payload["status"] == "FULL":
+        run_status["pending_components"] = [item for item in pending if item != component]
+    elif component not in pending:
+        run_status["pending_components"] = pending + [component]
+    run_status["status"] = "PARTIAL"
+    temporary = run_status_path.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(run_status, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8")
+    temporary.replace(run_status_path)
+
+
 def write_context(payload: dict, output: Path = OUTPUT) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix(output.suffix + ".tmp")
-    temporary.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    temporary.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8")
     temporary.replace(output)
+    update_run_status(payload)
 
 
 def main() -> int:

@@ -76,7 +76,7 @@ jobs:
         run: python scripts/long_fundamental_screen.py
       - name: Validate manual Simply Wall St Financial Health checks
         id: sw_financial_health
-        if: always() && steps.long_fundamentals.outcome == 'success'
+        if: always() && steps.long_fundamentals.outcome != 'skipped'
         continue-on-error: true
         run: python scripts/sw_financial_health.py
       - name: Check IBKR short-borrow inventory for qualified Short candidates

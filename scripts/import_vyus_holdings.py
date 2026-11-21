@@ -10,6 +10,12 @@ from html.parser import HTMLParser
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+from scripts.source_status import record_status
+
+SOURCE_ID = "vyus_holdings"
 SOURCE_URL = "https://stockanalysis.com/quote/etr/VYUS/holdings/"
 OUTPUT_FILE = ROOT / "data" / "vyus_tickers.csv"
 EXPECTED_COUNT = 25
@@ -110,12 +116,14 @@ def main():
     try:
         tickers = fetch_tickers()
     except Exception as exc:
+        record_status(SOURCE_ID, "failure", f"StockAnalysis fetch/parse stage failed: {exc}")
         raise RuntimeError(f"StockAnalysis fetch/parse stage failed: {exc}") from exc
     print(f"VYUS stage 1/3 complete: {len(tickers)} tickers retrieved.", flush=True)
 
     # The DSR CSV is written before the independent Sheets sync. A Sheets
     # outage must not discard a successfully retrieved source refresh.
     write_tickers_csv(tickers)
+    record_status(SOURCE_ID, "success", f"{len(tickers)} gevalideerde VYUS-tickers opgehaald.")
 
     # Google Sheets is a separate downstream destination. Missing Sheets
     # credentials must not prevent a valid DSR source CSV from being refreshed.

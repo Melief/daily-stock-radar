@@ -73,7 +73,7 @@ def parse_google_news_rss(xml_text: str, now: datetime | None = None,
             continue
         if relevance_terms:
             title_lower = title.lower()
-            if not any(re.search(r"\\b" + re.escape(term.lower()) + r"\\b", title_lower)
+            if not any(re.search(r"\b" + re.escape(term.lower()) + r"\b", title_lower)
                        for term in relevance_terms if term):
                 continue
         flags = event_flags(title)
@@ -198,7 +198,7 @@ def _fetch_candidate(candidate: dict) -> dict:
     if len(ticker) >= 2:
         relevance_terms.append(ticker)
     if company and company != ticker:
-        first_word = re.split(r"\\s+", company.strip())[0].strip(".,")
+        first_word = re.split(r"\s+", company.strip())[0].strip(".,")
         if len(first_word) >= 3:
             relevance_terms.append(first_word)
     try:

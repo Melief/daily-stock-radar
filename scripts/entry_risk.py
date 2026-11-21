@@ -26,6 +26,17 @@ def number(value):
         return None
 
 
+def clean_text(value, default: str = "") -> str:
+    """Convert missing Pandas values to an empty/default string, never 'nan'."""
+    try:
+        if pd.isna(value):
+            return default
+    except (TypeError, ValueError):
+        pass
+    result = str(value).strip()
+    return default if result.lower() in {"", "nan", "none"} else result
+
+
 def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: str,
                           volume, news_status: str = "ONBEKEND",
                           borrow_status: str = "NVT", nearest_support=None,
@@ -34,6 +45,9 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
                           prior_breakout_close=None, prior_breakout_volume=None) -> dict:
     entry, stop, pivot = number(entry), number(stop), number(pivot)
     volume = number(volume)
+    prior_breakout_date = clean_text(prior_breakout_date)
+    consolidation_pivot_date = clean_text(consolidation_pivot_date)
+    consolidation_pivot_status = clean_text(consolidation_pivot_status, "ONBEKEND")
     side = candidate_type.upper()
     if side not in {"LONG", "SHORT"}:
         raise ValueError("candidate_type moet LONG of SHORT zijn")

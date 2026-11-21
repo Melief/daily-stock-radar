@@ -72,6 +72,19 @@ class EntryRiskTests(unittest.TestCase):
         self.assertEqual(result["entry_status"], "ONBEKEND_STOP_OF_ENTRY")
         self.assertEqual(result["action"], "WACHTEN OP BEVESTIGING")
 
+    def test_nan_prior_breakout_date_is_not_treated_as_confirmed_breakout(self):
+        result = er.calculate_entry_risk(
+            "LONG", 100, 95, 100, "2026-11-20", 1800,
+            consolidation_pivot_status="OK",
+            prior_breakout_date=float("nan"),
+            prior_breakout_close=None,
+            prior_breakout_volume=None,
+        )
+        self.assertEqual(result["breakout_reference_status"], "GEEN_BREAKOUT")
+        self.assertEqual(result["breakout_reference_date"], "")
+        self.assertEqual(result["breakout_reference_close"], "")
+        self.assertEqual(result["breakout_reference_volume"], "")
+
     def test_missing_prior_breakout_values_do_not_crash_output_rounding(self):
         result = er.calculate_entry_risk(
             "LONG", 104, 95, 100, "2026-11-20", 1800,

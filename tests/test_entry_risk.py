@@ -28,6 +28,14 @@ class EntryRiskTests(unittest.TestCase):
         self.assertEqual(result["breakout_reference_status"], "GEEN_BREAKOUT")
         self.assertEqual(result["long_buy_zone_status"], "NOT_BROKEN")
 
+    def test_official_close_confirms_current_breakout_not_heikin_ashi_close(self):
+        result = er.calculate_entry_risk(
+            "LONG", 104, 95, 100, "2026-11-20", 1800,
+            consolidation_pivot_status="OK", current_ha_close=99, current_close=101,
+        )
+        self.assertEqual(result["breakout_reference_status"], "BREAKOUT_BEVESTIGD")
+        self.assertEqual(result["breakout_reference_close"], 104)
+        self.assertEqual(result["breakout_reference_ha_close"], 99)
     def test_historical_breakout_that_falls_back_below_ha_pivot_is_not_active(self):
         result = er.calculate_entry_risk("LONG", 99, 95, 100, "2026-11-20", 1800,
                                          consolidation_pivot_status="OK",

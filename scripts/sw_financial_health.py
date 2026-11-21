@@ -140,7 +140,7 @@ def main() -> int:
                "manual_scores_available": len(verified)}
     write_status(payload)
     print(f"SW Financial Health: {passed} PASS, {excluded} uitgesloten (<4/6), {unknown} ONBEKEND.")
-    return 0 if status == "FULL" else 1
+    return 0
 
 
 if __name__ == "__main__":

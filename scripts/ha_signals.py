@@ -86,8 +86,14 @@ def load_universe():
     source_counts: dict[str, int] = {}
     for source_name, path, fmt in SOURCES:
         tickers = read_source(path, fmt)
-        source_counts[source_name] = len(set(tickers))
-        for ticker in tickers:
+        unique_tickers = set(tickers)
+        if not unique_tickers:
+            raise ValueError(
+                f"Verplichte DSR-bron bevat geen geldige tickers: "
+                f"{source_name} ({path.relative_to(ROOT)})"
+            )
+        source_counts[source_name] = len(unique_tickers)
+        for ticker in unique_tickers:
             ticker_sources.setdefault(ticker, set()).add(source_name)
     return ticker_sources, source_counts
 

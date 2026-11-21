@@ -11,7 +11,7 @@
     "News and event checks",
     "Consolidated daily Long/Short report"
   ],
-  "generated_at": "2026-11-21T11:25:30+00:00",
+  "generated_at": "2026-11-21T13:51:42+00:00",
   "unique_tickers": 69,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
@@ -23,5 +23,7 @@
     "VYUS holdings": "UNKNOWN: Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.",
     "Blue Sky": "STALE_FALLBACK: Blue Sky fetch step; last successful fetch confirmed in GitHub Actions run 44861728262. | Laatste refresh mislukte; vorige succesvolle data gebruikt."
   },
-  "missing_ha_rows": 0
+  "missing_ha_rows": 0,
+  "market_context_status": "PARTIAL",
+  "market_context_data_status": "FULL"
 }

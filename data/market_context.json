@@ -1,0 +1,44 @@
+{
+  "status": "PARTIAL",
+  "data_status": "FULL",
+  "session_date": "2026-11-20",
+  "symbols": {
+    "SPX": {
+      "symbol": "^GSPC",
+      "date": "2026-11-20",
+      "close": 6910.3901,
+      "sma20": 7499.2315,
+      "sma50": 7625.2564,
+      "close_above_sma20": false,
+      "close_above_sma50": false,
+      "position": "ONDER_BEIDE",
+      "sma_alignment": "BEARISH",
+      "momentum_5d_pct": -8.61,
+      "momentum_21d_pct": -9.83,
+      "support_resistance": "ONBEKEND: nog niet technisch geverifieerd",
+      "status": "OK"
+    },
+    "QQQ": {
+      "symbol": "QQQ",
+      "date": "2026-11-20",
+      "close": 608.45,
+      "sma20": 678.5305,
+      "sma50": 710.9572,
+      "close_above_sma20": false,
+      "close_above_sma50": false,
+      "position": "ONDER_BEIDE",
+      "sma_alignment": "BEARISH",
+      "momentum_5d_pct": -10.51,
+      "momentum_21d_pct": -13.63,
+      "support_resistance": "ONBEKEND: nog niet technisch geverifieerd",
+      "status": "OK"
+    }
+  },
+  "qqq_minus_spx_momentum_21d_pct": -3.8,
+  "market_regime": "ONBEKEND",
+  "errors": {},
+  "limitations": [
+    "Steun- en weerstandsniveaus zijn niet automatisch vastgesteld.",
+    "Marktregime blijft ONBEKEND; afgesproken risk-on/risk-off criteria ontbreken."
+  ]
+}

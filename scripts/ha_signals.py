@@ -24,10 +24,10 @@ COVERAGE_OUT = ROOT / "data" / "ha_source_coverage.csv"
 HISTORY_PERIOD = "1y"
 HA_LOOKBACK = 30
 
-# The JSON file is the single source of truth for the five DSR sources.
+# The JSON file is the single source of truth for the six DSR sources.
 SOURCE_CONFIG = ROOT / "data" / "dsr_ticker_sources.json"
 EXPECTED_SOURCES = {
-    "Sector Top Tickers", "Finviz", "VYUS holdings",
+    "Sector Top Tickers", "FV Momentum Darvas", "Blue Sky", "VYUS holdings",
     "Simpel Monsters", "Follow Thrue",
 }
 # The existing DSR rule: these two sources must pass both moving averages.
@@ -38,9 +38,9 @@ def load_source_config():
     config = json.loads(SOURCE_CONFIG.read_text(encoding="utf-8"))
     entries = config.get("sources", [])
     names = {entry.get("name") for entry in entries}
-    if len(entries) != 5 or names != EXPECTED_SOURCES:
+    if len(entries) != 6 or names != EXPECTED_SOURCES:
         raise ValueError(
-            "DSR-bronconfiguratie moet exact de vijf afgesproken bronnen bevatten; "
+            "DSR-bronconfiguratie moet exact de zes afgesproken bronnen bevatten; "
             f"gevonden: {sorted(str(name) for name in names)}"
         )
     sources = []

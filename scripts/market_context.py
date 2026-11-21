@@ -39,7 +39,14 @@ def _normalise_frame(frame: pd.DataFrame) -> pd.DataFrame:
         raise ValueError("geen koersdata ontvangen")
     data = frame.copy()
     if isinstance(data.columns, pd.MultiIndex):
-        data.columns = data.columns.get_level_values(0)
+        close_level = next(
+            (level for level in range(data.columns.nlevels)
+             if "Close" in data.columns.get_level_values(level)),
+            None,
+        )
+        if close_level is None:
+            raise ValueError("Close-kolom ontbreekt in yfinance MultiIndex-kolommen")
+        data.columns = data.columns.get_level_values(close_level)
     if "Close" not in data.columns:
         raise ValueError("Close-kolom ontbreekt")
     index = pd.DatetimeIndex(data.index)
@@ -102,7 +109,7 @@ def fetch_symbol(symbol: str, expected_session: date) -> dict:
         symbol,
         period=HISTORY_PERIOD,
         interval="1d",
-        auto_adjust=True,
+        auto_adjust=False,
         progress=False,
         threads=False,
         timeout=25,

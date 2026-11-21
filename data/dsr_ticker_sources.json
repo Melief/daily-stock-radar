@@ -1,5 +1,5 @@
 {
-  "description": "Canonical DSR ticker sources. Keep source files separate; this configuration is the single source of truth. The HA workflow unions and deduplicates these five sources while retaining source membership.",
+  "description": "Canonical DSR ticker sources. Keep source files separate; this configuration is the single source of truth. The HA workflow unions and deduplicates these six sources while retaining source membership.",
   "sources": [
     {
       "name": "Sector Top Tickers",
@@ -7,7 +7,7 @@
       "format": "whitespace"
     },
     {
-      "name": "Finviz",
+      "name": "FV Momentum Darvas",
       "path": "finviz_tickers.csv",
       "format": "csv"
     },
@@ -24,6 +24,11 @@
     {
       "name": "VYUS holdings",
       "path": "data/vyus_tickers.csv",
+      "format": "csv"
+    },
+    {
+      "name": "Blue Sky",
+      "path": "data/blue_sky_tickers.csv",
       "format": "csv"
     }
   ],

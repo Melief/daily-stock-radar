@@ -23,6 +23,7 @@ on:
     paths:
       - ".github/workflows/dsr-ha-signals.yml"
       - "scripts/ha_signals.py"
+      - "scripts/market_context.py"
       - "scripts/source_status.py"
       - "data/dsr_ticker_sources.json"
       - "data/source_status/*.json"
@@ -53,14 +54,19 @@ jobs:
         id: calculate
         continue-on-error: true
         run: python scripts/ha_signals.py
-      - name: Commit updated signal and source coverage files
+      - name: Calculate SPX and QQQ market context
+        id: market_context
+        if: always() && steps.calculate.outcome != 'skipped'
+        continue-on-error: true
+        run: python scripts/market_context.py
+      - name: Commit updated signal, market context and source coverage files
         if: always() && steps.calculate.outcome != 'skipped'
         shell: bash
         run: |
           set -e
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for output in data/ha_signals.csv data/ha_source_coverage.csv data/dsr_source_status.csv data/dsr_run_status.json; do
+          for output in data/ha_signals.csv data/ha_source_coverage.csv data/dsr_source_status.csv data/dsr_run_status.json data/market_context.json; do
             if [ -f "$output" ]; then git add "$output"; fi
           done
           if git diff --cached --quiet; then
@@ -110,8 +116,8 @@ jobs:
             fi
             sleep 3
           done
-      - name: Mark partial HA pipeline as failed
-        if: steps.calculate.outcome == 'failure'
+      - name: Mark partial DSR pipeline as failed
+        if: steps.calculate.outcome == 'failure' || steps.market_context.outcome == 'failure'
         run: |
           echo "HA pipeline is PARTIAL: source freshness, source coverage or ticker analysis is incomplete. See the source status and HA outputs above."
           exit 1

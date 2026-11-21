@@ -76,11 +76,17 @@ SOURCE_METADATA = load_source_metadata()
 
 
 def write_run_status(status: str, source_rows: list[dict], ticker_count: int,
-                     source_errors: dict, source_warnings: dict, missing_rows: int = 0):
+                     source_errors: dict, source_warnings: dict, missing_rows: int = 0,
+                     unknown_tickers: int = 0):
+    source_state = "PARTIAL" if source_errors or source_warnings else "FULL"
+    analysis_state = "PARTIAL" if unknown_tickers or missing_rows or ticker_count == 0 else "FULL"
     payload = {
         "status": status,
+        "source_status": source_state,
+        "analysis_status": analysis_state,
         "generated_at": pd.Timestamp.now(tz="UTC").isoformat(timespec="seconds"),
         "unique_tickers": ticker_count,
+        "unknown_market_data_tickers": unknown_tickers,
         "source_count": len(source_rows),
         "source_errors": source_errors,
         "source_warnings": source_warnings,
@@ -564,10 +570,10 @@ def main() -> int:
     ok = int(results["status"].astype(str).str.startswith("OK").sum())
     unknown = len(results) - ok
     missing = len(ticker_sources) - len(result_tickers)
-    partial = bool(source_errors or source_warnings or missing)
+    partial = bool(source_errors or source_warnings or missing or unknown)
     run_state = "PARTIAL" if partial else "FULL"
     write_run_status(run_state, source_status_rows, len(ticker_sources),
-                     source_errors, source_warnings, missing)
+                     source_errors, source_warnings, missing, unknown)
     print(
         f"Controle voltooid: {ok} tickers OK, {unknown} ONBEKEND, "
         f"{missing} ontbrekende HA-rijen. Totaal {len(ticker_sources)} unieke tickers."
@@ -576,8 +582,8 @@ def main() -> int:
     print(f"HA-uitvoer: {OUT}")
     print(f"Broncontrole: {COVERAGE_OUT}")
     print(f"Bronactualiteit: {SOURCE_STATUS_OUT}")
-    # Existing market-data ONBEKEND rows remain visible; source freshness errors
-    # and missing HA rows make the overall run PARTIAL.
+    # Source freshness and technical-data availability are reported separately.
+    # Either incomplete source coverage or unknown ticker analysis makes the run PARTIAL.
     return 1 if partial else 0
 
 

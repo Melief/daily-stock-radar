@@ -227,6 +227,8 @@ Controleer vóór publicatie:
 - [ ] Geen SW-controle voor Short.
 - [ ] Gegevensdatum, beperkingen, aantallen en conclusies vermeld.
 
+Het geconsolideerde rapport wordt dagelijks gegenereerd als `data/dsr_report.md`, met componentstatus in `data/dsr_report_status.json` en de aggregate status in `data/dsr_run_status.json`.
+
 Als een onderdeel niet is uitgevoerd, label het rapport **GEDEELTELIJKE DSR** en benoem precies welke controles ontbreken. Presenteer nooit een gedeeltelijke selectie als volledig doorgelichte DSR.
 
 ## 10. Wijzigingsbeheer

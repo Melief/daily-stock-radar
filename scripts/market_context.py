@@ -47,15 +47,18 @@ def _normalise_frame(frame: pd.DataFrame) -> pd.DataFrame:
         if close_level is None:
             raise ValueError("Close-kolom ontbreekt in yfinance MultiIndex-kolommen")
         data.columns = data.columns.get_level_values(close_level)
-    if "Close" not in data.columns:
-        raise ValueError("Close-kolom ontbreekt")
+    required = ["High", "Low", "Close"]
+    missing = [column for column in required if column not in data.columns]
+    if missing:
+        raise ValueError(f"OHLC-kolommen ontbreken: {missing}")
     index = pd.DatetimeIndex(data.index)
     if index.tz is not None:
         index = index.tz_convert("America/New_York").tz_localize(None)
     data.index = index.normalize()
     data = data[~data.index.duplicated(keep="last")].sort_index()
-    data["Close"] = pd.to_numeric(data["Close"], errors="coerce")
-    return data.dropna(subset=["Close"])
+    for column in required:
+        data[column] = pd.to_numeric(data[column], errors="coerce")
+    return data.dropna(subset=required)
 
 
 def analyse_symbol(frame: pd.DataFrame, symbol: str, expected_session: date) -> dict:
@@ -87,6 +90,22 @@ def analyse_symbol(frame: pd.DataFrame, symbol: str, expected_session: date) -> 
             raise ValueError(f"onvoldoende historie voor momentum over {sessions} sessies")
         return (last_close / float(close.iloc[-sessions - 1]) - 1.0) * 100.0
 
+    # Confirmed five-session swing pivots: two completed bars on either side.
+    recent = data.tail(126)
+    highs = recent["High"].tolist()
+    lows = recent["Low"].tolist()
+    swing_highs = []
+    swing_lows = []
+    for i in range(2, len(recent) - 2):
+        if highs[i] > max(highs[i - 2:i]) and highs[i] >= max(highs[i + 1:i + 3]):
+            swing_highs.append((float(highs[i]), recent.index[i].date().isoformat()))
+        if lows[i] < min(lows[i - 2:i]) and lows[i] <= min(lows[i + 1:i + 3]):
+            swing_lows.append((float(lows[i]), recent.index[i].date().isoformat()))
+    support_levels = [level for level in swing_lows if level[0] < last_close]
+    resistance_levels = [level for level in swing_highs if level[0] > last_close]
+    support = max(support_levels, key=lambda item: item[0]) if support_levels else None
+    resistance = min(resistance_levels, key=lambda item: item[0]) if resistance_levels else None
+
     return {
         "symbol": symbol,
         "date": actual_session.isoformat(),
@@ -99,7 +118,16 @@ def analyse_symbol(frame: pd.DataFrame, symbol: str, expected_session: date) -> 
         "sma_alignment": alignment,
         "momentum_5d_pct": round(pct_change(5), 2),
         "momentum_21d_pct": round(pct_change(21), 2),
-        "support_resistance": "ONBEKEND: nog niet technisch geverifieerd",
+        "support": round(support[0], 4) if support else None,
+        "support_date": support[1] if support else None,
+        "resistance": round(resistance[0], 4) if resistance else None,
+        "resistance_date": resistance[1] if resistance else None,
+        "support_resistance_method": "confirmed 5-session swing pivots; 126-session lookback",
+        "support_resistance": (
+            f"Steun {support[0]:.2f} ({support[1]})" if support else "Geen bevestigde swing-steun"
+        ) + " | " + (
+            f"Weerstand {resistance[0]:.2f} ({resistance[1]})" if resistance else "Geen bevestigde swing-weerstand"
+        ),
         "status": "OK",
     }
 
@@ -136,7 +164,7 @@ def build_context(expected_session: date, results: dict[str, dict], errors: dict
         "market_regime": regime,
         "errors": errors,
         "limitations": [
-            "Steun- en weerstandsniveaus zijn niet automatisch vastgesteld.",
+            "Steun en weerstand zijn afgeleid van bevestigde vijf-sessie swing-pivots; het zijn referentieniveaus, geen automatische entrysignalen.",
             "Marktregime blijft ONBEKEND; afgesproken risk-on/risk-off criteria ontbreken.",
         ],
     }

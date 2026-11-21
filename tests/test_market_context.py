@@ -14,13 +14,31 @@ from scripts import market_context as mc
 class MarketContextTests(unittest.TestCase):
     def frame(self, trend=1.0, end=date(2026, 11, 20)):
         dates = pd.bdate_range(end=end, periods=65)
-        return pd.DataFrame({"Close": [100 + i * trend for i in range(65)]}, index=dates)
+        return pd.DataFrame({
+            "High": [101 + i * trend for i in range(65)],
+            "Low": [99 + i * trend for i in range(65)],
+            "Close": [100 + i * trend for i in range(65)],
+        }, index=dates)
 
     def test_completed_session_and_indicators(self):
         result = mc.analyse_symbol(self.frame(), "SPX", date(2026, 11, 20))
         self.assertEqual(result["date"], "2026-11-20")
         self.assertEqual(result["position"], "BOVEN_BEIDE")
         self.assertEqual(result["sma_alignment"], "BULLISH")
+
+    def test_confirmed_swing_levels_are_returned(self):
+        dates = pd.bdate_range(end=date(2026, 11, 20), periods=65)
+        closes = [100 + (i % 8) for i in range(65)]
+        frame = pd.DataFrame({
+            "High": [value + 2 for value in closes],
+            "Low": [value - 2 for value in closes],
+            "Close": closes,
+        }, index=dates)
+        result = mc.analyse_symbol(frame, "SPX", date(2026, 11, 20))
+        self.assertEqual(result["support_resistance_method"],
+                         "confirmed 5-session swing pivots; 126-session lookback")
+        self.assertIsNotNone(result["support"])
+        self.assertIsNotNone(result["resistance"])
 
     def test_rejects_stale_data(self):
         with self.assertRaisesRegex(ValueError, "koersdata loopt achter"):

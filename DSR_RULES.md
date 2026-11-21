@@ -59,6 +59,8 @@ Begin het rapport met een korte marktconclusie op basis van SPX en QQQ:
 - momentum en relevante steun-/weerstandsniveaus;
 - relatieve sterkte/zwakte en algemene risk-on/risk-off-context.
 
+Voor SPX en QQQ worden steun en weerstand bepaald met bevestigde vijf-sessie swing-pivots (twee voltooide candles links en rechts), binnen een lookback van 126 voltooide sessies. Toon de dichtstbijzijnde bevestigde swing-steun onder de slotkoers en weerstand erboven, inclusief pivotdatum. Dit zijn referentieniveaus, geen zelfstandige entrysignalen.
+
 Gebruik de meest recente voltooide sessie. Maak duidelijk wanneer een marktindicator niet is gecontroleerd. De marktcontext beïnvloedt de terughoudendheid en timing van adviezen, maar vervangt de individuele aandelentoets niet.
 
 ## 4. Technische basis voor Long en Short

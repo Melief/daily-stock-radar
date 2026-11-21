@@ -30,7 +30,8 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
                           volume, news_status: str = "ONBEKEND",
                           borrow_status: str = "NVT", nearest_support=None,
                           nearest_resistance=None, consolidation_pivot_status="ONBEKEND",
-                          consolidation_pivot_date="") -> dict:
+                          consolidation_pivot_date="", prior_breakout_date="",
+                          prior_breakout_close=None, prior_breakout_volume=None) -> dict:
     entry, stop, pivot = number(entry), number(stop), number(pivot)
     volume = number(volume)
     side = candidate_type.upper()
@@ -102,20 +103,32 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         buy_zone = "ONBEKEND"
     elif side == "LONG":
         distance = (entry / pivot - 1) * 100
-        broken = entry > pivot
+        broken = bool(prior_breakout_date) or entry > pivot
         pivot_status = "BREAKOUT_BEVESTIGD" if broken else "GEEN_BREAKOUT"
-        breakout_date = score_date if broken else ""
-        breakout_close = entry if broken else ""
-        breakout_volume = volume if broken and volume is not None else ""
+        breakout_date = prior_breakout_date or (score_date if entry > pivot else "")
+        breakout_close = (
+            number(prior_breakout_close) if prior_breakout_date
+            else entry if entry > pivot else ""
+        )
+        breakout_volume = (
+            number(prior_breakout_volume) if prior_breakout_date
+            else volume if entry > pivot and volume is not None else ""
+        )
         buy_zone = "NOT_BROKEN" if not broken else ("WITHIN_5PCT" if distance <= 5 else "EXTENDED")
         action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
     else:
         distance = (pivot / entry - 1) * 100
-        broken = entry < pivot
+        broken = bool(prior_breakout_date) or entry < pivot
         pivot_status = "DOORBRAAK_BEVESTIGD" if broken else "GEEN_DOORBRAAK"
-        breakout_date = score_date if broken else ""
-        breakout_close = entry if broken else ""
-        breakout_volume = volume if broken and volume is not None else ""
+        breakout_date = prior_breakout_date or (score_date if entry < pivot else "")
+        breakout_close = (
+            number(prior_breakout_close) if prior_breakout_date
+            else entry if entry < pivot else ""
+        )
+        breakout_volume = (
+            number(prior_breakout_volume) if prior_breakout_date
+            else volume if entry < pivot and volume is not None else ""
+        )
         buy_zone = "NVT"
         action = "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT"
 
@@ -192,6 +205,9 @@ def build_rows() -> list[dict]:
             risk_row.get("nearest_support"), risk_row.get("nearest_resistance"),
             str(risk_row.get("consolidation_pivot_status", "ONBEKEND")),
             str(risk_row.get("consolidation_pivot_date", "")),
+            str(risk_row.get("prior_breakout_date", "")),
+            risk_row.get("prior_breakout_close"),
+            risk_row.get("prior_breakout_volume"),
         )
         output.append({
             "ticker": ticker,

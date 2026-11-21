@@ -60,6 +60,22 @@ def clean(value) -> str:
     return text.replace("|", "/")
 
 
+def proximity_bar(distance_to_high, kind: str) -> str:
+    distance = as_float(distance_to_high)
+    if distance is None:
+        return "ONBEKEND"
+    percent = 100.0 - distance
+    if kind == "52w":
+        marker = "🟢" if percent > 100 else "🟠" if percent >= 95 else "🔴"
+    elif kind == "ath":
+        marker = "🟢" if percent >= 90 else "🟠" if percent >= 85 else "🔴"
+    else:
+        raise ValueError("kind moet 52w of ath zijn")
+    filled = max(0, min(10, round(max(0.0, min(100.0, percent)) / 10)))
+    bar = "█" * filled + "░" * (10 - filled)
+    return f"{marker} {percent:.1f}% {bar}"
+
+
 def select_long_candidates(sw_rows: list[dict]) -> list[dict]:
     return [
         row for row in sw_rows
@@ -141,8 +157,8 @@ def build_report() -> tuple[str, dict]:
             entry.get("entry", tech.get("close_completed", "")), entry.get("stop", ""),
             entry.get("risk_pct", ""), entry.get("target_2r", ""),
             tech.get("pivot_resistance_20d", ""), entry.get("long_buy_zone_status", ""),
-            risk.get("high_52w", ""), risk.get("distance_to_52w_high_pct", ""),
-            risk.get("all_time_high", ""), risk.get("distance_to_ath_pct", ""),
+            risk.get("high_52w", ""), proximity_bar(risk.get("distance_to_52w_high_pct"), "52w"),
+            risk.get("all_time_high", ""), proximity_bar(risk.get("distance_to_ath_pct"), "ath"),
             tech.get("rvol_5_21", ""), risk.get("risk_status", "ONBEKEND"),
             entry.get("action", "ONBEKEND"),
         ])
@@ -163,8 +179,8 @@ def build_report() -> tuple[str, dict]:
             borrow.get("status", "ONBEKEND"), borrow.get("fee_rate_pct", ""),
             borrow.get("available_shares", ""), risk.get("short_percent_of_float", ""),
             risk.get("days_to_cover", ""), risk.get("high_52w", ""),
-            risk.get("distance_to_52w_high_pct", ""), risk.get("all_time_high", ""),
-            risk.get("distance_to_ath_pct", ""), risk.get("risk_status", "ONBEKEND"),
+            proximity_bar(risk.get("distance_to_52w_high_pct"), "52w"), risk.get("all_time_high", ""),
+            proximity_bar(risk.get("distance_to_ath_pct"), "ath"), risk.get("risk_status", "ONBEKEND"),
             entry.get("action", "ONBEKEND"),
         ])
 

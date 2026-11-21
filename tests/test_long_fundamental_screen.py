@@ -46,6 +46,8 @@ class LongFundamentalTests(unittest.TestCase):
     def test_biotech_is_flagged_for_review_not_automatically_excluded(self):
         result = lf.evaluate_fundamentals(self.passing_info(), "Healthcare", "Biotechnology")
         self.assertEqual(result["biotech_clinical_risk_review"], "REVIEW")
+        drug_maker = lf.evaluate_fundamentals(self.passing_info(), "Healthcare", "Drug Manufacturers - Specialty & Generic")
+        self.assertEqual(drug_maker["biotech_clinical_risk_review"], "REVIEW")
         self.assertEqual(result["fundamental_status"], "PASS")
 
     def test_candidate_requires_technical_score_and_close_above_sma50(self):

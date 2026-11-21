@@ -140,5 +140,21 @@ class EntryRiskTests(unittest.TestCase):
                 self.assertEqual(er.build_rows(), [])
 
 
+    def test_invalid_stop_still_reports_ha_breakout_evidence(self):
+        result = er.calculate_entry_risk(
+            "LONG", 100, 105, 95, "2026-11-20", 1200,
+            consolidation_pivot_status="OK",
+            consolidation_pivot_date="2026-11-10",
+            current_ha_close=96,
+        )
+        self.assertEqual(result["entry_status"], "ONGELDIGE_STOP")
+        self.assertEqual(result["consolidation_pivot_status"], "OK")
+        self.assertEqual(result["breakout_reference_status"], "BREAKOUT_BEVESTIGD")
+        self.assertEqual(result["breakout_reference_date"], "2026-11-20")
+        self.assertEqual(result["breakout_reference_close"], 100)
+        self.assertEqual(result["breakout_reference_ha_close"], 96)
+        self.assertEqual(result["breakout_reference_volume"], 1200)
+
+
 if __name__ == "__main__":
     unittest.main()

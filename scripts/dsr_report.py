@@ -113,6 +113,20 @@ def select_ha_short_signals(ha_rows: list[dict]) -> list[dict]:
     return [row for row in ha_rows if as_bool(row.get("ha_pivot_down")) is True]
 
 
+def pivot_audit_cells(entry: dict) -> list:
+    """Return consolidation-pivot status separately from breakout confirmation."""
+    return [
+        entry.get("consolidation_pivot", ""),
+        entry.get("consolidation_pivot_date", ""),
+        entry.get("consolidation_pivot_status", "ONBEKEND"),
+        entry.get("breakout_reference_status", "ONBEKEND"),
+        entry.get("breakout_reference_date", ""),
+        entry.get("breakout_reference_close", ""),
+        entry.get("breakout_reference_ha_close", ""),
+        entry.get("breakout_reference_volume", ""),
+    ]
+
+
 def _table(headers: list[str], rows: list[list[str]]) -> str:
     if not rows:
         return "_Geen kandidaten._"
@@ -175,10 +189,7 @@ def build_report() -> tuple[str, dict]:
             candidate.get("technical_score", ""), f"{candidate.get('financial_health_score')}/6",
             entry.get("entry", tech.get("close_completed", "")), entry.get("stop", ""),
             entry.get("risk_pct", ""), entry.get("target_2r", ""),
-            entry.get("target_feasibility", ""), entry.get("consolidation_pivot", ""),
-            entry.get("consolidation_pivot_date", ""), entry.get("breakout_reference_status", ""),
-            entry.get("breakout_reference_date", ""), entry.get("breakout_reference_close", ""),
-            entry.get("breakout_reference_ha_close", ""), entry.get("breakout_reference_volume", ""), entry.get("long_buy_zone_status", ""),
+            entry.get("target_feasibility", ""), *pivot_audit_cells(entry), entry.get("long_buy_zone_status", ""),
             risk.get("high_52w", ""), proximity_bar(risk.get("distance_to_52w_high_pct"), "52w"),
             risk.get("all_time_high", ""), proximity_bar(risk.get("distance_to_ath_pct"), "ath"),
             tech.get("rvol_5_21", ""), risk.get("risk_status", "ONBEKEND"),
@@ -198,10 +209,7 @@ def build_report() -> tuple[str, dict]:
             candidate.get("short_score", ""), "__EMPTY__",
             entry.get("entry", candidate.get("close_completed", "")), entry.get("stop", ""),
             entry.get("risk_pct", ""), entry.get("target_2r", ""),
-            entry.get("target_feasibility", ""), entry.get("consolidation_pivot", ""),
-            entry.get("consolidation_pivot_date", ""), entry.get("breakout_reference_status", ""),
-            entry.get("breakout_reference_date", ""), entry.get("breakout_reference_close", ""),
-            entry.get("breakout_reference_ha_close", ""), entry.get("breakout_reference_volume", ""), borrow.get("status", "ONBEKEND"), borrow.get("fee_rate_pct", ""),
+            entry.get("target_feasibility", ""), *pivot_audit_cells(entry), borrow.get("status", "ONBEKEND"), borrow.get("fee_rate_pct", ""),
             borrow.get("available_shares", ""), risk.get("short_percent_of_float", ""),
             risk.get("days_to_cover", ""), risk.get("high_52w", ""),
             proximity_bar(risk.get("distance_to_52w_high_pct"), "52w"), risk.get("all_time_high", ""),
@@ -289,7 +297,9 @@ def build_report() -> tuple[str, dict]:
     }
     nonblocking_fundamental_unknown = sorted(fundamental_unknown_tickers & sw_excluded_tickers)
     unresolved_fundamental_unknown = sorted(fundamental_unknown_tickers - sw_excluded_tickers)
-    if unresolved_fundamental_unknown:
+    if fundamental_status.get("data_status") == "STALE_FALLBACK":
+        pending.append("Yahoo Finance leverde geen actuele Long-fundamentalvelden; de laatste gevalideerde waarden zijn alleen als STALE_FALLBACK bewaard.")
+    elif unresolved_fundamental_unknown:
         pending.append("Long-fundamentalgegevens blijven ONBEKEND voor niet anderszins uitgesloten kandidaten: "
                        + ", ".join(unresolved_fundamental_unknown) + ".")
     if sw_status.get("status") != "FULL" or sw_status.get("unknown", 0):
@@ -303,6 +313,7 @@ def build_report() -> tuple[str, dict]:
         "session_date": session,
         "technical_score_status": tech_status.get("status", "ONBEKEND"),
         "long_fundamental_status": fundamental_status.get("status", "ONBEKEND"),
+        "long_fundamental_data_status": fundamental_status.get("data_status", "CURRENT"),
         "fundamental_unknown_excluded_by_sw": nonblocking_fundamental_unknown,
         "unresolved_fundamental_unknown": unresolved_fundamental_unknown,
         "sw_financial_health_status": sw_status.get("status", "ONBEKEND"),
@@ -321,7 +332,7 @@ def build_report() -> tuple[str, dict]:
 
     long_summary = (
         f"Technisch gekwalificeerd: **{long_tech_count}**. Fundamenteel PASS: **{fundamental_status.get('passed', 0)}**; "
-        f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**. "
+        f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**; data: **{fundamental_status.get('data_status', 'CURRENT')}**. "
         f"SW PASS: **{sw_status.get('passed', 0)}**; SW uitgesloten: **{sw_status.get('excluded_sw', 0)}**; "
         f"onbekend: **{sw_status.get('unknown', 0)}**. Goedgekeurd voor verdere Long-beoordeling: **{len(long_candidates)}**."
     )
@@ -340,12 +351,12 @@ def build_report() -> tuple[str, dict]:
         "",
         "## 3. Long",
         long_summary,
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Breakoutdatum", "Officieel slot", "HA-slot", "Volume", "Koopzone", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Breakoutstatus", "Breakoutdatum", "Officieel slot", "HA-slot", "Volume", "Koopzone", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
         "",
         "## 4. Short",
         f"Technisch gekwalificeerd: **{short_tech_count}**. IBKR beschikbaar: **{borrow_available}**; "
         f"IBKR onbekend: **{borrow_unknown}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Doorbraakdatum", "Officieel slot", "HA-slot", "Volume", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "Nieuws", "Actie"], short_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Doorbraakstatus", "Doorbraakdatum", "Officieel slot", "HA-slot", "Volume", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "Nieuws", "Actie"], short_table),
         "",
         "## 5. HA-signalen",
         f"Long-signalen volgens HA 21/8 (HA Low=Open; slotkoers boven SMA20 en SMA50): **{len(ha_long)}**.",

@@ -1,7 +1,7 @@
 """Tests for independent TradingView source retrieval."""
 
 import unittest
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 from scripts import update_tradingview_screeners as tradingview
 
@@ -21,13 +21,15 @@ class RetrieveAllScreenersTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "Simpel Monsters"):
                 tradingview.retrieve_all_screeners(browser, screeners)
 
+        self.assertEqual(retrieve.call_count, 2)
         self.assertEqual(
-            retrieve.call_args_list,
+            [args[1:] for args, _ in retrieve.call_args_list],
             [
-                call(browser, "Simpel Monsters", "https://example.test/first"),
-                call(browser, "Follow Thrue", "https://example.test/second"),
+                ("Simpel Monsters", "https://example.test/first"),
+                ("Follow Thrue", "https://example.test/second"),
             ],
         )
+        self.assertTrue(all(args[0] is browser for args, _ in retrieve.call_args_list))
 
     def test_successful_sources_do_not_raise(self):
         screeners = [
@@ -40,12 +42,13 @@ class RetrieveAllScreenersTests(unittest.TestCase):
 
         self.assertEqual(retrieve.call_count, 2)
         self.assertEqual(
-            retrieve.call_args_list,
+            [args[1:] for args, _ in retrieve.call_args_list],
             [
-                call(browser, "Simpel Monsters", "https://example.test/first"),
-                call(browser, "Follow Thrue", "https://example.test/second"),
+                ("Simpel Monsters", "https://example.test/first"),
+                ("Follow Thrue", "https://example.test/second"),
             ],
         )
+        self.assertTrue(all(args[0] is browser for args, _ in retrieve.call_args_list))
 
 
 if __name__ == "__main__":

@@ -224,10 +224,11 @@ def calculate_history_extremes(frame: pd.DataFrame, expected_date: str) -> dict:
  
 def calculate_consolidation_pivot(frame: pd.DataFrame, expected_date: str,
                                   candidate_type: str) -> dict:
-    """Find the latest confirmed swing-origin consolidation in the prior 5–21 sessions.
+    """Find a confirmed 5–21-session base and its first close-confirmed break.
 
-    The latest completed session is excluded from the range so it can confirm
-    a breakout/breakdown. A swing origin needs two completed bars on each side.
+    The latest completed session is excluded from pivot construction and is
+    evaluated separately by entry_risk. The pivot is the range extreme before
+    the first close beyond that range.
     """
     side = candidate_type.upper()
     if side not in {"LONG", "SHORT"}:
@@ -242,6 +243,9 @@ def calculate_consolidation_pivot(frame: pd.DataFrame, expected_date: str,
         "consolidation_pivot_date": "",
         "consolidation_sessions": "",
         "consolidation_pivot_status": "ONBEKEND",
+        "prior_breakout_date": "",
+        "prior_breakout_close": "",
+        "prior_breakout_volume": "",
     }
     if len(prior) < 5:
         return unknown
@@ -257,13 +261,36 @@ def calculate_consolidation_pivot(frame: pd.DataFrame, expected_date: str,
         )
         sessions = len(prior) - i
         if is_origin and 5 <= sessions <= 21:
-            eligible.append((i, sessions))
+            eligible.append(i)
     if not eligible:
         return unknown
 
-    index, sessions = max(eligible, key=lambda item: item[0])
-    segment = prior.iloc[index:]
-    level = float(segment["High"].max() if side == "LONG" else segment["Low"].min())
+    index = max(eligible)
+    breakout = None
+    for j in range(index + 5, len(prior)):
+        base = prior.iloc[index:j]
+        pivot = float(base["High"].max() if side == "LONG" else base["Low"].min())
+        close = float(prior["Close"].iloc[j])
+        broken = close > pivot if side == "LONG" else close < pivot
+        if broken:
+            breakout = (j, pivot, base)
+            break
+
+    if breakout is not None:
+        j, level, segment = breakout
+        sessions = j - index
+        breakout_date = prior.index[j].strftime("%Y-%m-%d")
+        breakout_close = float(prior["Close"].iloc[j])
+        breakout_volume = (
+            float(prior["Volume"].iloc[j])
+            if "Volume" in prior.columns and pd.notna(prior["Volume"].iloc[j]) else ""
+        )
+    else:
+        segment = prior.iloc[index:]
+        level = float(segment["High"].max() if side == "LONG" else segment["Low"].min())
+        sessions = len(prior) - index
+        breakout_date = breakout_close = breakout_volume = ""
+
     level_date = (
         segment["High"].idxmax() if side == "LONG" else segment["Low"].idxmin()
     ).strftime("%Y-%m-%d")
@@ -272,6 +299,9 @@ def calculate_consolidation_pivot(frame: pd.DataFrame, expected_date: str,
         "consolidation_pivot_date": level_date,
         "consolidation_sessions": int(sessions),
         "consolidation_pivot_status": "OK",
+        "prior_breakout_date": breakout_date,
+        "prior_breakout_close": round(breakout_close, 4) if breakout_close != "" else "",
+        "prior_breakout_volume": int(breakout_volume) if breakout_volume != "" else "",
     }
 
 

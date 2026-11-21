@@ -63,7 +63,7 @@ def load_verified_scores(path: Path = INPUT) -> dict[str, dict]:
     return verified
 
 
-def build_sw_rows(fundamentals: pd.DataFrame, verified: dict[str, dict]) -> list[dict]:
+def build_sw_rows(fundamentals: pd.DataFrame, verified: dict[str, dict], fundamental_data_status: str = "CURRENT") -> list[dict]:
     output = []
     for _, candidate in fundamentals.iterrows():
         ticker = str(candidate.get("ticker", "")).strip().upper()
@@ -111,11 +111,11 @@ def main() -> int:
         fundamentals = pd.read_csv(FUNDAMENTALS, dtype={"ticker": str})
         verified = load_verified_scores()
         try:
-        fundamental_status = json.loads(FUNDAMENTAL_STATUS.read_text(encoding="utf-8"))
-    except Exception:
-        fundamental_status = {}
-    fundamental_data_status = fundamental_status.get("data_status", "CURRENT")
-    rows = build_sw_rows(fundamentals, verified, fundamental_data_status)
+            fundamental_status = json.loads(FUNDAMENTAL_STATUS.read_text(encoding="utf-8"))
+        except Exception:
+            fundamental_status = {}
+        fundamental_data_status = fundamental_status.get("data_status", "CURRENT")
+        rows = build_sw_rows(fundamentals, verified, fundamental_data_status)
     except Exception as exc:
         write_status({"status": "PARTIAL", "errors": [str(exc)]})
         print(f"SW-controle niet beschikbaar: {exc}", file=sys.stderr)
@@ -130,7 +130,7 @@ def main() -> int:
     excluded = sum(row["sw_status"] == "EXCLUDED" for row in rows)
     unknown = sum(row["sw_status"].startswith("ONBEKEND") for row in rows)
     status = "FULL" if unknown == 0 else "PARTIAL"
-    payload = {"status": status, "long_candidates": len(rows), "passed": passed,
+    payload = {"status": status, "data_status": fundamental_data_status, "long_candidates": len(rows), "passed": passed,
                "excluded_sw": excluded, "unknown": unknown,
                "manual_scores_available": len(verified)}
     write_status(payload)

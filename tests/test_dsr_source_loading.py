@@ -77,6 +77,29 @@ class LoadUniverseTests(unittest.TestCase):
             self.assertIn("Broken source", errors)
             self.assertNotIn("Valid source", errors)
 
+    def test_all_sources_unavailable_persist_diagnostics(self):
+        with tempfile.TemporaryDirectory(dir=ha_signals.ROOT) as temp:
+            root = Path(temp)
+            configured_sources = [
+                ("Missing A", root / "missing_a.csv", "csv"),
+                ("Missing B", root / "missing_b.csv", "csv"),
+            ]
+            signals_out = root / "ha_signals.csv"
+            coverage_out = root / "ha_source_coverage.csv"
+            with (
+                patch.object(ha_signals, "SOURCES", configured_sources),
+                patch.object(ha_signals, "OUT", signals_out),
+                patch.object(ha_signals, "COVERAGE_OUT", coverage_out),
+            ):
+                self.assertEqual(ha_signals.main(), 1)
+
+            self.assertTrue(signals_out.exists())
+            self.assertTrue(coverage_out.exists())
+            import pandas as pd
+            coverage = pd.read_csv(coverage_out)
+            self.assertEqual(set(coverage["source"]), {"Missing A", "Missing B"})
+            self.assertTrue(coverage["ha_status"].str.startswith("BRONFOUT:").all())
+
 
 if __name__ == "__main__":
     unittest.main()

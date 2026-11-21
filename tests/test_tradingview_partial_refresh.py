@@ -1,5 +1,6 @@
 """Tests that TradingView sources are attempted independently."""
 import unittest
+import csv
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -69,9 +70,10 @@ class TradingViewPartialRefreshTests(unittest.TestCase):
             }]
             with patch.object(tv, "DATA_DIR", root), patch.object(tv, "ROOT", root):
                 output = tv.save_rows("Follow Thrue", rows)
-            content = output.read_text(encoding="utf-8-sig")
-            self.assertIn("CRVL,NASDAQ,NASDAQ:CRVL,CorVel Corp.", content)
-            self.assertIn("PLMR,NASDAQ,NASDAQ:PLMR,Palomar Holdings, Inc.", content)
+            with output.open(encoding="utf-8-sig", newline="") as f:
+                rows = list(csv.DictReader(f))
+            self.assertEqual([row["ticker"] for row in rows], ["CRVL", "PLMR"])
+            self.assertEqual(rows[1]["description"], "Palomar Holdings, Inc.")
 
 
 if __name__ == "__main__":

@@ -76,5 +76,15 @@ class TradingViewPartialRefreshTests(unittest.TestCase):
             self.assertEqual(rows[1]["description"], "Palomar Holdings, Inc.")
 
 
+    def test_explicit_zero_result_screener_writes_valid_empty_csv(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with patch.object(tv, "DATA_DIR", root), patch.object(tv, "ROOT", root):
+                output = tv.save_rows("Simpel Monsters", {"totalCount": 0, "symbols": [], "data": []})
+            with output.open(encoding="utf-8-sig", newline="") as f:
+                rows = list(csv.DictReader(f))
+            self.assertEqual(rows, [])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -301,7 +301,7 @@ def build_report() -> tuple[str, dict]:
     # enrichments. UNKNOWN never becomes PASS and therefore cannot approve a Long.
     non_blocking_components = []
     if (fundamental_status.get("status") != "FULL"
-            or fundamental_status.get("data_status", "CURRENT") != "CURRENT"
+            or fundamental_status.get("data_status", "UNKNOWN") != "CURRENT"
             or fundamental_status.get("unknown", 0)
             or unresolved_fundamental_unknown):
         non_blocking_components.append(
@@ -332,7 +332,7 @@ def build_report() -> tuple[str, dict]:
         "session_date": session,
         "technical_score_status": tech_status.get("status", "ONBEKEND"),
         "long_fundamental_status": fundamental_status.get("status", "ONBEKEND"),
-        "long_fundamental_data_status": fundamental_status.get("data_status", "CURRENT"),
+        "long_fundamental_data_status": fundamental_status.get("data_status", "UNKNOWN"),
         "fundamental_unknown_excluded_by_sw": nonblocking_fundamental_unknown,
         "unresolved_fundamental_unknown": unresolved_fundamental_unknown,
         "sw_financial_health_status": sw_status.get("status", "ONBEKEND"),
@@ -352,7 +352,7 @@ def build_report() -> tuple[str, dict]:
 
     long_summary = (
         f"Technisch gekwalificeerd: **{long_tech_count}**. Fundamenteel PASS: **{fundamental_status.get('passed', 0)}**; "
-        f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**; data: **{fundamental_status.get('data_status', 'CURRENT')}**. "
+        f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**; data: **{fundamental_status.get('data_status', 'UNKNOWN')}**. "
         f"SW PASS: **{sw_status.get('passed', 0)}**; SW uitgesloten: **{sw_status.get('excluded_sw', 0)}**; "
         f"onbekend: **{sw_status.get('unknown', 0)}**. Goedgekeurd voor verdere Long-beoordeling: **{len(long_candidates)}**."
     )

@@ -17,6 +17,7 @@ class CandidateRiskNewsTests(unittest.TestCase):
     def test_missing_short_interest_metrics_remain_unknown(self):
         self.assertEqual(rn.derive_risk_status("CHECKED", [], False, True), "UNKNOWN")
         self.assertEqual(rn.derive_risk_status("NO_RESULTS", [], True, True), "NO_RESULTS")
+        self.assertEqual(rn.derive_risk_status("CHECKED", [], True, True, False), "UNKNOWN")
         self.assertEqual(rn.derive_risk_status("CHECKED", ["fda"], True, True), "REVIEW")
 
     def test_google_news_rss_filters_old_items_and_extracts_source(self):

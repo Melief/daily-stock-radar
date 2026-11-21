@@ -88,14 +88,24 @@ def main():
     if not endpoint or not secret:
         raise RuntimeError("Missing GitHub variable VYUS_GS_WEBAPP_URL or secret VYUS_GS_SECRET.")
 
-    tickers = fetch_tickers()
+    print("VYUS stage 1/2: fetching and parsing StockAnalysis holdings.", flush=True)
+    try:
+        tickers = fetch_tickers()
+    except Exception as exc:
+        raise RuntimeError(f"StockAnalysis fetch/parse stage failed: {exc}") from exc
+    print(f"VYUS stage 1/2 complete: {len(tickers)} tickers retrieved.", flush=True)
+
     payload = json.dumps({"secret": secret, "tickers": tickers}).encode("utf-8")
     req = Request(endpoint, data=payload, headers={"Content-Type": "application/json"}, method="POST")
-    with urlopen(req, timeout=45) as response:
-        result = json.loads(response.read().decode("utf-8"))
+    print("VYUS stage 2/2: posting holdings to Google Apps Script.", flush=True)
+    try:
+        with urlopen(req, timeout=45) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        raise RuntimeError(f"Google Apps Script POST stage failed: {exc}") from exc
 
     if not result.get("success") or result.get("count") != EXPECTED_COUNT:
-        raise RuntimeError(f"Apps Script rejected the import: {result}")
+        raise RuntimeError(f"Google Apps Script response validation failed: {result}")
     print(f"SUCCESS: imported {result['count']} VYUS tickers into {result.get('sheet', 'target sheet')}.")
     print(", ".join(tickers))
 

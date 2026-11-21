@@ -107,7 +107,7 @@ def fetch_google_news(query: str, relevance_terms: list[str] | None = None) -> l
     return parse_google_news_rss(xml_text, relevance_terms=relevance_terms)
 
 
-def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
+def _normalise_price_history(frame: pd.DataFrame) -> pd.DataFrame:
     if frame is None or frame.empty:
         raise ValueError("geen OHLC-data ontvangen")
     data = frame.copy()
@@ -127,7 +127,11 @@ def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
     data = data[~data.index.duplicated(keep="last")].sort_index()
     for column in required:
         data[column] = pd.to_numeric(data[column], errors="coerce")
-    data = data.dropna(subset=required)
+    return data.dropna(subset=required)
+
+
+def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
+    data = _normalise_price_history(frame)
     if len(data) < 22:
         raise ValueError(f"onvoldoende historie voor ATR/gap: {len(data)} sessies")
     actual_date = data.index[-1].strftime("%Y-%m-%d")
@@ -154,6 +158,37 @@ def calculate_price_risk(frame: pd.DataFrame, expected_date: str) -> dict:
         "max_overnight_gap_20d_pct": round(max_gap_20d, 2),
     }
 
+
+def calculate_history_extremes(frame: pd.DataFrame, expected_date: str) -> dict:
+    data = _normalise_price_history(frame)
+    actual_date = data.index[-1].strftime("%Y-%m-%d")
+    if actual_date != expected_date:
+        raise ValueError(f"koersdata loopt achter: verwacht {expected_date}, ontvangen {actual_date}")
+    close = float(data["Close"].iloc[-1])
+    ath_position = int(data["High"].to_numpy().argmax())
+    ath = float(data["High"].iloc[ath_position])
+    result = {
+        "history_date": actual_date,
+        "history_sessions": int(len(data)),
+        "high_52w": "",
+        "low_52w": "",
+        "distance_to_52w_high_pct": "",
+        "all_time_high": round(ath, 4),
+        "all_time_high_date": data.index[ath_position].strftime("%Y-%m-%d"),
+        "distance_to_ath_pct": round((ath - close) / ath * 100.0, 2) if ath > 0 else "",
+        "history_extremes_status": "PARTIAL",
+    }
+    if len(data) >= 252:
+        recent = data.tail(252)
+        high_52w = float(recent["High"].max())
+        low_52w = float(recent["Low"].min())
+        result.update({
+            "high_52w": round(high_52w, 4),
+            "low_52w": round(low_52w, 4),
+            "distance_to_52w_high_pct": round((high_52w - close) / high_52w * 100.0, 2) if high_52w > 0 else "",
+            "history_extremes_status": "FULL",
+        })
+    return result
 
 def _earnings_date(info: dict, today: datetime | None = None) -> str:
     today = (today or datetime.now(timezone.utc)).date()

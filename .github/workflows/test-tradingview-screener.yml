@@ -2,6 +2,12 @@ name: Update TradingView screener tickers
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/test-tradingview-screener.yml"
+      - "scripts/update_tradingview_screeners.py"
+      - "tv_screener_urls.txt"
   schedule:
     # 21:45 Amsterdam; twee UTC-momenten met lokale-tijdcheck voor zomer/wintertijd.
     - cron: '45 19 * * 1-5'

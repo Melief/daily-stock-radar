@@ -1,0 +1,42 @@
+"""Tests for DSR stop and 2R calculations."""
+import unittest
+
+from scripts import entry_risk as er
+
+
+class EntryRiskTests(unittest.TestCase):
+    def test_long_stop_risk_and_2r_target(self):
+        result = er.calculate_entry_risk("LONG", 100, 95, 102, "2026-11-20", 1000000)
+        self.assertEqual(result["risk_per_share"], 5)
+        self.assertEqual(result["risk_pct"], 5)
+        self.assertEqual(result["target_2r"], 110)
+        self.assertEqual(result["breakout_reference_status"], "ONDER_20D_PIVOT")
+        self.assertEqual(result["action"], "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT")
+
+    def test_short_stop_risk_and_2r_target(self):
+        result = er.calculate_entry_risk("SHORT", 100, 105, 95, "2026-11-20", 1000000,
+                                         news_status="CHECKED", borrow_status="AVAILABLE")
+        self.assertEqual(result["risk_per_share"], 5)
+        self.assertEqual(result["risk_pct"], 5)
+        self.assertEqual(result["target_2r"], 90)
+        self.assertEqual(result["breakout_reference_status"], "BOVEN_20D_SUPPORT")
+        self.assertEqual(result["action"], "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT")
+
+    def test_invalid_stop_is_not_used(self):
+        result = er.calculate_entry_risk("LONG", 100, 105, 110, "2026-11-20", 1000)
+        self.assertEqual(result["entry_status"], "ONGELDIGE_STOP")
+        self.assertEqual(result["target_2r"], "")
+
+    def test_missing_stop_remains_unknown(self):
+        result = er.calculate_entry_risk("SHORT", 100, None, 90, "2026-11-20", 1000)
+        self.assertEqual(result["entry_status"], "ONBEKEND_STOP_OF_ENTRY")
+        self.assertEqual(result["action"], "WACHTEN OP BEVESTIGING")
+
+    def test_short_without_borrow_never_gets_entry_action(self):
+        result = er.calculate_entry_risk("SHORT", 100, 105, 95, "2026-11-20", 1000,
+                                         news_status="CHECKED", borrow_status="ONBEKEND")
+        self.assertEqual(result["action"], "GEEN BEVESTIGDE BORROW")
+
+
+if __name__ == "__main__":
+    unittest.main()

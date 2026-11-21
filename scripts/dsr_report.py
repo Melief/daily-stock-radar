@@ -261,6 +261,7 @@ def build_report() -> tuple[str, dict]:
         "",
         "## 3. Long",
         f"Technisch gekwalificeerd: **{long_tech_count}**. Fundamenteel PASS: **{fundamental_status.get('passed', 0)}**; "
+        f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**. "
         f"SW PASS: **{sw_status.get('passed', 0)}**; SW uitgesloten: **{sw_status.get('excluded_sw', 0)}**; "
         f"onbekend: **{sw_status.get('unknown', 0)}**. Goedgekeurd voor verdere Long-beoordeling: **{len(long_candidates)}**.",
         _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Close", "20d pivot-ref", "RVOL 5/21", "Nieuws"], long_table),

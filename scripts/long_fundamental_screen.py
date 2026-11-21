@@ -67,7 +67,8 @@ def evaluate_fundamentals(info: dict, sector: str = "", industry: str = "") -> d
     else:
         status = "PASS"
 
-    biotech_review = "REVIEW" if "biotech" in str(industry).lower() else "NVT"
+    industry_text = str(industry).lower()
+    biotech_review = "REVIEW" if ("biotech" in industry_text or "drug manufacturers" in industry_text) else "NVT"
     return {
         "fundamental_status": status,
         "checks": checks,

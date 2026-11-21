@@ -33,6 +33,24 @@ class TechnicalScoreTests(unittest.TestCase):
         self.assertEqual(result["long_score"], 5)
         self.assertEqual(result["status"], "OK")
 
+    def test_relative_strength_compares_only_with_qqq(self):
+        ha = {"above_sma20": "False", "above_sma50": "False", "rvol_5_21": "1.5"}
+        long_price = {
+            "above_sma20": True, "above_sma50": True,
+            "momentum_21d_pct": 6.0, "higher_highs_higher_lows": True,
+            "lower_highs_lower_lows": False,
+        }
+        long_result = ts.score_components(ha, long_price, 7.0, 5.0)
+        self.assertEqual(long_result["long_components"]["relative_strength"], True)
+
+        short_price = {
+            "above_sma20": False, "above_sma50": False,
+            "momentum_21d_pct": -6.0, "higher_highs_higher_lows": False,
+            "lower_highs_lower_lows": True,
+        }
+        short_result = ts.score_components(ha, short_price, -7.0, -5.0)
+        self.assertEqual(short_result["short_components"]["relative_strength"], True)
+
     def test_short_score_is_independent_and_mirrored(self):
         ha = {"above_sma20": "True", "above_sma50": "True", "rvol_5_21": "1.3"}
         price = {"above_sma20": False, "above_sma50": False,

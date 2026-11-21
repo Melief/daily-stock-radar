@@ -14,7 +14,6 @@ class CandidateSessionDateTests(unittest.TestCase):
             technical = root / "technical.csv"
             long_sw = root / "long_sw.csv"
             borrow = root / "borrow.csv"
-            risk = root / "risk.csv"
             technical.write_text(
                 "ticker,score_status,short_score,sma20,sma50,score_date,sector,industry\n"
                 "AAA,OK,1,110,100,2026-11-20,Technology,Software\n",
@@ -26,9 +25,8 @@ class CandidateSessionDateTests(unittest.TestCase):
                 encoding="utf-8",
             )
             borrow.write_text("ticker,status,available_shares,fee_rate_pct\n", encoding="utf-8")
-            risk.write_text("ticker,candidate_type\n", encoding="utf-8")
             with patch.object(rn, "TECHNICAL", technical), patch.object(rn, "LONG_SW", long_sw), \
-                 patch.object(rn, "BORROW", borrow), patch.object(rn, "RISK_NEWS", risk):
+                 patch.object(rn, "BORROW", borrow):
                 candidates = rn.load_candidates()
         self.assertEqual(len(candidates), 1)
         self.assertEqual(candidates[0]["candidate_type"], "LONG")

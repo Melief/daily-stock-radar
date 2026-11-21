@@ -17,8 +17,8 @@ class EntryRiskTests(unittest.TestCase):
         self.assertEqual(result["action"], "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT")
 
     def test_long_buy_zone_is_limited_to_five_percent_above_reference(self):
-        within = er.calculate_entry_risk("LONG", 104, 95, 100, "2026-11-20", 1000000, consolidation_pivot_status="OK", current_ha_close=101)
-        extended = er.calculate_entry_risk("LONG", 106, 95, 100, "2026-11-20", 1000000, consolidation_pivot_status="OK", current_ha_close=101)
+        within = er.calculate_entry_risk("LONG", 104, 95, 100, "2026-11-20", 1000000, consolidation_pivot_status="OK", current_ha_close=101, current_close=101)
+        extended = er.calculate_entry_risk("LONG", 106, 95, 100, "2026-11-20", 1000000, consolidation_pivot_status="OK", current_ha_close=101, current_close=101)
         self.assertEqual(within["long_buy_zone_status"], "WITHIN_5PCT")
         self.assertEqual(extended["long_buy_zone_status"], "EXTENDED")
 
@@ -28,12 +28,20 @@ class EntryRiskTests(unittest.TestCase):
         self.assertEqual(result["breakout_reference_status"], "GEEN_BREAKOUT")
         self.assertEqual(result["long_buy_zone_status"], "NOT_BROKEN")
 
+    def test_official_close_confirms_current_breakout_not_heikin_ashi_close(self):
+        result = er.calculate_entry_risk(
+            "LONG", 104, 95, 100, "2026-11-20", 1800,
+            consolidation_pivot_status="OK", current_ha_close=99, current_close=101,
+        )
+        self.assertEqual(result["breakout_reference_status"], "BREAKOUT_BEVESTIGD")
+        self.assertEqual(result["breakout_reference_close"], 104)
+        self.assertEqual(result["breakout_reference_ha_close"], 99)
     def test_historical_breakout_that_falls_back_below_ha_pivot_is_not_active(self):
         result = er.calculate_entry_risk("LONG", 99, 95, 100, "2026-11-20", 1800,
                                          consolidation_pivot_status="OK",
                                          prior_breakout_date="2026-11-18",
                                          prior_breakout_close=102, prior_breakout_ha_close=101,
-                                         current_ha_close=99)
+                                         current_ha_close=99, current_close=99)
         self.assertEqual(result["breakout_reference_status"], "BREAKOUT_TERUGGEVALLEN")
         self.assertEqual(result["long_buy_zone_status"], "NOT_BROKEN")
 
@@ -43,7 +51,7 @@ class EntryRiskTests(unittest.TestCase):
             consolidation_pivot_status="OK",
             prior_breakout_date="2026-11-18",
             prior_breakout_close=102.5,
-            prior_breakout_volume=3200, current_ha_close=101.5, prior_breakout_ha_close=102.8,
+            prior_breakout_volume=3200, current_ha_close=101.5, prior_breakout_ha_close=102.8, current_close=101.5,
         )
         self.assertEqual(result["breakout_reference_status"], "BREAKOUT_BEVESTIGD")
         self.assertEqual(result["breakout_reference_date"], "2026-11-18")
@@ -109,7 +117,7 @@ class EntryRiskTests(unittest.TestCase):
             consolidation_pivot_status="OK",
             prior_breakout_date="2026-11-18",
             prior_breakout_close=None,
-            prior_breakout_volume=None, current_ha_close=101, prior_breakout_ha_close=101.5,
+            prior_breakout_volume=None, current_ha_close=101, prior_breakout_ha_close=101.5, current_close=101,
         )
         self.assertEqual(result["breakout_reference_status"], "BREAKOUT_BEVESTIGD")
         self.assertEqual(result["breakout_reference_date"], "2026-11-18")
@@ -119,7 +127,7 @@ class EntryRiskTests(unittest.TestCase):
     def test_missing_borrow_does_not_override_technical_entry_status(self):
         result = er.calculate_entry_risk("SHORT", 100, 105, 95, "2026-11-20", 1000,
                                          news_status="UNKNOWN", borrow_status="ONBEKEND",
-                                         consolidation_pivot_status="OK", current_ha_close=94)
+                                         consolidation_pivot_status="OK", current_ha_close=94, current_close=94)
         self.assertEqual(result["breakout_reference_status"], "DOORBRAAK_BEVESTIGD")
         self.assertEqual(result["action"], "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT")
 
@@ -145,7 +153,7 @@ class EntryRiskTests(unittest.TestCase):
             "LONG", 100, 105, 95, "2026-11-20", 1200,
             consolidation_pivot_status="OK",
             consolidation_pivot_date="2026-11-10",
-            current_ha_close=96,
+            current_ha_close=96, current_close=96,
         )
         self.assertEqual(result["entry_status"], "ONGELDIGE_STOP")
         self.assertEqual(result["consolidation_pivot_status"], "OK")

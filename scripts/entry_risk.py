@@ -41,7 +41,7 @@ def evaluate_pivot_status(side, entry, pivot, score_date, volume,
                          consolidation_pivot_status, consolidation_pivot_date,
                          prior_breakout_date, prior_breakout_close,
                          prior_breakout_volume, current_ha_close,
-                         prior_breakout_ha_close):
+                         prior_breakout_ha_close, current_close):
     pivot_status = "ONBEKEND"
     distance = ""
     breakout_date = ""
@@ -57,7 +57,7 @@ def evaluate_pivot_status(side, entry, pivot, score_date, volume,
     elif pivot is not None and pivot > 0 and consolidation_pivot_status == "OK":
         if side == "LONG":
             distance = (entry / pivot - 1) * 100 if entry is not None else ""
-            broken = current_ha_close is not None and current_ha_close > pivot
+            broken = current_close is not None and current_close > pivot
             prior_broken = bool(prior_breakout_date)
             pivot_status = ("BREAKOUT_BEVESTIGD" if broken else
                             "BREAKOUT_TERUGGEVALLEN" if prior_broken else "GEEN_BREAKOUT")
@@ -70,7 +70,7 @@ def evaluate_pivot_status(side, entry, pivot, score_date, volume,
                         "WITHIN_5PCT" if distance <= 5 else "EXTENDED")
         else:
             distance = (pivot / entry - 1) * 100 if entry is not None and entry > 0 else ""
-            broken = current_ha_close is not None and current_ha_close < pivot
+            broken = current_close is not None and current_close < pivot
             prior_broken = bool(prior_breakout_date)
             pivot_status = ("DOORBRAAK_BEVESTIGD" if broken else
                             "DOORBRAAK_TERUGGEVALLEN" if prior_broken else "GEEN_DOORBRAAK")
@@ -103,10 +103,11 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
                           nearest_resistance=None, consolidation_pivot_status="ONBEKEND",
                           consolidation_pivot_date="", prior_breakout_date="",
                           prior_breakout_close=None, prior_breakout_volume=None,
-                          current_ha_close=None, prior_breakout_ha_close=None) -> dict:
+                          current_ha_close=None, prior_breakout_ha_close=None, current_close=None) -> dict:
     entry, stop, pivot = number(entry), number(stop), number(pivot)
     volume = number(volume)
     current_ha_close = number(current_ha_close)
+    current_close = number(current_close)
     prior_breakout_ha_close = number(prior_breakout_ha_close)
     prior_breakout_date = clean_text(prior_breakout_date)
     consolidation_pivot_date = clean_text(consolidation_pivot_date)
@@ -119,7 +120,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
     pivot_result = evaluate_pivot_status(
         side, pivot_entry, pivot, score_date, volume, consolidation_pivot_status,
         consolidation_pivot_date, prior_breakout_date, prior_breakout_close,
-        prior_breakout_volume, current_ha_close, prior_breakout_ha_close,
+        prior_breakout_volume, current_ha_close, prior_breakout_ha_close, current_close,
     )
     if entry is None or entry <= 0 or stop is None:
         return {
@@ -218,6 +219,7 @@ def build_rows() -> list[dict]:
             risk_row.get("prior_breakout_close"),
             risk_row.get("prior_breakout_volume"),
             risk_row.get("current_ha_close"), risk_row.get("prior_breakout_ha_close"),
+            risk_row.get("current_close"),
         )
         output.append({
             "ticker": ticker,
@@ -281,7 +283,7 @@ def main() -> int:
         "unknown": unknown,
         "invalid_stop_or_2r": invalid,
         "unknown_or_invalid": unknown + invalid,
-        "note": "Consolidation pivot is calculated from completed-session Heikin-Ashi candles; actual close and volume are reported separately for breakout/breakdown confirmation.",
+        "note": "Consolidation pivot is calculated from completed-session regular OHLC candles; official close and volume confirm breakout/breakdown. HA close is supplemental audit data.",
     }
     write_status(payload)
     print(f"Entry risk: {payload['stop_2r_calculated']} stop/2R berekend, {unknown} onbekend, {invalid} ongeldig.")

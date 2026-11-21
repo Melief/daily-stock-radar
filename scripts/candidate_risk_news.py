@@ -410,6 +410,7 @@ def _fetch_candidate(candidate: dict) -> dict:
         "_short_metrics_ok": short_metrics_ok,
         "_earnings_date_known": earnings_date_known,
         "_history_ok": history_extremes.get("history_extremes_status") == "FULL",
+        "_pivot_ok": history_extremes.get("consolidation_pivot_status") == "OK",
     }
 
 
@@ -500,6 +501,7 @@ def main() -> int:
     unknown = sum(
         row["risk_status"] == "UNKNOWN"
         or not row["_history_ok"]
+        or not row["_pivot_ok"]
         or (row["candidate_type"] == "SHORT" and
             (not row["_info_ok"] or not row["_price_ok"] or not row["_short_metrics_ok"] or not row["_earnings_date_known"]))
         for row in results
@@ -517,6 +519,7 @@ def main() -> int:
         "limitations": [
             "NO_RESULTS betekent geen geïndexeerde Google News RSS-resultaten binnen 7 dagen; het bewijst niet dat er geen nieuws of gebeurtenisrisico bestaat.",
             "Short interest, days-to-cover, ATR en gaps zijn bronafhankelijke ruwe gegevens; er worden geen niet-afgesproken risicodrempels toegepast.",
+            "Een kandidaat zonder bevestigde consolidatiepivot volgens de 5–21-sessieregel blijft ONBEKEND en maakt de risicocontrole PARTIAL.",
         ],
     }
     write_status(payload)

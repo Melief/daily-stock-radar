@@ -93,7 +93,7 @@ jobs:
           fi
 
       - name: Mark incomplete TradingView refresh as failed
-        if: steps.retrieve.outcome == 'failure'
+        if: always() && steps.retrieve.outcome == 'failure'
         run: |
           echo "TradingView refresh is PARTIAL: at least one screener failed. Any successfully retrieved source CSV was committed; inspect the logs."
           exit 1

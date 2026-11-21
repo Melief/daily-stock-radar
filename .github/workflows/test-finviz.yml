@@ -108,3 +108,9 @@ jobs:
           path: finviz_tickers.csv
           if-no-files-found: warn
           retention-days: 7
+
+      - name: Mark source refresh as partial when a fetch failed
+        if: always() && (steps.finviz.outcome == 'failure' || steps.blue_sky.outcome == 'failure')
+        run: |
+          echo "DSR source refresh is PARTIAL: Finviz or Blue Sky fetch failed. Other successful source updates and Sheets syncs were preserved."
+          exit 1

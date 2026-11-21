@@ -113,6 +113,20 @@ def select_ha_short_signals(ha_rows: list[dict]) -> list[dict]:
     return [row for row in ha_rows if as_bool(row.get("ha_pivot_down")) is True]
 
 
+def pivot_audit_cells(entry: dict) -> list:
+    """Return consolidation-pivot status separately from breakout confirmation."""
+    return [
+        entry.get("consolidation_pivot", ""),
+        entry.get("consolidation_pivot_date", ""),
+        entry.get("consolidation_pivot_status", "ONBEKEND"),
+        entry.get("breakout_reference_status", "ONBEKEND"),
+        entry.get("breakout_reference_date", ""),
+        entry.get("breakout_reference_close", ""),
+        entry.get("breakout_reference_ha_close", ""),
+        entry.get("breakout_reference_volume", ""),
+    ]
+
+
 def _table(headers: list[str], rows: list[list[str]]) -> str:
     if not rows:
         return "_Geen kandidaten._"

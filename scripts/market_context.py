@@ -150,7 +150,7 @@ def update_run_status(payload: dict) -> None:
     run_status["market_context_status"] = payload["status"]
     pending = run_status.get("pending_components", [])
     component = "SPX/QQQ market context"
-    if payload["status"] == "FULL":
+    if payload.get("data_status") == "FULL":
         run_status["pending_components"] = [item for item in pending if item != component]
     elif component not in pending:
         run_status["pending_components"] = pending + [component]
@@ -201,7 +201,7 @@ def main() -> int:
     payload = build_context(session, results, errors)
     write_context(payload)
     print(f"Marktcontext {payload['status']} opgeslagen: {OUTPUT.relative_to(ROOT)}")
-    return 0 if payload["status"] == "FULL" else 1
+    return 0 if payload.get("data_status") == "FULL" else 1
 
 
 if __name__ == "__main__":

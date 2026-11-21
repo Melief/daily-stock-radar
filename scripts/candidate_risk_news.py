@@ -552,8 +552,6 @@ def main() -> int:
     unknown = sum(
         not row["_history_ok"]
         or not row["_pivot_ok"]
-        or (row["candidate_type"] == "SHORT" and
-            (not row["_info_ok"] or not row["_price_ok"] or not row["_short_metrics_ok"] or not row["_earnings_date_known"]))
         for row in results
     )
     review = sum(row["risk_status"] == "REVIEW" for row in results)

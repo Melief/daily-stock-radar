@@ -103,7 +103,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
     elif side == "LONG":
         distance = (entry / pivot - 1) * 100
         broken = entry > pivot
-        pivot_status = "BREAKOUT_BEvestigd" if broken else "GEEN_BREAKOUT"
+        pivot_status = "BREAKOUT_BEVESTIGD" if broken else "GEEN_BREAKOUT"
         breakout_date = score_date if broken else ""
         breakout_close = entry if broken else ""
         breakout_volume = volume if broken and volume is not None else ""
@@ -112,7 +112,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
     else:
         distance = (pivot / entry - 1) * 100
         broken = entry < pivot
-        pivot_status = "DOORBRAAK_BEvestigd" if broken else "GEEN_DOORBRAAK"
+        pivot_status = "DOORBRAAK_BEVESTIGD" if broken else "GEEN_DOORBRAAK"
         breakout_date = score_date if broken else ""
         breakout_close = entry if broken else ""
         breakout_volume = volume if broken and volume is not None else ""

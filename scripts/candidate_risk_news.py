@@ -503,15 +503,13 @@ def load_candidates() -> list[dict]:
         if sma20 is None or sma50 is None or sma20 >= sma50:
             continue
         loan = borrow_map.get(ticker)
-        if loan is None or str(loan.get("status", "")) != "AVAILABLE":
-            continue
         candidates.append({
             "candidate_type": "SHORT", "ticker": ticker,
             "sector": row.get("sector", ""), "industry": row.get("industry", ""),
             "technical_score": int(short_score), "score_date": str(row.get("score_date", "")),
-            "borrow_status": loan.get("status", ""),
-            "available_shares": loan.get("available_shares", ""),
-            "borrow_fee_rate_pct": loan.get("fee_rate_pct", ""),
+            "borrow_status": loan.get("status", "ONBEKEND") if loan is not None else "ONBEKEND",
+            "available_shares": loan.get("available_shares", "") if loan is not None else "",
+            "borrow_fee_rate_pct": loan.get("fee_rate_pct", "") if loan is not None else "",
         })
     return candidates
 
@@ -552,8 +550,7 @@ def main() -> int:
     pd.DataFrame(public_rows).to_csv(OUTPUT, index=False)
 
     unknown = sum(
-        row["risk_status"] == "UNKNOWN"
-        or not row["_history_ok"]
+        not row["_history_ok"]
         or not row["_pivot_ok"]
         or (row["candidate_type"] == "SHORT" and
             (not row["_info_ok"] or not row["_price_ok"] or not row["_short_metrics_ok"] or not row["_earnings_date_known"]))

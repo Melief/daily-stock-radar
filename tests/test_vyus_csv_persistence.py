@@ -30,6 +30,21 @@ class VYUSCsvTests(unittest.TestCase):
             self.assertEqual(output.read_text(encoding="utf-8"), "ticker\nOLD\n")
 
 
+class VYUSFetchTests(unittest.TestCase):
+    def test_fetch_uses_browser_headers_accepted_by_stockanalysis(self):
+        html = "<table><tr><th>Symbol</th></tr>" + "".join(
+            f"<tr><td>T{i:02d}</td></tr>" for i in range(25)
+        ) + "</table>"
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = html.encode()
+        with patch.object(vyus, "urlopen", return_value=response) as mocked:
+            tickers = vyus.fetch_tickers()
+        request = mocked.call_args.args[0]
+        self.assertEqual(len(tickers), 25)
+        self.assertIn("Chrome/126.0", request.get_header("User-agent"))
+        self.assertEqual(request.get_header("Accept-language"), "en-US,en;q=0.9")
+
+
 class VYUSMainTests(unittest.TestCase):
     def _environment(self):
         return patch.dict("os.environ", {

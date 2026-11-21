@@ -57,7 +57,14 @@ class TableParser(HTMLParser):
 
 
 def fetch_tickers():
-    req = Request(SOURCE_URL, headers={"User-Agent": "Mozilla/5.0"})
+    req = Request(SOURCE_URL, headers={
+        "User-Agent": (
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "Chrome/126.0 Safari/537.36"
+        ),
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    })
     with urlopen(req, timeout=30) as response:
         html = response.read().decode("utf-8", errors="replace")
 

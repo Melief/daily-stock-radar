@@ -72,6 +72,19 @@ class EntryRiskTests(unittest.TestCase):
         self.assertEqual(result["entry_status"], "ONBEKEND_STOP_OF_ENTRY")
         self.assertEqual(result["action"], "WACHTEN OP BEVESTIGING")
 
+    def test_missing_prior_breakout_values_do_not_crash_output_rounding(self):
+        result = er.calculate_entry_risk(
+            "LONG", 104, 95, 100, "2026-11-20", 1800,
+            consolidation_pivot_status="OK",
+            prior_breakout_date="2026-11-18",
+            prior_breakout_close=None,
+            prior_breakout_volume=None,
+        )
+        self.assertEqual(result["breakout_reference_status"], "BREAKOUT_BEVESTIGD")
+        self.assertEqual(result["breakout_reference_date"], "2026-11-18")
+        self.assertEqual(result["breakout_reference_close"], "")
+        self.assertEqual(result["breakout_reference_volume"], "")
+
     def test_short_without_borrow_never_gets_entry_action(self):
         result = er.calculate_entry_risk("SHORT", 100, 105, 95, "2026-11-20", 1000,
                                          news_status="CHECKED", borrow_status="ONBEKEND")

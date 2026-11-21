@@ -50,15 +50,42 @@ class MarketContextTests(unittest.TestCase):
         self.assertEqual(result["data_status"], "PARTIAL")
         self.assertEqual(result["market_regime"], "ONBEKEND")
 
-    def test_does_not_invent_undefined_risk_regime(self):
+    def test_risk_on_when_both_indices_are_above_both_smas(self):
         session = date(2026, 11, 20)
         spx = mc.analyse_symbol(self.frame(0.5), "SPX", session)
         qqq = mc.analyse_symbol(self.frame(1.0), "QQQ", session)
         result = mc.build_context(session, {"SPX": spx, "QQQ": qqq}, {})
         self.assertEqual(result["data_status"], "FULL")
+        self.assertEqual(result["market_regime"], "RISK-ON")
+        self.assertEqual(result["status"], "FULL")
+
+    def test_risk_off_when_both_indices_are_below_both_smas(self):
+        session = date(2026, 11, 20)
+        spx = mc.analyse_symbol(self.frame(-0.5), "SPX", session)
+        qqq = mc.analyse_symbol(self.frame(-1.0), "QQQ", session)
+        result = mc.build_context(session, {"SPX": spx, "QQQ": qqq}, {})
+        self.assertEqual(result["market_regime"], "RISK-OFF")
+
+    def test_mixed_positions_are_neutral(self):
+        session = date(2026, 11, 20)
+        spx = mc.analyse_symbol(self.frame(0.5), "SPX", session)
+        qqq = mc.analyse_symbol(self.frame(-1.0), "QQQ", session)
+        result = mc.build_context(session, {"SPX": spx, "QQQ": qqq}, {})
+        self.assertEqual(result["market_regime"], "NEUTRAAL")
+
+    def test_missing_symbol_keeps_regime_unknown(self):
+        session = date(2026, 11, 20)
+        spx = mc.analyse_symbol(self.frame(0.5), "SPX", session)
+        result = mc.build_context(session, {"SPX": spx}, {"QQQ": "data ontbreekt"})
+        self.assertEqual(result["data_status"], "PARTIAL")
         self.assertEqual(result["market_regime"], "ONBEKEND")
-        self.assertIsNotNone(result["qqq_minus_spx_momentum_21d_pct"])
-        self.assertEqual(result["status"], "PARTIAL")
+
+    def test_ema_momentum_classification(self):
+        self.assertEqual(mc.ema_momentum_status(110, 105, 5, 4), "BULLISH")
+        self.assertEqual(mc.ema_momentum_status(90, 95, 5, 4), "BEARISH")
+        self.assertEqual(mc.ema_momentum_status(110, 105, 4, 5), "BEWARE")
+        self.assertEqual(mc.ema_momentum_status(90, 95, 4, 5), "BEWARE")
+        self.assertEqual(mc.ema_momentum_status(100, 100, 0, 0), "BEWARE")
 
     def test_multilevel_yfinance_columns_are_normalised(self):
         frame = self.frame()

@@ -152,8 +152,8 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         "breakout_reference_status": pivot_status,
         "target_feasibility": target_feasibility,
         "breakout_reference_date": breakout_date,
-        "breakout_reference_close": round(breakout_close, 4) if breakout_close != "" else "",
-        "breakout_reference_volume": int(breakout_volume) if breakout_volume != "" else "",
+        "breakout_reference_close": round(breakout_close, 4) if breakout_close is not None and breakout_close != "" else "",
+        "breakout_reference_volume": int(breakout_volume) if breakout_volume is not None and breakout_volume != "" else "",
         "entry_status": "STOP_2R_BEREKEND",
         "action": action,
     }

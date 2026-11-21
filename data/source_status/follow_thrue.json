@@ -1,7 +1,7 @@
 {
   "source_id": "follow_thrue",
-  "last_attempt_status": "success",
+  "last_attempt_status": "failure",
   "last_attempt_at": "2026-11-21T18:57:05+00:00",
-  "last_success_at": "2026-11-21T18:57:05+00:00",
-  "detail": "3 gevalideerde TradingView-tickers opgehaald."
+  "last_success_at": "2026-11-08T07:46:03+00:00",
+  "detail": "TradingView page requires login to view registered-user filters; last validated CSV restored."
 }

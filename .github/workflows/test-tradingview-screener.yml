@@ -60,6 +60,8 @@ jobs:
       - name: Retrieve both TradingView screeners
         id: retrieve
         if: steps.schedule.outputs.run == 'true'
+        env:
+          TRADINGVIEW_STORAGE_STATE_B64: ${{ secrets.TRADINGVIEW_STORAGE_STATE_B64 }}
         run: python scripts/update_tradingview_screeners.py
 
       - name: Commit successfully retrieved ticker lists

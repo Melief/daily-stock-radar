@@ -1,9 +1,11 @@
 """Tests that TradingView sources are attempted independently."""
 import unittest
 import csv
+import base64
+import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from scripts import update_tradingview_screeners as tv
 
@@ -84,6 +86,37 @@ class TradingViewPartialRefreshTests(unittest.TestCase):
             with output.open(encoding="utf-8-sig", newline="") as f:
                 rows = list(csv.DictReader(f))
             self.assertEqual(rows, [])
+
+
+    def test_login_restricted_screen_is_not_marked_as_success(self):
+        message = (
+            "Log in to see the results. "
+            "This screen is using some filters for registered users only."
+        )
+        with self.assertRaisesRegex(RuntimeError, "verbergt screenerresultaten achter een login"):
+            tv.ensure_results_visible("Simpel Monsters", message)
+
+    def test_unrestricted_empty_screen_is_allowed(self):
+        tv.ensure_results_visible("Simpel Monsters", "No symbols match your criteria")
+
+
+    def test_storage_state_secret_is_loaded_without_logging_contents(self):
+        browser = MagicMock()
+        state = {"cookies": [], "origins": []}
+        encoded = base64.b64encode(json.dumps(state).encode("utf-8")).decode("ascii")
+        with patch.dict(tv.os.environ, {"TRADINGVIEW_STORAGE_STATE_B64": encoded}):
+            context = tv.create_authenticated_context(browser)
+        browser.new_context.assert_called_once_with(
+            storage_state=state, viewport={"width": 1600, "height": 1000}
+        )
+        self.assertIs(context, browser.new_context.return_value)
+
+    def test_missing_storage_state_secret_uses_public_context(self):
+        browser = MagicMock()
+        with patch.dict(tv.os.environ, {}, clear=True):
+            context = tv.create_authenticated_context(browser)
+        browser.new_context.assert_called_once_with(viewport={"width": 1600, "height": 1000})
+        self.assertIs(context, browser.new_context.return_value)
 
 
 if __name__ == "__main__":

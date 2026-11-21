@@ -1,20 +1,13 @@
 {
   "status": "PARTIAL",
   "candidate_count": 26,
-  "checked": 2,
-  "unknown": 24,
-  "review_required": 9,
+  "checked": 12,
+  "unknown": 14,
+  "review_required": 8,
   "long_candidates": 8,
   "short_candidates": 18,
   "errors": [
-    "ASO: geen afgeronde sessies tot de verwachte datum",
-    "CBOE: geen afgeronde sessies tot de verwachte datum",
-    "CHD: geen afgeronde sessies tot de verwachte datum",
-    "EPAM: geen afgeronde sessies tot de verwachte datum",
-    "KNSA: geen afgeronde sessies tot de verwachte datum",
-    "PGNY: geen afgeronde sessies tot de verwachte datum",
-    "SPNT: geen afgeronde sessies tot de verwachte datum",
-    "VLTO: geen afgeronde sessies tot de verwachte datum"
+    "TRMD: HTTP Error 429: Too Many Requests"
   ],
   "limitations": [
     "NO_RESULTS betekent geen geïndexeerde Google News RSS-resultaten binnen 7 dagen; het bewijst niet dat er geen nieuws of gebeurtenisrisico bestaat.",

@@ -1,7 +1,7 @@
 {
   "source_id": "follow_thrue",
-  "last_attempt_status": "failure",
-  "last_attempt_at": "2026-11-21T17:48:31+00:00",
-  "last_success_at": "2026-11-08T07:46:03+00:00",
-  "detail": "Last verified successful TradingView refresh: GitHub Actions run 42460044048. Latest refresh failed: no /global/scan results received; prior CSV retained."
+  "last_attempt_status": "success",
+  "last_attempt_at": "2026-11-21T18:49:10+00:00",
+  "last_success_at": "2026-11-21T18:49:10+00:00",
+  "detail": "17 TradingView-rows opgehaald."
 }

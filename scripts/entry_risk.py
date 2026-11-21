@@ -282,7 +282,7 @@ def main() -> int:
         "target_2r", "pivot_reference_20d", "consolidation_pivot",
         "consolidation_pivot_date", "consolidation_pivot_status", "distance_to_pivot_pct",
         "long_buy_zone_status", "breakout_reference_status", "breakout_reference_date",
-        "breakout_reference_close", "breakout_reference_volume", "nearest_support",
+        "breakout_reference_close", "breakout_reference_ha_close", "breakout_reference_volume", "nearest_support",
         "nearest_support_date", "nearest_resistance", "nearest_resistance_date",
         "target_feasibility", "borrow_status", "news_status", "entry_status", "action", "score_date",
     ]

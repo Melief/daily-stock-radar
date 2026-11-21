@@ -6,6 +6,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: vyus-holdings-refresh
+  cancel-in-progress: false
+
 jobs:
   vyus-to-csv:
     runs-on: ubuntu-latest

@@ -6,7 +6,6 @@ import concurrent.futures
 import email.utils
 import json
 import sys
-import time
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -161,6 +160,17 @@ def _earnings_date(info: dict) -> str:
     return ""
 
 
+def derive_risk_status(news_status: str, flags: list[str], short_metrics_ok: bool = True,
+                       price_ok: bool = True) -> str:
+    if flags:
+        return "REVIEW"
+    if news_status == "UNKNOWN" or not short_metrics_ok or not price_ok:
+        return "UNKNOWN"
+    if news_status == "NO_RESULTS":
+        return "NO_RESULTS"
+    return "CHECKED"
+
+
 def _fetch_candidate(candidate: dict) -> dict:
     ticker = candidate["ticker"]
     checked_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -202,9 +212,12 @@ def _fetch_candidate(candidate: dict) -> dict:
     shares_short = number(info.get("sharesShort"))
     shares_short_prior = number(info.get("sharesShortPriorMonth"))
     all_flags = sorted({flag for item in news for flag in item["event_flags"]})
-    risk_status = "REVIEW" if all_flags else (
-        "CHECKED" if news_status in {"CHECKED", "NO_RESULTS"} else "UNKNOWN"
+    short_metrics_ok = (
+        candidate["candidate_type"] != "SHORT"
+        or (short_float_pct is not None and short_ratio is not None)
     )
+    price_ok = candidate["candidate_type"] != "SHORT" or bool(price)
+    risk_status = derive_risk_status(news_status, all_flags, short_metrics_ok, price_ok)
     errors = [value for value in (info_error, news_error, price_error) if value]
     return {
         "candidate_type": candidate["candidate_type"],
@@ -233,6 +246,7 @@ def _fetch_candidate(candidate: dict) -> dict:
         "error": " | ".join(errors),
         "_info_ok": not bool(info_error),
         "_price_ok": not bool(price_error) if candidate["candidate_type"] == "SHORT" else True,
+        "_short_metrics_ok": short_metrics_ok,
     }
 
 
@@ -313,8 +327,9 @@ def main() -> int:
     pd.DataFrame(public_rows).to_csv(OUTPUT, index=False)
 
     unknown = sum(
-        row["news_status"] == "UNKNOWN"
-        or (row["candidate_type"] == "SHORT" and (not row["_info_ok"] or not row["_price_ok"]))
+        row["risk_status"] == "UNKNOWN"
+        or (row["candidate_type"] == "SHORT" and
+            (not row["_info_ok"] or not row["_price_ok"] or not row["_short_metrics_ok"]))
         for row in results
     )
     review = sum(row["risk_status"] == "REVIEW" for row in results)

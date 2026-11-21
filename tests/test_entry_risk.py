@@ -6,7 +6,7 @@ from scripts import entry_risk as er
 
 class EntryRiskTests(unittest.TestCase):
     def test_long_stop_risk_and_2r_target(self):
-        result = er.calculate_entry_risk("LONG", 100, 95, 102, "2026-11-20", 1000000)
+        result = er.calculate_entry_risk("LONG", 100, 95, 102, "2026-11-20", 1000000, consolidation_pivot_status="OK")
         self.assertEqual(result["risk_per_share"], 5)
         self.assertEqual(result["risk_pct"], 5)
         self.assertEqual(result["target_2r"], 110)
@@ -14,8 +14,8 @@ class EntryRiskTests(unittest.TestCase):
         self.assertEqual(result["action"], "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT")
 
     def test_long_buy_zone_is_limited_to_five_percent_above_reference(self):
-        within = er.calculate_entry_risk("LONG", 104, 95, 100, "2026-11-20", 1000000)
-        extended = er.calculate_entry_risk("LONG", 106, 95, 100, "2026-11-20", 1000000)
+        within = er.calculate_entry_risk("LONG", 104, 95, 100, "2026-11-20", 1000000, consolidation_pivot_status="OK")
+        extended = er.calculate_entry_risk("LONG", 106, 95, 100, "2026-11-20", 1000000, consolidation_pivot_status="OK")
         self.assertEqual(within["long_buy_zone_status"], "WITHIN_5PCT")
         self.assertEqual(extended["long_buy_zone_status"], "EXTENDED")
 
@@ -31,7 +31,7 @@ class EntryRiskTests(unittest.TestCase):
     def test_long_2r_target_is_compared_with_confirmed_resistance(self):
         result = er.calculate_entry_risk(
             "LONG", 100, 95, 102, "2026-11-20", 1000000,
-            news_status="CHECKED", nearest_resistance=108
+            news_status="CHECKED", nearest_resistance=108, consolidation_pivot_status="OK"
         )
         self.assertEqual(result["target_2r"], 110)
         self.assertEqual(result["target_feasibility"], "2R_DOEL_BOVEN_WEERSTAND")
@@ -39,13 +39,13 @@ class EntryRiskTests(unittest.TestCase):
     def test_short_2r_target_is_compared_with_confirmed_support(self):
         result = er.calculate_entry_risk(
             "SHORT", 100, 105, 95, "2026-11-20", 1000000,
-            news_status="CHECKED", borrow_status="AVAILABLE", nearest_support=92
+            news_status="CHECKED", borrow_status="AVAILABLE", nearest_support=92, consolidation_pivot_status="OK"
         )
         self.assertEqual(result["target_2r"], 90)
         self.assertEqual(result["target_feasibility"], "2R_DOEL_ONDER_STEUN")
 
     def test_missing_swing_level_keeps_target_feasibility_unknown(self):
-        result = er.calculate_entry_risk("LONG", 100, 95, 102, "2026-11-20", 1000000)
+        result = er.calculate_entry_risk("LONG", 100, 95, 102, "2026-11-20", 1000000, consolidation_pivot_status="OK")
         self.assertEqual(result["target_feasibility"], "ONBEKEND")
 
     def test_invalid_stop_is_not_used(self):

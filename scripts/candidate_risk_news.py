@@ -16,6 +16,8 @@ from pathlib import Path
 import pandas as pd
 import yfinance as yf
 
+from scripts.selection_rules import is_qualified_short_candidate
+
 ROOT = Path(__file__).resolve().parents[1]
 TECHNICAL = ROOT / "data" / "technical_scores.csv"
 LONG_SW = ROOT / "data" / "long_sw_status.csv"
@@ -386,10 +388,7 @@ def load_candidates() -> list[dict]:
     for _, row in technical.iterrows():
         ticker = str(row.get("ticker", "")).upper()
         short_score = number(row.get("short_score"))
-        sma20, sma50 = number(row.get("sma20")), number(row.get("sma50"))
-        if str(row.get("score_status", "")) != "OK" or short_score is None or short_score < 4:
-            continue
-        if sma20 is None or sma50 is None or sma20 >= sma50:
+        if not is_qualified_short_candidate(row, min_score=4):
             continue
         loan = borrow_map.get(ticker)
         if loan is None or str(loan.get("status", "")) != "AVAILABLE":

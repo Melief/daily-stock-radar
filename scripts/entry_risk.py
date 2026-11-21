@@ -225,12 +225,18 @@ def main() -> int:
     ]
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(rows, columns=columns).to_csv(OUTPUT, index=False)
-    unknown = sum(row["entry_status"] != "STOP_2R_BEREKEND" for row in rows)
+    stop_unknown = sum(row["entry_status"] != "STOP_2R_BEREKEND" for row in rows)
+    feasibility_unknown = sum(row.get("target_feasibility") == "ONBEKEND" for row in rows)
+    unknown = sum(
+        row["entry_status"] != "STOP_2R_BEREKEND" or row.get("target_feasibility") == "ONBEKEND"
+        for row in rows
+    )
     status = "FULL" if unknown == 0 else "PARTIAL"
     payload = {
         "status": status,
         "candidate_count": len(rows),
-        "stop_2r_calculated": len(rows) - unknown,
+        "stop_2r_calculated": len(rows) - stop_unknown,
+        "target_feasibility_unknown": feasibility_unknown,
         "unknown_or_invalid": unknown,
         "note": "20-session pivot is a reference only; it is not asserted to be the current consolidation pivot or a confirmed breakout.",
     }

@@ -1,0 +1,27 @@
+{
+  "status": "PARTIAL",
+  "ha_pipeline_status": "PARTIAL",
+  "source_status": "PARTIAL",
+  "analysis_status": "FULL",
+  "pending_components": [
+    "SPX/QQQ market context",
+    "Long technical and fundamental selection",
+    "Simply Wall St Financial Health verification for Long",
+    "Short technical selection and borrow/locate risk checks",
+    "News and event checks",
+    "Consolidated daily Long/Short report"
+  ],
+  "generated_at": "2026-11-21T10:46:33+00:00",
+  "unique_tickers": 69,
+  "unknown_market_data_tickers": 0,
+  "source_count": 6,
+  "source_errors": {},
+  "source_warnings": {
+    "FV Momentum Darvas": "UNKNOWN: Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.",
+    "Simpel Monsters": "UNKNOWN: Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.",
+    "Follow Thrue": "UNKNOWN: Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.",
+    "VYUS holdings": "UNKNOWN: Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.",
+    "Blue Sky": "UNKNOWN: Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt."
+  },
+  "missing_ha_rows": 0
+}

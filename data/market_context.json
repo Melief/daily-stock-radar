@@ -15,7 +15,12 @@
       "sma_alignment": "BEARISH",
       "momentum_5d_pct": -8.61,
       "momentum_21d_pct": -9.83,
-      "support_resistance": "ONBEKEND: nog niet technisch geverifieerd",
+      "support": null,
+      "support_date": null,
+      "resistance": 7480.5698,
+      "resistance_date": "2026-07-27",
+      "support_resistance_method": "confirmed 5-session swing pivots; 126-session lookback",
+      "support_resistance": "Geen bevestigde swing-steun | Weerstand 7480.57 (2026-07-27)",
       "status": "OK"
     },
     "QQQ": {
@@ -30,7 +35,12 @@
       "sma_alignment": "BEARISH",
       "momentum_5d_pct": -10.51,
       "momentum_21d_pct": -13.63,
-      "support_resistance": "ONBEKEND: nog niet technisch geverifieerd",
+      "support": null,
+      "support_date": null,
+      "resistance": 695.57,
+      "resistance_date": "2026-11-11",
+      "support_resistance_method": "confirmed 5-session swing pivots; 126-session lookback",
+      "support_resistance": "Geen bevestigde swing-steun | Weerstand 695.57 (2026-11-11)",
       "status": "OK"
     }
   },
@@ -38,7 +48,7 @@
   "market_regime": "ONBEKEND",
   "errors": {},
   "limitations": [
-    "Steun- en weerstandsniveaus zijn niet automatisch vastgesteld.",
+    "Steun en weerstand zijn afgeleid van bevestigde vijf-sessie swing-pivots; het zijn referentieniveaus, geen automatische entrysignalen.",
     "Marktregime blijft ONBEKEND; afgesproken risk-on/risk-off criteria ontbreken."
   ]
 }

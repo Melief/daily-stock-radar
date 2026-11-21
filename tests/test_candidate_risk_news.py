@@ -193,5 +193,18 @@ class CandidateRiskNewsTests(unittest.TestCase):
             rn.calculate_price_risk(frame, "2026-11-20")
 
 
+    def test_flat_history_returns_known_no_valid_pivot_not_missing_data(self):
+        dates = pd.bdate_range(end="2026-11-20", periods=22)
+        frame = pd.DataFrame({
+            "Open": [10.0] * 22, "High": [10.5] * 22,
+            "Low": [9.5] * 22, "Close": [10.0] * 22,
+            "Volume": [1000] * 22,
+        }, index=dates)
+        result = rn.calculate_consolidation_pivot(frame, "2026-11-20", "LONG")
+        self.assertEqual(result["consolidation_pivot_status"], "GEEN_GELDIGE_PIVOT")
+        self.assertEqual(result["consolidation_pivot"], "")
+        self.assertNotEqual(result["current_ha_close"], "")
+
+
 if __name__ == "__main__":
     unittest.main()

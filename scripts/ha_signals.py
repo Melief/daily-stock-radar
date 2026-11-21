@@ -469,8 +469,9 @@ def main() -> int:
     )
     print(f"HA-uitvoer: {OUT}")
     print(f"Broncontrole: {COVERAGE_OUT}")
-    # Unknown data is visible and does not invalidate coverage. Missing rows do.
-    return 1 if missing else 0
+    # A failed source or missing result row makes this run PARTIAL.
+    # Unknown market data remains visible in the output and does not change source coverage.
+    return 1 if source_errors or missing else 0
 
 
 if __name__ == "__main__":

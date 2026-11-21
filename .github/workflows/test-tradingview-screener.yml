@@ -10,6 +10,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: tradingview-screener-refresh
+  cancel-in-progress: false
+
 jobs:
   update-tradingview-tickers:
     runs-on: ubuntu-latest

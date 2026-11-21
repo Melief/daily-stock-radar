@@ -180,6 +180,8 @@ Mogelijke acties:
 
 Voor de Short-watchlist geldt dezelfde 2R-benadering gespiegeld voor een shortpositie: instap actuele koers; stop op de laatste HA High waarbij HA High = HA Open; risk = afstand instap tot stop; koersdoel op 2R. Beoordeel R/R en technische haalbaarheid, daarna Risk %, daarna Entry Score.
 
+Vergelijk het 2R-doel met de dichtstbijzijnde bevestigde vijf-sessie swingweerstand (Long) of swingsteun (Short), berekend over maximaal 126 voltooide sessies. Rapporteer expliciet of het 2R-doel vóór of voorbij dat niveau ligt; dit is technische context, geen garantie.
+
 De Short-tabel toont een lege SW-kolom, uitsluitend om de kolommen uit te lijnen met de Long-tabel. Haal geen SW-scores op, bereken of beoordeel ze niet voor Short.
 
 ## 7. Nieuws en gebeurtenissen

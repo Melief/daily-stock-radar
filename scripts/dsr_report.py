@@ -285,6 +285,8 @@ def build_report() -> tuple[str, dict]:
         ]),
         "",
         "## 6. Nieuws-/eventsignalen",
+        f"Status: **{clean(risk_status.get('status'))}**; gecontroleerd: {clean(risk_status.get('checked'))}; "
+        f"onbekend: {clean(risk_status.get('unknown'))}; review vereist: {clean(risk_status.get('review_required'))}.",
         *(risk_review if risk_review else ["_Geen nieuwsitems met de ingestelde event-zoektermen aangetroffen. Dit is geen bewijs dat er geen risico bestaat._"]),
         "",
         "## 7. Nog niet volledig uitgevoerd",

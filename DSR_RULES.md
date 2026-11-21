@@ -123,6 +123,7 @@ Iedere Long-kandidaat moet vóór verdere Long-beoordeling een SW Financial Heal
 - SW onbekend/niet verifieerbaar: niet presenteren als goedgekeurde Long-kandidaat en geen positief koopadvies geven.
 - VYUS: hergebruik een eerder vastgelegde, betrouwbare SW-beoordeling; voer niet dagelijks onnodig dezelfde controle opnieuw uit. Als er geen betrouwbare eerdere score is of een relevante aanleiding tot hercontrole bestaat, markeer de score als onbekend totdat deze is geverifieerd.
 - Leg score, controledatum en bron vast zodat hergebruik controleerbaar is.
+- De handmatig op de openbare Simply Wall St-website geverifieerde scores worden vastgelegd in `data/sw_financial_health.csv` met score 0–6, controledatum en de exacte bron-URL. De software scrapt Simply Wall St niet en gebruikt geen betaalde API. Ontbrekende of ongeldige registraties blijven ONBEKEND; 0–3/6 wordt uitgesloten en 4–6/6 mag door.
 - SW is uitsluitend verplicht voor Long. Haal geen SW-scores op voor Short.
 
 ### Pivot en actieadvies

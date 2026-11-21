@@ -29,7 +29,8 @@ def number(value):
 def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: str,
                           volume, news_status: str = "ONBEKEND",
                           borrow_status: str = "NVT", nearest_support=None,
-                          nearest_resistance=None) -> dict:
+                          nearest_resistance=None, consolidation_pivot_status="ONBEKEND",
+                          consolidation_pivot_date="") -> dict:
     entry, stop, pivot = number(entry), number(stop), number(pivot)
     volume = number(volume)
     side = candidate_type.upper()
@@ -43,6 +44,9 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "risk_pct": "",
             "target_2r": "",
             "pivot_reference_20d": pivot if pivot is not None else "",
+            "consolidation_pivot": pivot if pivot is not None else "",
+            "consolidation_pivot_date": consolidation_pivot_date or "",
+            "consolidation_pivot_status": consolidation_pivot_status,
             "distance_to_pivot_pct": "",
             "long_buy_zone_status": "ONBEKEND",
             "breakout_reference_status": "ONBEKEND",
@@ -68,7 +72,10 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         return {
             "entry": entry, "stop": stop, "risk_per_share": round(risk, 4),
             "risk_pct": round(risk / entry * 100, 2), "target_2r": "",
-            "pivot_reference_20d": pivot or "", "distance_to_pivot_pct": "",
+            "pivot_reference_20d": pivot or "", "consolidation_pivot": pivot or "",
+            "consolidation_pivot_date": consolidation_pivot_date or "",
+            "consolidation_pivot_status": consolidation_pivot_status,
+            "distance_to_pivot_pct": "",
             "long_buy_zone_status": "ONBEKEND", "breakout_reference_status": "ONBEKEND",
             "target_feasibility": "ONBEKEND", "breakout_reference_date": "",
             "breakout_reference_close": "", "breakout_reference_volume": "",
@@ -87,7 +94,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "2R_DOEL_ONDER_STEUN" if target < support else "2R_DOEL_BOVEN_STEUN"
         )
 
-    if pivot is None or pivot <= 0:
+    if pivot is None or pivot <= 0 or consolidation_pivot_status != "OK":
         pivot_status, distance, breakout_date, breakout_close, breakout_volume = (
             "ONBEKEND", "", "", "", ""
         )
@@ -96,7 +103,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
     elif side == "LONG":
         distance = (entry / pivot - 1) * 100
         broken = entry > pivot
-        pivot_status = "BOVEN_20D_PIVOT" if broken else "ONDER_20D_PIVOT"
+        pivot_status = "BREAKOUT_BEvestigd" if broken else "GEEN_BREAKOUT"
         breakout_date = score_date if broken else ""
         breakout_close = entry if broken else ""
         breakout_volume = volume if broken and volume is not None else ""
@@ -105,7 +112,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
     else:
         distance = (pivot / entry - 1) * 100
         broken = entry < pivot
-        pivot_status = "ONDER_20D_SUPPORT" if broken else "BOVEN_20D_SUPPORT"
+        pivot_status = "DOORBRAAK_BEvestigd" if broken else "GEEN_DOORBRAAK"
         breakout_date = score_date if broken else ""
         breakout_close = entry if broken else ""
         breakout_volume = volume if broken and volume is not None else ""
@@ -124,6 +131,9 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
         "risk_pct": round(risk / entry * 100, 2),
         "target_2r": round(target, 4),
         "pivot_reference_20d": round(pivot, 4) if pivot is not None else "",
+        "consolidation_pivot": round(pivot, 4) if pivot is not None else "",
+        "consolidation_pivot_date": consolidation_pivot_date or "",
+        "consolidation_pivot_status": consolidation_pivot_status,
         "distance_to_pivot_pct": round(distance, 2) if distance != "" else "",
         "long_buy_zone_status": buy_zone if side == "LONG" else "NVT",
         "breakout_reference_status": pivot_status,
@@ -168,17 +178,20 @@ def build_rows() -> list[dict]:
         news_row = news_map.get((ticker, side), {})
         stop_key = "last_ha_long_stop" if side == "LONG" else "last_ha_short_stop"
         stop_date_key = "last_ha_long_stop_date" if side == "LONG" else "last_ha_short_stop_date"
-        pivot_key = "pivot_resistance_20d" if side == "LONG" else "pivot_support_20d"
+        risk_row = news_map.get((ticker, side), {})
+        pivot_key = "consolidation_pivot"
         result = calculate_entry_risk(
             side,
             tech.get("close_completed"),
             tech.get(stop_key),
-            tech.get(pivot_key),
+            risk_row.get(pivot_key),
             str(tech.get("score_date", "")),
             tech.get("daily_volume"),
             str(news_row.get("risk_status", "ONBEKEND")),
             str(borrow_row.get("status", "ONBEKEND")) if side == "SHORT" else "NVT",
-            news_row.get("nearest_support"), news_row.get("nearest_resistance"),
+            risk_row.get("nearest_support"), risk_row.get("nearest_resistance"),
+            str(risk_row.get("consolidation_pivot_status", "ONBEKEND")),
+            str(risk_row.get("consolidation_pivot_date", "")),
         )
         output.append({
             "ticker": ticker,
@@ -217,7 +230,8 @@ def main() -> int:
     columns = [
         "ticker", "candidate_type", "sector", "industry", "sources", "technical_score",
         "ha_day_type", "stop_date", "entry", "stop", "risk_per_share", "risk_pct",
-        "target_2r", "pivot_reference_20d", "distance_to_pivot_pct",
+        "target_2r", "pivot_reference_20d", "consolidation_pivot",
+        "consolidation_pivot_date", "consolidation_pivot_status", "distance_to_pivot_pct",
         "long_buy_zone_status", "breakout_reference_status", "breakout_reference_date",
         "breakout_reference_close", "breakout_reference_volume", "nearest_support",
         "nearest_support_date", "nearest_resistance", "nearest_resistance_date",
@@ -238,7 +252,7 @@ def main() -> int:
         "stop_2r_calculated": len(rows) - stop_unknown,
         "target_feasibility_unknown": feasibility_unknown,
         "unknown_or_invalid": unknown,
-        "note": "20-session pivot is a reference only; it is not asserted to be the current consolidation pivot or a confirmed breakout.",
+        "note": "Consolidation pivot uses a confirmed swing origin and the following 5–21 completed sessions; the latest completed close is evaluated separately for breakout/breakdown.",
     }
     write_status(payload)
     print(f"Entry risk: {payload['stop_2r_calculated']} stop/2R berekend, {unknown} onbekend/ongeldig.")

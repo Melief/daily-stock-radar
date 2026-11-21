@@ -48,11 +48,12 @@ jobs:
           python -m playwright install --with-deps chromium
 
       - name: Retrieve both TradingView screeners
+        id: retrieve
         if: steps.schedule.outputs.run == 'true'
         run: python scripts/update_tradingview_screeners.py
 
-      - name: Commit updated ticker lists
-        if: success() && steps.schedule.outputs.run == 'true'
+      - name: Commit successfully retrieved ticker lists
+        if: always() && steps.schedule.outputs.run == 'true'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
@@ -64,3 +65,9 @@ jobs:
             git commit -m "Update both TradingView screener ticker lists"
             git push
           fi
+
+      - name: Mark incomplete TradingView refresh as failed
+        if: steps.retrieve.outcome == 'failure'
+        run: |
+          echo "TradingView refresh is PARTIAL: at least one screener failed. Any successfully retrieved source CSV was committed; inspect the logs."
+          exit 1

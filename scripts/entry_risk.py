@@ -59,7 +59,7 @@ def calculate_entry_risk(candidate_type: str, entry, stop, pivot, score_date: st
             "entry": entry, "stop": stop, "risk_per_share": round(risk, 4),
             "risk_pct": "", "target_2r": "", "pivot_reference_20d": pivot or "",
             "distance_to_pivot_pct": "", "long_buy_zone_status": "ONBEKEND",
-            "breakout_reference_status": "ONBEKEND",
+            "breakout_reference_status": "ONBEKEND", "target_feasibility": "ONBEKEND",
             "breakout_reference_date": "", "breakout_reference_close": "", "breakout_reference_volume": "",
             "entry_status": "ONGELDIGE_STOP", "action": "VERMIJDEN TOT STOP HERSTELD",
         }

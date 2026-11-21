@@ -47,6 +47,14 @@ class MarketContextTests(unittest.TestCase):
         frame.columns = pd.MultiIndex.from_product([frame.columns, ["^GSPC"]])
         result = mc.analyse_symbol(frame, "SPX", date(2026, 11, 20))
         self.assertEqual(result["status"], "OK")
+        frame.columns = pd.MultiIndex.from_product([["^GSPC"], frame.columns])
+        result = mc.analyse_symbol(frame, "SPX", date(2026, 11, 20))
+        self.assertEqual(result["status"], "OK")
+
+    def test_download_uses_unadjusted_official_close(self):
+        with patch.object(mc.yf, "download", return_value=self.frame()) as download:
+            mc.fetch_symbol("^GSPC", date(2026, 11, 20))
+        self.assertFalse(download.call_args.kwargs["auto_adjust"])
 
     def test_json_output_has_real_newline_and_preserves_dsr_status(self):
         with tempfile.TemporaryDirectory() as temp:

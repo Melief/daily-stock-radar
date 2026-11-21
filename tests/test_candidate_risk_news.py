@@ -120,6 +120,25 @@ class CandidateRiskNewsTests(unittest.TestCase):
         self.assertEqual(result["consolidation_sessions"], 11)
         self.assertEqual(result["consolidation_pivot"], max(highs[10:21]))
 
+    def test_regular_ohlc_pivot_uses_official_close_for_historical_breakout(self):
+        dates = pd.bdate_range(end="2026-11-20", periods=22)
+        lows = [10.0] * 22
+        lows[8:13] = [8.0, 7.0, 4.0, 7.5, 8.0]
+        highs = [value + 2 for value in lows]
+        highs[10:21] = [12.0 + i * 0.1 for i in range(11)]
+        closes = [9.0] * 22
+        closes[15] = 13.0
+        volumes = [1000] * 22
+        volumes[15] = 2500
+        frame = pd.DataFrame({
+            "Open": [9.0] * 22, "High": highs, "Low": lows,
+            "Close": closes, "Volume": volumes,
+        }, index=dates)
+        result = rn.calculate_consolidation_pivot(frame, "2026-11-20", "LONG")
+        self.assertEqual(result["consolidation_pivot_status"], "OK")
+        self.assertEqual(result["prior_breakout_date"], dates[15].strftime("%Y-%m-%d"))
+        self.assertEqual(result["prior_breakout_close"], 13.0)
+        self.assertEqual(result["prior_breakout_volume"], 2500)
     def test_regular_close_alone_does_not_confirm_ha_pivot_breakout(self):
         dates = pd.bdate_range(end="2026-11-20", periods=22)
         lows = [10.0] * 22

@@ -272,6 +272,8 @@ def build_report() -> tuple[str, dict]:
         "Long-entry: actuele consolidatiepivot, breakoutdatum, officiële slotkoers, volume en koopzone moeten zijn geverifieerd.",
         "Short-entry: actuele consolidatiepivot, breakdowndatum, officiële slotkoers en volume moeten zijn geverifieerd; borrow en ruwe squeeze-/gapgegevens blijven afzonderlijk zichtbaar.",
     ]
+    if market.get("market_regime") == "ONBEKEND":
+        pending.append("Risk-on/risk-off marktregime is ONBEKEND door ontbrekende of ongeldige marktdata.")
     if borrow_unknown:
         pending.append(f"IBKR-borrowinventaris ontbreekt voor {borrow_unknown} Short-kandidaten.")
     if source_warnings:

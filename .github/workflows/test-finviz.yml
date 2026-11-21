@@ -53,11 +53,13 @@ jobs:
         continue-on-error: true
         run: python scripts/test_blue_sky.py
 
-      - name: Record independent source refresh statuses
-        if: always() && steps.finviz.outcome != 'skipped' && steps.blue_sky.outcome != 'skipped'
-        run: |
-          python scripts/source_status.py fv_momentum_darvas "${{ steps.finviz.outcome }}" --detail "Finviz fetch step"
-          python scripts/source_status.py blue_sky "${{ steps.blue_sky.outcome }}" --detail "Blue Sky fetch step"
+      - name: Record Finviz refresh status
+        if: always() && steps.finviz.outcome != 'skipped'
+        run: python scripts/source_status.py fv_momentum_darvas "${{ steps.finviz.outcome }}" --detail "Finviz fetch step"
+
+      - name: Record Blue Sky refresh status
+        if: always() && steps.blue_sky.outcome != 'skipped'
+        run: python scripts/source_status.py blue_sky "${{ steps.blue_sky.outcome }}" --detail "Blue Sky fetch step"
 
       - name: Commit updated ticker CSVs to GitHub
         run: |

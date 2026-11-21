@@ -113,7 +113,10 @@ def build_report() -> tuple[str, dict]:
     tech_by_ticker = {row.get("ticker", "").upper(): row for row in technical}
     ha_by_ticker = {row.get("ticker", "").upper(): row for row in ha_rows}
     borrow_by_ticker = {row.get("ticker", "").upper(): row for row in borrow_rows}
-    risk_by_ticker = {row.get("ticker", "").upper(): row for row in risk_rows}
+    risk_by_key = {
+        (row.get("ticker", "").upper(), row.get("candidate_type", "").upper()): row
+        for row in risk_rows
+    }
     entry_risk_by_key = {
         (row.get("ticker", "").upper(), row.get("candidate_type", "").upper()): row
         for row in entry_risk_rows
@@ -129,7 +132,7 @@ def build_report() -> tuple[str, dict]:
         ticker = candidate.get("ticker", "").upper()
         tech = tech_by_ticker.get(ticker, {})
         ha = ha_by_ticker.get(ticker, {})
-        risk = risk_by_ticker.get(ticker, {})
+        risk = risk_by_key.get((ticker, "LONG"), {})
         entry = entry_risk_by_key.get((ticker, "LONG"), {})
         long_table.append([
             ticker, candidate.get("sources", ""), candidate.get("sector", ""),
@@ -149,7 +152,7 @@ def build_report() -> tuple[str, dict]:
         ticker = candidate.get("ticker", "").upper()
         ha = ha_by_ticker.get(ticker, {})
         borrow = borrow_by_ticker.get(ticker, {})
-        risk = risk_by_ticker.get(ticker, {})
+        risk = risk_by_key.get((ticker, "SHORT"), {})
         entry = entry_risk_by_key.get((ticker, "SHORT"), {})
         short_table.append([
             ticker, candidate.get("sources", ""), candidate.get("sector", ""),

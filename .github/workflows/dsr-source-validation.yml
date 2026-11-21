@@ -5,11 +5,9 @@ on:
     branches: [main]
     paths:
       - "scripts/ha_signals.py"
-      - "scripts/technical_score.py"
-      - "scripts/short_borrow.py"
-      - "scripts/short_borrow.py"
       - "scripts/market_context.py"
       - "scripts/technical_score.py"
+      - "scripts/short_borrow.py"
       - "scripts/source_status.py"
       - "scripts/import_vyus_holdings.py"
       - "scripts/update_tradingview_screeners.py"
@@ -26,6 +24,9 @@ on:
     branches: [main]
     paths:
       - "scripts/ha_signals.py"
+      - "scripts/market_context.py"
+      - "scripts/technical_score.py"
+      - "scripts/short_borrow.py"
       - "scripts/source_status.py"
       - "scripts/import_vyus_holdings.py"
       - "scripts/update_tradingview_screeners.py"

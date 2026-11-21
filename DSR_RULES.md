@@ -112,6 +112,8 @@ Algemene screeningsrichtlijnen:
 
 Ontbrekende fundamentele gegevens worden niet als geslaagd beschouwd. Maak zichtbaar welke criteria daadwerkelijk zijn gecontroleerd.
 
+De automatische eerste controle gebruikt Yahoo Finance quoteSummary-velden: marketCap, averageVolume, operatingMargins, returnOnEquity, revenueGrowth en debtToEquity. Yahoo's debtToEquity wordt als percentage ontvangen en door 100 gedeeld om de afgesproken ratio (<1) te toetsen. Voor financiële instellingen wordt debt/equity als NVT vastgelegd in plaats van als een onbetrouwbare uitsluitingsgrond. Ontbrekende velden blijven ONBEKEND. Een biotech-industry wordt gemarkeerd voor afzonderlijke klinische-/nieuwscontrole, niet automatisch uitgesloten.
+
 ### Simply Wall St. (SW) — harde verplichte stap
 
 Iedere Long-kandidaat moet vóór verdere Long-beoordeling een SW Financial Health-score krijgen of expliciet als onbekend worden aangemerkt.

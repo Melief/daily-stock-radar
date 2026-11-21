@@ -47,7 +47,8 @@ class MarketContextTests(unittest.TestCase):
         frame.columns = pd.MultiIndex.from_product([frame.columns, ["^GSPC"]])
         result = mc.analyse_symbol(frame, "SPX", date(2026, 11, 20))
         self.assertEqual(result["status"], "OK")
-        frame.columns = pd.MultiIndex.from_product([["^GSPC"], frame.columns])
+        frame = self.frame()
+        frame.columns = pd.MultiIndex.from_tuples([("^GSPC", column) for column in frame.columns])
         result = mc.analyse_symbol(frame, "SPX", date(2026, 11, 20))
         self.assertEqual(result["status"], "OK")
 

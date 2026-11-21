@@ -566,7 +566,7 @@ def main() -> int:
         "limitations": [
             "NO_RESULTS betekent geen geïndexeerde Google News RSS-resultaten binnen 7 dagen; het bewijst niet dat er geen nieuws of gebeurtenisrisico bestaat.",
             "Short interest, days-to-cover, ATR en gaps zijn bronafhankelijke ruwe gegevens; er worden geen niet-afgesproken risicodrempels toegepast.",
-            "Een kandidaat zonder bevestigde consolidatiepivot volgens de 5–21-sessieregel blijft ONBEKEND en maakt de risicocontrole PARTIAL.",
+            "Geen geldige consolidatiepivot is een expliciete negatieve uitkomst (GEEN_GELDIGE_PIVOT); alleen ontbrekende of onvoldoende historische koersdata maakt de controle PARTIAL.",
         ],
     }
     write_status(payload)

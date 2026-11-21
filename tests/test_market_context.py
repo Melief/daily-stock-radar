@@ -51,7 +51,8 @@ class MarketContextTests(unittest.TestCase):
     def test_json_output_has_real_newline_and_preserves_dsr_status(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            status_file = root / "dsr_run_status.json"
+            (root / "data").mkdir()
+            status_file = root / "data" / "dsr_run_status.json"
             status_file.write_text(json.dumps({
                 "status": "PARTIAL",
                 "pending_components": ["SPX/QQQ market context", "Long selectie"],

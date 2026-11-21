@@ -1,0 +1,11 @@
+ticker,financial_health_score,checked_at,source_url
+ASO,5,2026-11-21,https://simplywall.st/stocks/us/retail/nasdaq-aso/academy-sports-and-outdoors
+CBOE,6,2026-11-21,https://simplywall.st/stocks/us/diversified-financials/bats-cboe/cboe-global-markets
+CHD,4,2026-11-21,https://simplywall.st/stocks/us/household/nyse-chd/church-dwight
+DGX,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-dgx/quest-diagnostics
+EPAM,6,2026-11-21,https://simplywall.st/stocks/us/software/nyse-epam/epam-systems
+KNSA,6,2026-11-21,https://simplywall.st/stocks/us/pharmaceuticals-biotech/nasdaq-knsa/kiniksa-pharmaceuticals-international
+LH,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-lh/labcorp-holdings
+PGNY,6,2026-11-21,https://simplywall.st/stocks/us/healthcare/nasdaq-pgny/progyny
+SPNT,5,2026-11-21,https://simplywall.st/stocks/us/insurance/nyse-spnt/siriuspoint
+VLTO,4,2026-11-21,https://simplywall.st/stocks/us/commercial-services/nyse-vlto/veralto

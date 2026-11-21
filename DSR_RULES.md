@@ -50,7 +50,7 @@ Broncontrole vermeldt aantallen per bron, totaal ingelezen tickers, aantal uniek
 - Sector Top Tickers is handmatig beheerd en wordt als `MANUAL` weergegeven; er wordt geen automatische verversingstijd verzonnen.
 - `data/dsr_source_status.csv` rapporteert bronactualiteit; `data/dsr_run_status.json` rapporteert afzonderlijk bronstatus, HA-pipeline, technische analysebeschikbaarheid en de DSR-status.
 - Zolang marktcontext, volledige Long-/Short-selectie, SW-controle, short-risicocontrole, nieuwscontrole en het geconsolideerde dagrapport niet zijn geïmplementeerd, blijft de totale DSR-status PARTIAL. Een volledig geslaagde HA-pipeline mag nooit als VOLLEDIGE DSR worden aangeduid.
-- De geplande VYUS-verversing loopt op werkdagen om 03:45 UTC, vóór de bestaande HA-ochtendrun van 04:15 UTC. De dagelijkse frequentie blijft gelijk.
+- De VYUS-verversing loopt op werkdagen om 03:45 Amsterdam (01:45 UTC in de zomer, 02:45 UTC in de winter). De definitieve DSR-ochtendrun loopt om 04:00 Amsterdam (02:00 UTC in de zomer, 03:00 UTC in de winter). Beide tijden worden DST-veilig gecontroleerd; de frequentie blijft op werkdagen dagelijks. De VYUS scheduled workflow triggert niet afzonderlijk een extra HA-run; de 04:00 DSR-snapshot verwerkt de vernieuwde of expliciet mislukte VYUS-status.
 
 ## 3. Marktbeeld
 
@@ -123,6 +123,7 @@ Iedere Long-kandidaat moet vóór verdere Long-beoordeling een SW Financial Heal
 - SW onbekend/niet verifieerbaar: niet presenteren als goedgekeurde Long-kandidaat en geen positief koopadvies geven.
 - VYUS: hergebruik een eerder vastgelegde, betrouwbare SW-beoordeling; voer niet dagelijks onnodig dezelfde controle opnieuw uit. Als er geen betrouwbare eerdere score is of een relevante aanleiding tot hercontrole bestaat, markeer de score als onbekend totdat deze is geverifieerd.
 - Leg score, controledatum en bron vast zodat hergebruik controleerbaar is.
+- De handmatig op de openbare Simply Wall St-website geverifieerde scores worden vastgelegd in `data/sw_financial_health.csv` met score 0–6, controledatum en de exacte bron-URL. De software scrapt Simply Wall St niet en gebruikt geen betaalde API. Ontbrekende of ongeldige registraties blijven ONBEKEND; 0–3/6 wordt uitgesloten en 4–6/6 mag door.
 - SW is uitsluitend verplicht voor Long. Haal geen SW-scores op voor Short.
 
 ### Pivot en actieadvies

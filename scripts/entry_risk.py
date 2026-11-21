@@ -283,7 +283,7 @@ def main() -> int:
         "unknown": unknown,
         "invalid_stop_or_2r": invalid,
         "unknown_or_invalid": unknown + invalid,
-        "note": "Consolidation pivot is calculated from completed-session Heikin-Ashi candles; actual close and volume are reported separately for breakout/breakdown confirmation.",
+        "note": "Consolidation pivot is calculated from completed-session regular OHLC candles; official close and volume confirm breakout/breakdown. HA close is supplemental audit data.",
     }
     write_status(payload)
     print(f"Entry risk: {payload['stop_2r_calculated']} stop/2R berekend, {unknown} onbekend, {invalid} ongeldig.")

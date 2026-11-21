@@ -100,6 +100,7 @@ def build_report() -> tuple[str, dict]:
     sw_rows = read_csv("long_sw_status.csv")
     borrow_rows = read_csv("short_borrow.csv")
     risk_rows = read_csv("candidate_risk_news.csv")
+    entry_risk_rows = read_csv("entry_risk.csv")
     market = read_json("market_context.json")
     run_status = read_json("dsr_run_status.json")
     tech_status = read_json("technical_score_status.json")
@@ -107,11 +108,16 @@ def build_report() -> tuple[str, dict]:
     sw_status = read_json("long_sw_status.json")
     borrow_status = read_json("short_borrow_status.json")
     risk_status = read_json("candidate_risk_news_status.json")
+    entry_risk_status = read_json("entry_risk_status.json")
 
     tech_by_ticker = {row.get("ticker", "").upper(): row for row in technical}
     ha_by_ticker = {row.get("ticker", "").upper(): row for row in ha_rows}
     borrow_by_ticker = {row.get("ticker", "").upper(): row for row in borrow_rows}
     risk_by_ticker = {row.get("ticker", "").upper(): row for row in risk_rows}
+    entry_risk_by_key = {
+        (row.get("ticker", "").upper(), row.get("candidate_type", "").upper()): row
+        for row in entry_risk_rows
+    }
 
     long_candidates = select_long_candidates(sw_rows)
     short_candidates = select_short_candidates(technical)
@@ -124,12 +130,15 @@ def build_report() -> tuple[str, dict]:
         tech = tech_by_ticker.get(ticker, {})
         ha = ha_by_ticker.get(ticker, {})
         risk = risk_by_ticker.get(ticker, {})
+        entry = entry_risk_by_key.get((ticker, "LONG"), {})
         long_table.append([
             ticker, candidate.get("sources", ""), candidate.get("sector", ""),
             candidate.get("industry", ""), ha.get("ha_day_type", tech.get("ha_day_type", "")),
             candidate.get("technical_score", ""), f"{candidate.get('financial_health_score')}/6",
-            tech.get("close_completed", ""), tech.get("pivot_resistance_20d", ""),
-            tech.get("rvol_5_21", ""), risk.get("risk_status", "ONBEKEND"),
+            entry.get("entry", tech.get("close_completed", "")), entry.get("stop", ""),
+            entry.get("risk_pct", ""), entry.get("target_2r", ""),
+            tech.get("pivot_resistance_20d", ""), tech.get("rvol_5_21", ""),
+            risk.get("risk_status", "ONBEKEND"), entry.get("action", "ONBEKEND"),
         ])
 
     short_table = []
@@ -138,13 +147,17 @@ def build_report() -> tuple[str, dict]:
         ha = ha_by_ticker.get(ticker, {})
         borrow = borrow_by_ticker.get(ticker, {})
         risk = risk_by_ticker.get(ticker, {})
+        entry = entry_risk_by_key.get((ticker, "SHORT"), {})
         short_table.append([
             ticker, candidate.get("sources", ""), candidate.get("sector", ""),
             candidate.get("industry", ""), ha.get("ha_day_type", candidate.get("ha_day_type", "")),
-            candidate.get("short_score", ""), "__EMPTY__", borrow.get("status", "ONBEKEND"),
-            borrow.get("fee_rate_pct", ""), borrow.get("available_shares", ""),
-            risk.get("short_percent_of_float", ""), risk.get("days_to_cover", ""),
-            risk.get("risk_status", "ONBEKEND"),
+            candidate.get("short_score", ""), "__EMPTY__",
+            entry.get("entry", candidate.get("close_completed", "")), entry.get("stop", ""),
+            entry.get("risk_pct", ""), entry.get("target_2r", ""),
+            borrow.get("status", "ONBEKEND"), borrow.get("fee_rate_pct", ""),
+            borrow.get("available_shares", ""), risk.get("short_percent_of_float", ""),
+            risk.get("days_to_cover", ""), risk.get("risk_status", "ONBEKEND"),
+            entry.get("action", "ONBEKEND"),
         ])
 
     ha_long = []
@@ -224,6 +237,8 @@ def build_report() -> tuple[str, dict]:
         pending.append("Bronverversing/dekking bevat waarschuwingen of onbekende statussen.")
     if risk_status.get("status") != "FULL":
         pending.append("Nieuws- en Short-risicocontrole is gedeeltelijk of bevat onbekende gegevens.")
+    if entry_risk_status.get("status") != "FULL":
+        pending.append("HA-stop, risico% en 2R zijn niet voor alle kandidaten betrouwbaar berekend.")
     if fundamental_status.get("unknown", 0):
         pending.append("Fundamentele gegevens ontbreken voor een of meer Long-kandidaten.")
     if sw_status.get("unknown", 0):
@@ -238,6 +253,7 @@ def build_report() -> tuple[str, dict]:
         "sw_financial_health_status": sw_status.get("status", "ONBEKEND"),
         "short_borrow_status": borrow_status.get("status", "ONBEKEND"),
         "candidate_risk_news_status": risk_status.get("status", "ONBEKEND"),
+        "entry_risk_status": entry_risk_status.get("status", "ONBEKEND"),
         "long_technical_candidates": long_tech_count,
         "long_approved_candidates": len(long_candidates),
         "short_technical_candidates": short_tech_count,
@@ -264,12 +280,12 @@ def build_report() -> tuple[str, dict]:
         f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**. "
         f"SW PASS: **{sw_status.get('passed', 0)}**; SW uitgesloten: **{sw_status.get('excluded_sw', 0)}**; "
         f"onbekend: **{sw_status.get('unknown', 0)}**. Goedgekeurd voor verdere Long-beoordeling: **{len(long_candidates)}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Close", "20d pivot-ref", "RVOL 5/21", "Nieuws"], long_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "20d pivot-ref", "RVOL 5/21", "Nieuws", "Actie"], long_table),
         "",
         "## 4. Short",
         f"Technisch gekwalificeerd: **{short_tech_count}**. IBKR beschikbaar: **{borrow_available}**; "
         f"IBKR onbekend: **{borrow_unknown}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "Nieuws"], short_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "Nieuws", "Actie"], short_table),
         "",
         "## 5. HA-signalen",
         f"Long-signalen die aan HA Low=Open en SMA20/SMA50 voldoen: **{len(ha_long)}**.",
@@ -310,6 +326,7 @@ def update_run_status(details: dict):
         "sw_financial_health": details["sw_financial_health_status"],
         "short_borrow": details["short_borrow_status"],
         "candidate_risk_news": details["candidate_risk_news_status"],
+        "entry_risk": details["entry_risk_status"],
     }
     current["pending_components"] = details["pending_components"]
     temporary = RUN_STATUS.with_suffix(".json.tmp")

@@ -1,0 +1,24 @@
+"""Tests for DST-safe Amsterdam scheduling."""
+import unittest
+
+from scripts.dsr_schedule_guard import should_run
+
+
+class DsrScheduleGuardTests(unittest.TestCase):
+    def test_summer_cron_runs_at_0400_amsterdam(self):
+        self.assertTrue(should_run("schedule", "0 2 * * 1-5", "+0200"))
+
+    def test_winter_cron_runs_at_0400_amsterdam(self):
+        self.assertTrue(should_run("schedule", "0 3 * * 1-5", "+0100"))
+
+    def test_wrong_cron_offset_pair_is_skipped(self):
+        self.assertFalse(should_run("schedule", "0 2 * * 1-5", "+0100"))
+        self.assertFalse(should_run("schedule", "0 3 * * 1-5", "+0200"))
+
+    def test_delayed_non_schedule_events_are_not_blocked(self):
+        self.assertTrue(should_run("workflow_run", "", "+0100"))
+        self.assertTrue(should_run("workflow_dispatch", "", "+0200"))
+
+
+if __name__ == "__main__":
+    unittest.main()

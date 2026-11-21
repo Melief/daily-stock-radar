@@ -11,6 +11,10 @@ class DsrScheduleGuardTests(unittest.TestCase):
     def test_winter_cron_runs_at_0400_amsterdam(self):
         self.assertTrue(should_run("schedule", "0 3 * * 1-5", "+0100"))
 
+    def test_vyus_cron_runs_at_0345_amsterdam(self):
+        self.assertTrue(should_run("schedule", "45 1 * * 1-5", "+0200"))
+        self.assertTrue(should_run("schedule", "45 2 * * 1-5", "+0100"))
+
     def test_wrong_cron_offset_pair_is_skipped(self):
         self.assertFalse(should_run("schedule", "0 2 * * 1-5", "+0100"))
         self.assertFalse(should_run("schedule", "0 3 * * 1-5", "+0200"))

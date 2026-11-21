@@ -11,17 +11,20 @@
     "News and event checks",
     "Consolidated daily Long/Short report"
   ],
-  "generated_at": "2026-11-21T10:46:33+00:00",
-  "unique_tickers": 69,
+  "generated_at": "2026-11-21T10:54:42+00:00",
+  "unique_tickers": 59,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
-  "source_errors": {},
+  "source_errors": {
+    "FV Momentum Darvas": "FAILED: Finviz fetch step",
+    "Blue Sky": "FAILED: Blue Sky fetch step"
+  },
   "source_warnings": {
-    "FV Momentum Darvas": "UNKNOWN: Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.",
+    "FV Momentum Darvas": "FAILED: Finviz fetch step",
     "Simpel Monsters": "UNKNOWN: Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.",
     "Follow Thrue": "UNKNOWN: Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.",
     "VYUS holdings": "UNKNOWN: Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.",
-    "Blue Sky": "UNKNOWN: Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt."
+    "Blue Sky": "FAILED: Blue Sky fetch step"
   },
   "missing_ha_rows": 0
 }

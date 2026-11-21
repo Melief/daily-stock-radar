@@ -1,7 +1,7 @@
 source,source_id,status,last_attempt_at,last_success_at,age_hours,included,ticker_count,detail
 Sector Top Tickers,sector_top_tickers,MANUAL,,,,True,32,Handmatig beheerde bron; automatische actualiteit niet van toepassing.
-FV Momentum Darvas,fv_momentum_darvas,UNKNOWN,,,,True,4,Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.
+FV Momentum Darvas,fv_momentum_darvas,FAILED,2026-11-21T10:45:38+00:00,,,False,0,Finviz fetch step
 Simpel Monsters,simpel_monsters,UNKNOWN,,,,True,1,Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.
 Follow Thrue,follow_thrue,UNKNOWN,,,,True,1,Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.
 VYUS holdings,vyus_holdings,UNKNOWN,,,,True,25,Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.
-Blue Sky,blue_sky,UNKNOWN,,,,True,9,Geen refreshstatus geregistreerd; bestaand bestand alleen als fallback gebruikt.
+Blue Sky,blue_sky,FAILED,2026-11-21T10:45:38+00:00,,,False,0,Blue Sky fetch step

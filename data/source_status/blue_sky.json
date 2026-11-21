@@ -1,7 +1,7 @@
 {
   "source_id": "blue_sky",
-  "last_attempt_status": "failure",
-  "last_attempt_at": "2026-11-21T10:45:38+00:00",
-  "last_success_at": "2026-11-21T03:33:41+00:00",
-  "detail": "Blue Sky fetch step; last successful fetch confirmed in GitHub Actions run 44861728262."
+  "last_attempt_status": "success",
+  "last_attempt_at": "2026-11-21T17:47:50+00:00",
+  "last_success_at": "2026-11-21T17:47:50+00:00",
+  "detail": "Blue Sky fetch step"
 }

@@ -54,7 +54,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/ha_signals.csv data/ha_source_coverage.csv data/dsr_source_status.csv data/dsr_run_status.json
+          for output in data/ha_signals.csv data/ha_source_coverage.csv data/dsr_source_status.csv data/dsr_run_status.json; do
+            if [ -f "$output" ]; then git add "$output"; fi
+          done
           if git diff --cached --quiet; then
             echo "Geen wijzigingen in DSR-signalen."
           else

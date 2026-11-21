@@ -26,7 +26,7 @@ De DSR-universum wordt gevormd door deze zes bronnen, samengevoegd en ontdubbeld
 
 Geen TradingView-bron toevoegen. Blue Sky is de expliciet afgesproken zesde bron en wordt als afzonderlijke bron getoond; het is geen vervanging van FV Momentum Darvas.
 
-De repository bevat de Blue Sky-URL en tickerdata, maar `data/dsr_ticker_sources.json` bevat op dit moment nog vijf bronnen. De opname van Blue Sky in de uitvoerende merge/selectieworkflow is dus nog niet geïmplementeerd; deze PR legt de afspraak alleen vast.
+Blue Sky wordt afzonderlijk ververst via `scripts/test_blue_sky.py` en daarna samen met de andere vijf bronnen opgenomen in de HA-merge via `data/dsr_ticker_sources.json`. De bronbestanden blijven gescheiden; de gecombineerde tickerlijst wordt ontdubbeld en behoudt per ticker alle bronvermeldingen.
 
 Toon per ticker altijd de bron of alle bronnen waaruit de ticker afkomstig is. Gebruik in de presentatie de namen **FV Momentum Darvas** en **Blue Sky** voor de twee afzonderlijke Finviz-bronnen.
 
@@ -171,7 +171,7 @@ Rapporteer compact en conclusiegericht, in deze volgorde:
 6. Concrete acties, instapniveaus, stops en doelen waar volledig geverifieerd.
 7. Wat ontbreekt of nog niet gecontroleerd kon worden.
 
-Iedere ticker in Long- en Short-overzichten bevat minimaal ticker, bron(nen), sector, industry, HA-status en technische score. Long bevat daarnaast SW-score en SW-status. Short bevat geen SW-kolom. Toon alleen kandidaten die aan de relevante criteria voldoen; maak ontbrekende gegevens zichtbaar.
+Iedere ticker in Long- en Short-overzichten bevat minimaal ticker, bron(nen), sector, industry, HA-status en technische score. Long bevat daarnaast SW-score en SW-status. Short toont een lege SW-kolom uitsluitend voor kolomuitlijning; er wordt geen SW-data voor Short opgehaald of beoordeeld. Toon alleen kandidaten die aan de relevante criteria voldoen; maak ontbrekende gegevens zichtbaar.
 
 Gebruik de compacte, afgesproken statusconclusies:
 - 🟢 KOOPWAARDIG

@@ -1,13 +1,16 @@
 ticker,sources,sector,industry,technical_score,fundamental_status,financial_health_score,checked_at,source_url,sw_status
-ASO,Blue Sky,Consumer Cyclical,Specialty Retail,4,PASS,5,2026-11-21,https://simplywall.st/stocks/us/retail/nasdaq-aso/academy-sports-and-outdoors,PASS
-CBOE,Blue Sky,Financial Services,Financial Data & Stock Exchanges,4,PASS,6,2026-11-21,https://simplywall.st/stocks/us/diversified-financials/bats-cboe/cboe-global-markets,PASS
-CHD,Blue Sky,Consumer Defensive,Household & Personal Products,4,PASS,4,2026-11-21,https://simplywall.st/stocks/us/household/nyse-chd/church-dwight,PASS
-DGX,Blue Sky;FV Momentum Darvas,Healthcare,Diagnostics & Research,4,PASS,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-dgx/quest-diagnostics,EXCLUDED
-GEN,VYUS holdings,Technology,Software - Infrastructure,3,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
-HG,Blue Sky,Financial Services,Insurance - Reinsurance,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
-KNSA,Blue Sky;FV Momentum Darvas,Healthcare,Drug Manufacturers - Specialty & Generic,4,PASS,6,2026-11-21,https://simplywall.st/stocks/us/pharmaceuticals-biotech/nasdaq-knsa/kiniksa-pharmaceuticals-international,PASS
-LH,Blue Sky;FV Momentum Darvas,Healthcare,Diagnostics & Research,4,PASS,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-lh/labcorp-holdings,EXCLUDED
-MCK,Sector Top Tickers,Healthcare,Medical Distribution,3,UNKNOWN,,,,ONBEKEND_FUNDAMENTALS
-PLGO,Blue Sky,Financial Services,Insurance - Diversified,5,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
-SPNT,Blue Sky,Financial Services,Insurance - Reinsurance,4,PASS,5,2026-11-21,https://simplywall.st/stocks/us/insurance/nyse-spnt/siriuspoint,PASS
-VLTO,FV Momentum Darvas,Industrials,Pollution & Treatment Controls,4,PASS,4,2026-11-21,https://simplywall.st/stocks/us/commercial-services/nyse-vlto/veralto,PASS
+ASO,Blue Sky,,,4,UNKNOWN,5,2026-11-21,https://simplywall.st/stocks/us/retail/nasdaq-aso/academy-sports-and-outdoors,ONBEKEND_FUNDAMENTALS
+CBOE,Blue Sky,,,4,UNKNOWN,6,2026-11-21,https://simplywall.st/stocks/us/diversified-financials/bats-cboe/cboe-global-markets,ONBEKEND_FUNDAMENTALS
+CHD,Blue Sky,,,4,UNKNOWN,4,2026-11-21,https://simplywall.st/stocks/us/household/nyse-chd/church-dwight,ONBEKEND_FUNDAMENTALS
+CRVL,Follow Thrue,,,5,UNKNOWN,,,,ONBEKEND_FUNDAMENTALS
+DGX,Blue Sky;FV Momentum Darvas,,,4,UNKNOWN,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-dgx/quest-diagnostics,EXCLUDED
+EXPO,Follow Thrue,,,4,UNKNOWN,,,,ONBEKEND_FUNDAMENTALS
+GEN,VYUS holdings,,,3,UNKNOWN,,,,ONBEKEND_FUNDAMENTALS
+HG,Blue Sky,,,4,UNKNOWN,,,,ONBEKEND_FUNDAMENTALS
+KNSA,Blue Sky;FV Momentum Darvas,,,4,UNKNOWN,6,2026-11-21,https://simplywall.st/stocks/us/pharmaceuticals-biotech/nasdaq-knsa/kiniksa-pharmaceuticals-international,ONBEKEND_FUNDAMENTALS
+LH,Blue Sky;FV Momentum Darvas,,,4,UNKNOWN,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-lh/labcorp-holdings,EXCLUDED
+MCK,Sector Top Tickers,,,3,UNKNOWN,2,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-mck/mckesson/health,EXCLUDED
+PLGO,Blue Sky,,,5,UNKNOWN,,,,ONBEKEND_FUNDAMENTALS
+PLMR,Follow Thrue,,,4,UNKNOWN,,,,ONBEKEND_FUNDAMENTALS
+SPNT,Blue Sky,,,4,UNKNOWN,5,2026-11-21,https://simplywall.st/stocks/us/insurance/nyse-spnt/siriuspoint,ONBEKEND_FUNDAMENTALS
+VLTO,FV Momentum Darvas,,,4,UNKNOWN,4,2026-11-21,https://simplywall.st/stocks/us/commercial-services/nyse-vlto/veralto,ONBEKEND_FUNDAMENTALS

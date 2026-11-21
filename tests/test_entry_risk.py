@@ -1,5 +1,8 @@
 """Tests for DSR stop and 2R calculations."""
 import unittest
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 
 from scripts import entry_risk as er
 
@@ -119,6 +122,22 @@ class EntryRiskTests(unittest.TestCase):
                                          consolidation_pivot_status="OK", current_ha_close=94)
         self.assertEqual(result["breakout_reference_status"], "DOORBRAAK_BEVESTIGD")
         self.assertEqual(result["action"], "WACHTEN OP ACTUELE CONSOLIDATIEPIVOT")
+
+
+    def test_entry_risk_build_rows_does_not_require_optional_borrow_file(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            technical = root / "technical_scores.csv"
+            long_sw = root / "long_sw_status.csv"
+            technical.write_text(
+                "ticker,score_status,long_score,short_score,sma20,sma50\n",
+                encoding="utf-8",
+            )
+            long_sw.write_text("ticker,fundamental_status,sw_status\n", encoding="utf-8")
+            with patch.object(er, "TECHNICAL", technical), patch.object(er, "LONG_SW", long_sw), \
+                 patch.object(er, "BORROW", root / "missing_borrow.csv"), \
+                 patch.object(er, "RISK_NEWS", root / "missing_news.csv"):
+                self.assertEqual(er.build_rows(), [])
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 """Tests that TradingView sources are attempted independently."""
 import unittest
+import csv
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -46,6 +47,43 @@ class TradingViewPartialRefreshTests(unittest.TestCase):
                 ])
             content = output.read_text(encoding="utf-8-sig")
             self.assertIn("PGNY,NASDAQ,NASDAQ:PGNY", content)
+
+
+    def test_standalone_screener_symbols_list_is_parsed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with patch.object(tv, "DATA_DIR", root), patch.object(tv, "ROOT", root):
+                output = tv.save_rows("Follow Thrue", ["NASDAQ:CRVL", "NASDAQ:PLMR"])
+            content = output.read_text(encoding="utf-8-sig")
+            self.assertIn("CRVL,NASDAQ,NASDAQ:CRVL", content)
+            self.assertIn("PLMR,NASDAQ,NASDAQ:PLMR", content)
+
+    def test_standalone_screener_raw_values_are_parsed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            rows = [{
+                "id": "TickerUniversal",
+                "rawValues": [
+                    {"name": "CRVL", "exchange": "NASDAQ", "description": "CorVel Corp."},
+                    {"name": "PLMR", "exchange": "NASDAQ", "description": "Palomar Holdings, Inc."},
+                ],
+            }]
+            with patch.object(tv, "DATA_DIR", root), patch.object(tv, "ROOT", root):
+                output = tv.save_rows("Follow Thrue", rows)
+            with output.open(encoding="utf-8-sig", newline="") as f:
+                rows = list(csv.DictReader(f))
+            self.assertEqual([row["ticker"] for row in rows], ["CRVL", "PLMR"])
+            self.assertEqual(rows[1]["description"], "Palomar Holdings, Inc.")
+
+
+    def test_explicit_zero_result_screener_writes_valid_empty_csv(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with patch.object(tv, "DATA_DIR", root), patch.object(tv, "ROOT", root):
+                output = tv.save_rows("Simpel Monsters", {"totalCount": 0, "symbols": [], "data": []})
+            with output.open(encoding="utf-8-sig", newline="") as f:
+                rows = list(csv.DictReader(f))
+            self.assertEqual(rows, [])
 
 
 if __name__ == "__main__":

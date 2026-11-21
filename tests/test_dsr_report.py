@@ -33,6 +33,29 @@ class DsrReportTests(unittest.TestCase):
         self.assertTrue(report.proximity_bar(12, "ath").startswith("🟠 88.0%"))
         self.assertTrue(report.proximity_bar(20, "ath").startswith("🔴 80.0%"))
 
+    def test_ha_lists_use_confirmed_21_8_pivot_flags(self):
+        rows = [
+            {"ticker": "OLD", "ha_pivot_up": "False", "ha_pivot_down": "False"},
+            {"ticker": "LONG", "ha_pivot_up": "True", "ha_pivot_down": "False"},
+            {"ticker": "SHORT", "ha_pivot_up": "False", "ha_pivot_down": "True"},
+            {"ticker": "ORDINARY", "ha_strong_signal": "True", "ha_strong_down_signal": "True"},
+        ]
+        self.assertEqual([r["ticker"] for r in report.select_ha_long_signals(rows)], ["LONG"])
+        self.assertEqual([r["ticker"] for r in report.select_ha_short_signals(rows)], ["SHORT"])
+
+    def test_long_technical_gate_requires_close_above_both_smas_not_sma_alignment(self):
+        rows = [
+            {"ticker": "PASS", "score_status": "OK", "long_score": "4",
+             "above_sma20_completed": "True", "above_sma50_completed": "True"},
+            {"ticker": "BELOW20", "score_status": "OK", "long_score": "4",
+             "above_sma20_completed": "False", "above_sma50_completed": "True"},
+            {"ticker": "BELOW50", "score_status": "OK", "long_score": "4",
+             "above_sma20_completed": "True", "above_sma50_completed": "False"},
+            {"ticker": "UNKNOWN", "score_status": "OK", "long_score": "4",
+             "above_sma20_completed": "", "above_sma50_completed": "True"},
+        ]
+        self.assertEqual([r["ticker"] for r in report.select_long_technical_candidates(rows)], ["PASS"])
+
     def test_empty_table_is_explicit(self):
         self.assertEqual(report._table(["Ticker"], []), "_Geen kandidaten._")
 

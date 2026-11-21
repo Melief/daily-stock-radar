@@ -94,6 +94,25 @@ def select_short_candidates(technical_rows: list[dict]) -> list[dict]:
     return result
 
 
+def select_long_technical_candidates(technical_rows: list[dict]) -> list[dict]:
+    return [
+        row for row in technical_rows
+        if row.get("score_status") == "OK"
+        and (as_float(row.get("long_score")) is not None)
+        and as_float(row.get("long_score")) >= 3
+        and as_bool(row.get("above_sma20_completed")) is True
+        and as_bool(row.get("above_sma50_completed")) is True
+    ]
+
+
+def select_ha_long_signals(ha_rows: list[dict]) -> list[dict]:
+    return [row for row in ha_rows if as_bool(row.get("ha_pivot_up")) is True]
+
+
+def select_ha_short_signals(ha_rows: list[dict]) -> list[dict]:
+    return [row for row in ha_rows if as_bool(row.get("ha_pivot_down")) is True]
+
+
 def _table(headers: list[str], rows: list[list[str]]) -> str:
     if not rows:
         return "_Geen kandidaten._"
@@ -184,19 +203,15 @@ def build_report() -> tuple[str, dict]:
             entry.get("action", "ONBEKEND"),
         ])
 
-    ha_long = []
-    ha_short = []
-    for row in ha_rows:
-        ticker = row.get("ticker", "").upper()
-        if as_bool(row.get("ha_strong_signal")) and as_bool(row.get("above_sma20")) and as_bool(row.get("above_sma50")):
-            ha_long.append(row)
-        if as_bool(row.get("ha_strong_down_signal")) and as_bool(row.get("above_sma20")) is False and as_bool(row.get("above_sma50")) is False:
-            ha_short.append(row)
-    ha_long.sort(key=lambda row: as_float(row.get("distance_from_low_pct"))
-                    if as_float(row.get("distance_from_low_pct")) is not None else float("inf"))
+    ha_long = select_ha_long_signals(ha_rows)
+    ha_short = select_ha_short_signals(ha_rows)
+    ha_long.sort(key=lambda row: (
+        as_float(row.get("ha_pivot_distance_pct"))
+        if as_float(row.get("ha_pivot_distance_pct")) is not None else float("inf")
+    ))
     ha_short.sort(key=lambda row: (
-        ((as_float(row.get("ha_high")) - as_float(row.get("ha_close"))) / as_float(row.get("ha_high")) * 100)
-        if as_float(row.get("ha_high")) and as_float(row.get("ha_close")) is not None else float("inf")
+        as_float(row.get("ha_pivot_distance_pct"))
+        if as_float(row.get("ha_pivot_distance_pct")) is not None else float("inf")
     ))
 
     market_lines = []
@@ -236,12 +251,7 @@ def build_report() -> tuple[str, dict]:
                         f"signalen: {', '.join(item.get('event_flags', []))}"
                     )
 
-    long_tech_count = sum(
-        row.get("score_status") == "OK"
-        and (as_float(row.get("long_score")) or -1) >= 3
-        and (as_float(row.get("close_completed")) or 0) > (as_float(row.get("sma50")) or float("inf"))
-        for row in technical
-    )
+    long_tech_count = len(select_long_technical_candidates(technical))
     short_tech_count = len(short_candidates)
     borrow_available = sum(row.get("status") == "AVAILABLE" for row in borrow_rows)
     borrow_unknown = sum(row.get("status") == "ONBEKEND" for row in borrow_rows)
@@ -312,17 +322,17 @@ def build_report() -> tuple[str, dict]:
         _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "Nieuws", "Actie"], short_table),
         "",
         "## 5. HA-signalen",
-        f"Long-signalen die aan HA Low=Open en SMA20/SMA50 voldoen: **{len(ha_long)}**.",
-        _table(["Ticker", "Sector", "Industry", "Close", "Afstand HA Low %", "RVOL 5/21"], [
+        f"Long-signalen volgens HA 21/8 (HA Low=Open; slotkoers boven SMA20 en SMA50): **{len(ha_long)}**.",
+        _table(["Ticker", "Sector", "Industry", "Close", "Afstand HA Low %", "Leeftijd", "RVOL 5/21"], [
             [row.get("ticker"), row.get("sector"), row.get("industry"), row.get("close"),
-             row.get("distance_from_low_pct"), row.get("rvol_5_21")] for row in ha_long
+             row.get("ha_pivot_distance_pct"), row.get("ha_pivot_low_age"), row.get("rvol_5_21")]
+            for row in ha_long
         ]),
-        f"Short-signalen die aan HA High=Open en SMA20/SMA50 voldoen: **{len(ha_short)}**.",
-        _table(["Ticker", "Sector", "Industry", "Close", "Afstand HA High %", "RVOL 5/21"], [
+        f"Short-signalen volgens HA 21/8 (HA High=Open; slotkoers onder SMA20 en SMA50): **{len(ha_short)}**.",
+        _table(["Ticker", "Sector", "Industry", "Close", "Afstand HA High %", "Leeftijd", "RVOL 5/21"], [
             [row.get("ticker"), row.get("sector"), row.get("industry"), row.get("close"),
-             round((as_float(row.get("ha_high")) - as_float(row.get("ha_close"))) / as_float(row.get("ha_high")) * 100, 1)
-             if as_float(row.get("ha_high")) and as_float(row.get("ha_close")) is not None else "ONBEKEND",
-             row.get("rvol_5_21")] for row in ha_short
+             row.get("ha_pivot_distance_pct"), row.get("ha_pivot_high_age"), row.get("rvol_5_21")]
+            for row in ha_short
         ]),
         "",
         "## 6. Nieuws-/eventsignalen",

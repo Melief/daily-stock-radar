@@ -50,15 +50,28 @@ class LongFundamentalTests(unittest.TestCase):
         self.assertEqual(drug_maker["biotech_clinical_risk_review"], "REVIEW")
         self.assertEqual(result["fundamental_status"], "PASS")
 
+    def test_candidate_requires_close_above_sma20_and_sma50_without_sma_alignment(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "scores.csv"
+            path.write_text(
+                "ticker,score_status,long_score,close_completed,sma50,above_sma20_completed,above_sma50_completed,sources,sector,industry,score_date\n"
+                "AAA,OK,4,110,100,True,True,FV,Technology,Software,2026-11-20\n"
+                "BBB,OK,4,110,100,False,True,FV,Technology,Software,2026-11-20\n"
+                "CCC,OK,4,110,100,True,False,FV,Technology,Software,2026-11-20\n"
+                "DDD,OK,4,110,100,,True,FV,Technology,Software,2026-11-20\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(lf.load_candidates(path)["ticker"].tolist(), ["AAA"])
+
     def test_candidate_requires_technical_score_and_close_above_sma50(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "scores.csv"
             path.write_text(
-                "ticker,score_status,long_score,close_completed,sma50,sources,sector,industry,score_date\n"
-                "AAA,OK,4,110,100,FV,Technology,Software,2026-11-20\n"
-                "BBB,OK,4,90,100,VYUS,Technology,Software,2026-11-20\n"
-                "CCC,ONBEKEND,5,110,100,VYUS,Technology,Software,2026-11-20\n"
-                "DDD,OK,2,110,100,VYUS,Technology,Software,2026-11-20\n",
+                "ticker,score_status,long_score,close_completed,sma50,above_sma20_completed,above_sma50_completed,sources,sector,industry,score_date\n"
+                "AAA,OK,4,110,100,True,True,FV,Technology,Software,2026-11-20\n"
+                "BBB,OK,4,90,100,False,False,VYUS,Technology,Software,2026-11-20\n"
+                "CCC,ONBEKEND,5,110,100,True,True,VYUS,Technology,Software,2026-11-20\n"
+                "DDD,OK,2,110,100,True,True,VYUS,Technology,Software,2026-11-20\n",
                 encoding="utf-8",
             )
             self.assertEqual(lf.load_candidates(path)["ticker"].tolist(), ["AAA"])

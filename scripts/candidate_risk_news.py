@@ -249,14 +249,19 @@ def _fetch_candidate(candidate: dict) -> dict:
 
     price = {}
     price_error = ""
-    if candidate["candidate_type"] == "SHORT":
-        try:
-            frame = yf.download(
-                ticker, period="3mo", interval="1d", auto_adjust=False,
-                progress=False, threads=False, timeout=25,
-            )
+    history_extremes = {}
+    history_error = ""
+    try:
+        frame = yf.download(
+            ticker, period="max", interval="1d", auto_adjust=False,
+            progress=False, threads=False, timeout=25,
+        )
+        history_extremes = calculate_history_extremes(frame, candidate["score_date"])
+        if candidate["candidate_type"] == "SHORT":
             price = calculate_price_risk(frame, candidate["score_date"])
-        except Exception as exc:
+    except Exception as exc:
+        history_error = str(exc)
+        if candidate["candidate_type"] == "SHORT":
             price_error = str(exc)
 
     short_float_raw = number(info.get("shortPercentOfFloat"))
@@ -276,7 +281,7 @@ def _fetch_candidate(candidate: dict) -> dict:
     earnings_date = _earnings_date(info)
     earnings_date_known = candidate["candidate_type"] != "SHORT" or bool(earnings_date)
     risk_status = derive_risk_status(news_status, all_flags, short_metrics_ok, price_ok, earnings_date_known)
-    errors = [value for value in (info_error, news_error, price_error) if value]
+    errors = [value for value in (info_error, news_error, price_error, history_error) if value]
     return {
         "candidate_type": candidate["candidate_type"],
         "ticker": ticker,
@@ -291,6 +296,7 @@ def _fetch_candidate(candidate: dict) -> dict:
         "shares_short": shares_short if shares_short is not None else "",
         "shares_short_prior_month": shares_short_prior if shares_short_prior is not None else "",
         "earnings_date": earnings_date,
+        **history_extremes,
         "close": price.get("close", ""),
         "momentum_5d_pct": price.get("momentum_5d_pct", ""),
         "atr14_pct": price.get("atr14_pct", ""),
@@ -306,6 +312,7 @@ def _fetch_candidate(candidate: dict) -> dict:
         "_price_ok": not bool(price_error) if candidate["candidate_type"] == "SHORT" else True,
         "_short_metrics_ok": short_metrics_ok,
         "_earnings_date_known": earnings_date_known,
+        "_history_ok": history_extremes.get("history_extremes_status") == "FULL",
     }
 
 
@@ -387,6 +394,7 @@ def main() -> int:
 
     unknown = sum(
         row["risk_status"] == "UNKNOWN"
+        or not row["_history_ok"]
         or (row["candidate_type"] == "SHORT" and
             (not row["_info_ok"] or not row["_price_ok"] or not row["_short_metrics_ok"] or not row["_earnings_date_known"]))
         for row in results

@@ -138,6 +138,8 @@ def build_report() -> tuple[str, dict]:
             entry.get("entry", tech.get("close_completed", "")), entry.get("stop", ""),
             entry.get("risk_pct", ""), entry.get("target_2r", ""),
             tech.get("pivot_resistance_20d", ""), entry.get("long_buy_zone_status", ""),
+            risk.get("high_52w", ""), risk.get("distance_to_52w_high_pct", ""),
+            risk.get("all_time_high", ""), risk.get("distance_to_ath_pct", ""),
             tech.get("rvol_5_21", ""), risk.get("risk_status", "ONBEKEND"),
             entry.get("action", "ONBEKEND"),
         ])
@@ -157,7 +159,9 @@ def build_report() -> tuple[str, dict]:
             entry.get("risk_pct", ""), entry.get("target_2r", ""),
             borrow.get("status", "ONBEKEND"), borrow.get("fee_rate_pct", ""),
             borrow.get("available_shares", ""), risk.get("short_percent_of_float", ""),
-            risk.get("days_to_cover", ""), risk.get("risk_status", "ONBEKEND"),
+            risk.get("days_to_cover", ""), risk.get("high_52w", ""),
+            risk.get("distance_to_52w_high_pct", ""), risk.get("all_time_high", ""),
+            risk.get("distance_to_ath_pct", ""), risk.get("risk_status", "ONBEKEND"),
             entry.get("action", "ONBEKEND"),
         ])
 
@@ -229,8 +233,8 @@ def build_report() -> tuple[str, dict]:
 
     pending = [
         "Risk-on/risk-off marktregime: expliciete criteria ontbreken.",
-        "Long-entry: actuele consolidatiepivot, breakoutdatum/-volume, 52-week high/ATH, HA-stop en 2R-validatie.",
-        "Short-entry: laatste HA High=Open-stop, 2R-validatie en definitieve squeeze-/gaprisicobeoordeling.",
+        "Long-entry: actuele consolidatiepivot en bevestigde breakoutdatum/-slotkoers/-volume; de 20-sessie pivot is alleen een referentie.",
+        "Short-entry: actuele consolidatiepivot en technische haalbaarheid van het 2R-doel; borrow en ruwe squeeze-/gapgegevens zijn afzonderlijk zichtbaar.",
     ]
     if borrow_unknown:
         pending.append(f"IBKR-borrowinventaris ontbreekt voor {borrow_unknown} Short-kandidaten.")
@@ -281,12 +285,12 @@ def build_report() -> tuple[str, dict]:
         f"FAIL: **{fundamental_status.get('failed', 0)}**; onbekend: **{fundamental_status.get('unknown', 0)}**. "
         f"SW PASS: **{sw_status.get('passed', 0)}**; SW uitgesloten: **{sw_status.get('excluded_sw', 0)}**; "
         f"onbekend: **{sw_status.get('unknown', 0)}**. Goedgekeurd voor verdere Long-beoordeling: **{len(long_candidates)}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "20d pivot-ref", "Koopzone", "RVOL 5/21", "Nieuws", "Actie"], long_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "20d pivot-ref", "Koopzone", "52w high", "Afstand %", "ATH", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
         "",
         "## 4. Short",
         f"Technisch gekwalificeerd: **{short_tech_count}**. IBKR beschikbaar: **{borrow_available}**; "
         f"IBKR onbekend: **{borrow_unknown}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "Nieuws", "Actie"], short_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high", "Afstand %", "ATH", "Afstand %", "Nieuws", "Actie"], short_table),
         "",
         "## 5. HA-signalen",
         f"Long-signalen die aan HA Low=Open en SMA20/SMA50 voldoen: **{len(ha_long)}**.",

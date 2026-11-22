@@ -99,6 +99,13 @@ class TradingViewPartialRefreshTests(unittest.TestCase):
     def test_unrestricted_empty_screen_is_allowed(self):
         tv.ensure_results_visible("Simpel Monsters", "No symbols match your criteria")
 
+    def test_zero_count_payload_is_not_treated_as_captured_results(self):
+        payload = {"totalCount": 0, "symbols": [], "data": []}
+        self.assertFalse(tv.has_screener_results([payload]))
+
+    def test_nonempty_symbol_list_is_treated_as_captured_results(self):
+        self.assertTrue(tv.has_screener_results([["NASDAQ:CRVL"]]))
+
     def test_login_banner_does_not_reject_captured_results(self):
         message = "Log in to see the results. This screen is using some filters for registered users only."
         tv.ensure_results_visible("Follow Thrue", message, has_results=True)

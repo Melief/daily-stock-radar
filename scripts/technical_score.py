@@ -75,6 +75,21 @@ def analyse_price_history(frame: pd.DataFrame, expected_date: str) -> dict:
     sma50 = float(close.rolling(50).mean().iloc[-1])
     latest_close = float(close.iloc[-1])
     momentum_21d = (float(close.iloc[-1]) / float(close.iloc[-22]) - 1.0) * 100.0
+    ema8_series = close.ewm(span=8, adjust=False).mean()
+    ema21_series = close.ewm(span=21, adjust=False).mean()
+    ema8 = float(ema8_series.iloc[-1])
+    ema21 = float(ema21_series.iloc[-1])
+    ema_gap = abs(ema8 - ema21)
+    previous_ema_gap = abs(float(ema8_series.iloc[-2]) - float(ema21_series.iloc[-2]))
+    ema_gap_direction = (
+        "WIDENING" if ema_gap > previous_ema_gap
+        else "NARROWING" if ema_gap < previous_ema_gap
+        else "STABLE"
+    )
+    if ema8 == ema21 or ema_gap <= previous_ema_gap:
+        ema_status = "BEWARE"
+    else:
+        ema_status = "BULLISH" if ema8 > ema21 else "BEARISH"
     recent = data.tail(10)
     prior = data.iloc[-20:-10]
     higher_structure = (
@@ -92,6 +107,11 @@ def analyse_price_history(frame: pd.DataFrame, expected_date: str) -> dict:
         "above_sma20": bool(latest_close > sma20),
         "above_sma50": bool(latest_close > sma50),
         "momentum_21d_pct": round(momentum_21d, 3),
+        "ema8": round(ema8, 4),
+        "ema21": round(ema21, 4),
+        "ema_gap_pct": round((ema8 / ema21 - 1.0) * 100.0, 3),
+        "ema_gap_direction": ema_gap_direction,
+        "ema_momentum_status": ema_status,
         "higher_highs_higher_lows": bool(higher_structure),
         "lower_highs_lower_lows": bool(lower_structure),
         "pivot_resistance_20d": round(float(previous_20["High"].max()), 4),
@@ -189,6 +209,11 @@ def main() -> int:
                 "above_sma20_completed": price["above_sma20"],
                 "above_sma50_completed": price["above_sma50"],
                 "momentum_21d_pct": price["momentum_21d_pct"],
+                "ema8": price["ema8"],
+                "ema21": price["ema21"],
+                "ema_gap_pct": price["ema_gap_pct"],
+                "ema_gap_direction": price["ema_gap_direction"],
+                "ema_momentum_status": price["ema_momentum_status"],
                 "relative_vs_spx_pct": round(price["momentum_21d_pct"] - spx, 3),
                 "relative_vs_qqq_pct": round(price["momentum_21d_pct"] - qqq, 3),
                 "higher_highs_higher_lows": price["higher_highs_higher_lows"],
@@ -206,7 +231,9 @@ def main() -> int:
         except Exception as exc:
             errors.append(f"{ticker}: {exc}")
             row = {**base, "close_completed": "", "above_sma20_completed": "",
-                   "above_sma50_completed": "", "momentum_21d_pct": "", "relative_vs_spx_pct": "", "relative_vs_qqq_pct": "",
+                   "above_sma50_completed": "", "momentum_21d_pct": "",
+                   "ema8": "", "ema21": "", "ema_gap_pct": "", "ema_gap_direction": "",
+                   "ema_momentum_status": "", "relative_vs_spx_pct": "", "relative_vs_qqq_pct": "",
                    "higher_highs_higher_lows": "", "lower_highs_lower_lows": "",
                    "pivot_resistance_20d": "", "pivot_support_20d": "", "long_score": "", "short_score": "",
                    "long_components": "", "short_components": "", "score_status": "ONBEKEND",

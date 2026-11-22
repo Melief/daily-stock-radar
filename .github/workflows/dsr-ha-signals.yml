@@ -238,8 +238,128 @@ jobs:
             name="${item%%:*}"
             outcome="${item#*:}"
             if [ "$outcome" != "success" ]; then
-              required_failures="$required_failures
-- $name: $outcome"
+              required_failures="${required_failures}"
+            fi
+          done
+
+          if [ -n "$required_failures" ]; then
+            echo "DSR status: FOUT — an essential calculation, report or save step failed."
+            printf '%s\n' "$required_failures"
+            {
+              echo "## DSR status: FOUT"
+              printf '%s\n' "$required_failures"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          if [ ! -s data/dsr_report.md ] || [ ! -s data/dsr_report_status.json ]; then
+            echo "DSR status: FOUT — the current run did not produce a DSR report and status file."
+            echo "## DSR status: FOUT" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          report_status="$(python -c 'import json; print(json.load(open("data/dsr_report_status.json", encoding="utf-8")).get("status", "UNKNOWN"))')"
+          optional_failures=""
+          for item in \
+            "Long fundamentals:$LONG_FUNDAMENTALS_OUTCOME" \
+            "Simply Wall St:$SW_HEALTH_OUTCOME" \
+            "Short borrow:$SHORT_BORROW_OUTCOME" \
+            "News and candidate risk:$CANDIDATE_RISK_OUTCOME"; do
+            name="${item%%:*}"
+            outcome="${item#*:}"
+            if [ "$outcome" = "failure" ]; then
+              optional_failures="${optional_failures}"
+            fi
+          done
+
+          if [ "$report_status" = "FULL" ] && [ -z "$optional_failures" ]; then
+            echo "DSR status: OK — essential calculations, report and save completed."
+            echo "## DSR status: OK" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$report_status" = "PARTIAL" ] || [ -n "$optional_failures" ]; then
+            echo "DSR status: PARTIAL — report generated; one or more data or enrichment checks remain incomplete."
+            printf '%s\n' "$optional_failures"
+            {
+              echo "## DSR status: PARTIAL"
+              echo "The DSR report was generated and saved. Missing or incomplete checks are shown in the report/status files."
+              printf '%s\n' "$optional_failures"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "DSR status: FOUT — unexpected report status: $report_status"
+            echo "## DSR status: FOUT — unexpected report status: $report_status" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+\n'"- $name: $outcome"
+            fi
+          done
+
+          if [ -n "$required_failures" ]; then
+            echo "DSR status: FOUT — an essential calculation, report or save step failed."
+            printf '%s\n' "$required_failures"
+            {
+              echo "## DSR status: FOUT"
+              printf '%s\n' "$required_failures"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          if [ ! -s data/dsr_report.md ] || [ ! -s data/dsr_report_status.json ]; then
+            echo "DSR status: FOUT — the current run did not produce a DSR report and status file."
+            echo "## DSR status: FOUT" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          report_status="$(python -c 'import json; print(json.load(open("data/dsr_report_status.json", encoding="utf-8")).get("status", "UNKNOWN"))')"
+          optional_failures=""
+          for item in \
+            "Long fundamentals:$LONG_FUNDAMENTALS_OUTCOME" \
+            "Simply Wall St:$SW_HEALTH_OUTCOME" \
+            "Short borrow:$SHORT_BORROW_OUTCOME" \
+            "News and candidate risk:$CANDIDATE_RISK_OUTCOME"; do
+            name="${item%%:*}"
+            outcome="${item#*:}"
+            if [ "$outcome" = "failure" ]; then
+              optional_failures="$optional_failures
+- $name: aanvullende controle niet beschikbaar"
+            fi
+          done
+
+          if [ "$report_status" = "FULL" ] && [ -z "$optional_failures" ]; then
+            echo "DSR status: OK — essential calculations, report and save completed."
+            echo "## DSR status: OK" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$report_status" = "PARTIAL" ] || [ -n "$optional_failures" ]; then
+            echo "DSR status: PARTIAL — report generated; one or more data or enrichment checks remain incomplete."
+            printf '%s\n' "$optional_failures"
+            {
+              echo "## DSR status: PARTIAL"
+              echo "The DSR report was generated and saved. Missing or incomplete checks are shown in the report/status files."
+              printf '%s\n' "$optional_failures"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "DSR status: FOUT — unexpected report status: $report_status"
+            echo "## DSR status: FOUT — unexpected report status: $report_status" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+\n'"- $name: aanvullende controle niet beschikbaar"
+            fi
+          done
+
+          if [ "$report_status" = "FULL" ] && [ -z "$optional_failures" ]; then
+            echo "DSR status: OK — essential calculations, report and save completed."
+            echo "## DSR status: OK" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$report_status" = "PARTIAL" ] || [ -n "$optional_failures" ]; then
+            echo "DSR status: PARTIAL — report generated; one or more data or enrichment checks remain incomplete."
+            printf '%s\n' "$optional_failures"
+            {
+              echo "## DSR status: PARTIAL"
+              echo "The DSR report was generated and saved. Missing or incomplete checks are shown in the report/status files."
+              printf '%s\n' "$optional_failures"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "DSR status: FOUT — unexpected report status: $report_status"
+            echo "## DSR status: FOUT — unexpected report status: $report_status" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+\n'"- $name: $outcome"
             fi
           done
 

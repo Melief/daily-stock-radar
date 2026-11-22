@@ -287,7 +287,9 @@ def main() -> int:
     }
     write_status(payload)
     print(f"Entry risk: {payload['stop_2r_calculated']} stop/2R berekend, {unknown} onbekend, {invalid} ongeldig.")
-    return 0 if status == "FULL" else 1
+    # Invalid and unknown stop/2R rows remain visible in the status file and report.
+    # A successfully generated partial risk table is not a script execution failure.
+    return 0
 
 
 if __name__ == "__main__":

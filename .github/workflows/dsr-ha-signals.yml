@@ -10,7 +10,7 @@ on:
     - cron: "0 3 * * 1-5"
   workflow_run:
     workflows:
-      - "Refresh Finviz tickers and sync to Google Sheets"
+      - "Manual sync Finviz tickers to Google Sheets"
       - "Update TradingView screener tickers"
       - "VYUS holdings to CSV"
       - "Import VYUS Top 25 Holdings"
@@ -55,10 +55,35 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements-dsr.txt
+      - name: Test DSR schedule guard
+        run: |
+          python -m py_compile scripts/dsr_schedule_guard.py scripts/ha_signals.py scripts/technical_score.py scripts/entry_risk.py scripts/dsr_report.py
+          python - <<'PY'
+          from scripts.dsr_schedule_guard import should_run
+
+          cases = [
+              ("workflow_dispatch", "", "+0100", "", True),
+              ("workflow_run", "", "+0100", "success", True),
+              ("workflow_run", "", "+0100", "failure", False),
+              ("schedule", "0 14-21 * * 1-5", "+0100", "", True),
+              ("schedule", "0 14-21 * * 1-5", "+0200", "", True),
+              ("schedule", "0 2 * * 1-5", "+0200", "", True),
+              ("schedule", "0 2 * * 1-5", "+0100", "", False),
+              ("schedule", "0 3 * * 1-5", "+0100", "", True),
+              ("schedule", "0 3 * * 1-5", "+0200", "", False),
+              ("schedule", "45 1 * * 1-5", "+0200", "", True),
+              ("schedule", "45 2 * * 1-5", "+0100", "", True),
+          ]
+          for event, cron, offset, conclusion, expected in cases:
+              actual = should_run(event, cron, offset, conclusion)
+              assert actual is expected, (event, cron, offset, conclusion, actual, expected)
+          print(f"Schedule guard: {len(cases)} tests passed.")
+          PY
       - name: Check Amsterdam schedule time
         id: schedule
         env:
           SCHEDULE: ${{ github.event.schedule }}
+          UPSTREAM_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
         run: python scripts/dsr_schedule_guard.py >> "$GITHUB_OUTPUT"
       - name: Install dependencies
         if: steps.schedule.outputs.run == 'true'
@@ -165,8 +190,107 @@ jobs:
             fi
             sleep 3
           done
-      - name: Mark partial DSR pipeline as failed
-        if: steps.schedule.outputs.run == 'true' && (steps.calculate.outcome == 'failure' || steps.market_context.outcome == 'failure' || steps.technical_score.outcome == 'failure' || steps.long_fundamentals.outcome == 'failure' || steps.sw_financial_health.outcome == 'failure' || steps.candidate_risk_news.outcome == 'failure' || steps.entry_risk.outcome == 'failure' || steps.dsr_report.outcome == 'failure' || steps.commit_outputs.outcome == 'failure')
+      - name: Classify DSR execution
+        if: always()
+        env:
+          SCHEDULE_RUN: ${{ steps.schedule.outputs.run }}
+          SCHEDULE_OUTCOME: ${{ steps.schedule.outcome }}
+          CALCULATE_OUTCOME: ${{ steps.calculate.outcome }}
+          MARKET_CONTEXT_OUTCOME: ${{ steps.market_context.outcome }}
+          TECHNICAL_SCORE_OUTCOME: ${{ steps.technical_score.outcome }}
+          ENTRY_RISK_OUTCOME: ${{ steps.entry_risk.outcome }}
+          REPORT_OUTCOME: ${{ steps.dsr_report.outcome }}
+          COMMIT_OUTCOME: ${{ steps.commit_outputs.outcome }}
+          LONG_FUNDAMENTALS_OUTCOME: ${{ steps.long_fundamentals.outcome }}
+          SW_HEALTH_OUTCOME: ${{ steps.sw_financial_health.outcome }}
+          SHORT_BORROW_OUTCOME: ${{ steps.short_borrow.outcome }}
+          CANDIDATE_RISK_OUTCOME: ${{ steps.candidate_risk_news.outcome }}
+          EVENT_NAME: ${{ github.event_name }}
+          UPSTREAM_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
         run: |
-          echo "DSR is PARTIAL: one or more mandatory source, market, technical, pivot, entry-risk or report checks are incomplete. External financial data, borrow and news are non-blocking enrichments; UNKNOWN values never qualify a candidate."
-          exit 1
+          if [ "$SCHEDULE_OUTCOME" != "success" ]; then
+            echo "DSR status: FOUT — schedule guard/test did not complete."
+            echo "## DSR status: FOUT" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          if [ "$SCHEDULE_RUN" != "true" ]; then
+            if [ "$EVENT_NAME" = "workflow_run" ] && [ "$UPSTREAM_CONCLUSION" != "success" ]; then
+              echo "DSR status: SKIPPED — upstream source workflow concluded $UPSTREAM_CONCLUSION."
+              echo "## DSR status: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+              echo "Upstream source workflow was not successful; DSR calculations were not started." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "DSR status: SKIPPED — non-matching seasonal cron."
+              echo "## DSR status: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
+              echo "The other seasonal 04:00 cron is intentionally ignored." >> "$GITHUB_STEP_SUMMARY"
+            fi
+            exit 0
+          fi
+
+          required_failures=""
+          for item in \
+            "HA calculation:$CALCULATE_OUTCOME" \
+            "Market context:$MARKET_CONTEXT_OUTCOME" \
+            "Technical scores:$TECHNICAL_SCORE_OUTCOME" \
+            "Entry risk:$ENTRY_RISK_OUTCOME" \
+            "DSR report:$REPORT_OUTCOME" \
+            "Commit outputs:$COMMIT_OUTCOME"; do
+            name="${item%%:*}"
+            outcome="${item#*:}"
+            if [ "$outcome" != "success" ]; then
+              required_failures="$required_failures
+- $name: $outcome"
+            fi
+          done
+
+          if [ -n "$required_failures" ]; then
+            echo "DSR status: FOUT — an essential calculation, report or save step failed."
+            printf '%b
+' "$required_failures"
+            {
+              echo "## DSR status: FOUT"
+              printf '%b
+' "$required_failures"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          if [ ! -s data/dsr_report.md ] || [ ! -s data/dsr_report_status.json ]; then
+            echo "DSR status: FOUT — the current run did not produce a DSR report and status file."
+            echo "## DSR status: FOUT" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          report_status="$(python -c 'import json; print(json.load(open("data/dsr_report_status.json", encoding="utf-8")).get("status", "UNKNOWN"))')"
+          optional_failures=""
+          for item in \
+            "Long fundamentals:$LONG_FUNDAMENTALS_OUTCOME" \
+            "Simply Wall St:$SW_HEALTH_OUTCOME" \
+            "Short borrow:$SHORT_BORROW_OUTCOME" \
+            "News and candidate risk:$CANDIDATE_RISK_OUTCOME"; do
+            name="${item%%:*}"
+            outcome="${item#*:}"
+            if [ "$outcome" = "failure" ]; then
+              optional_failures="$optional_failures
+- $name: aanvullende controle niet beschikbaar"
+            fi
+          done
+
+          if [ "$report_status" = "FULL" ] && [ -z "$optional_failures" ]; then
+            echo "DSR status: OK — essential calculations, report and save completed."
+            echo "## DSR status: OK" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$report_status" = "PARTIAL" ] || [ -n "$optional_failures" ]; then
+            echo "DSR status: PARTIAL — report generated; one or more data or enrichment checks remain incomplete."
+            printf '%b
+' "$optional_failures"
+            {
+              echo "## DSR status: PARTIAL"
+              echo "The DSR report was generated and saved. Missing or incomplete checks are shown in the report/status files."
+              printf '%b
+' "$optional_failures"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "DSR status: FOUT — unexpected report status: $report_status"
+            echo "## DSR status: FOUT — unexpected report status: $report_status" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi

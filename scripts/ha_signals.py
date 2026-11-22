@@ -658,7 +658,9 @@ def main() -> int:
     print(f"Bronactualiteit: {SOURCE_STATUS_OUT}")
     # Source freshness and technical-data availability are reported separately.
     # Either incomplete source coverage or unknown ticker analysis makes the run PARTIAL.
-    return 1 if partial else 0
+    # A valid snapshot may be PARTIAL because a source is stale or some data is unknown.
+    # The detailed PARTIAL state is preserved in dsr_run_status.json; reserve exit 1 for execution failure.
+    return 0
 
 
 if __name__ == "__main__":

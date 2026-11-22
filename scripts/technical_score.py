@@ -251,7 +251,9 @@ def main() -> int:
                "scored": scored, "unknown": unknown, "errors": errors}
     write_status(payload)
     print(f"Technische scores: {scored} OK, {unknown} ONBEKEND; status={status}")
-    return 0 if status == "FULL" else 1
+    # Unknown individual tickers remain explicitly PARTIAL in the status file;
+    # successfully written scores for the remaining universe are still usable.
+    return 0
 
 
 if __name__ == "__main__":

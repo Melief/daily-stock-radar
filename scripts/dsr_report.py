@@ -462,7 +462,8 @@ def main() -> int:
         f"Long technisch={details['long_technical_candidates']} goedgekeurd={details['long_approved_candidates']}; "
         f"Short technisch={details['short_technical_candidates']} borrow beschikbaar={details['short_borrow_available']}"
     )
-    return 0 if details["status"] == "FULL" else 1
+    # PARTIAL is a valid generated report state; exceptions during generation still fail the process.
+    return 0
 
 
 if __name__ == "__main__":

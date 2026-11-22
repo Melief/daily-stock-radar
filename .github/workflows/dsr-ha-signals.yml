@@ -60,7 +60,6 @@ jobs:
           python -m py_compile scripts/dsr_schedule_guard.py scripts/ha_signals.py scripts/technical_score.py scripts/entry_risk.py scripts/dsr_report.py
           python - <<'PY'
           from scripts.dsr_schedule_guard import should_run
-
           cases = [
               ("workflow_dispatch", "", "+0100", "", True),
               ("workflow_run", "", "+0100", "success", True),
@@ -209,25 +208,16 @@ jobs:
           UPSTREAM_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
         run: |
           if [ "$SCHEDULE_OUTCOME" != "success" ]; then
-            echo "DSR status: FOUT — schedule guard/test did not complete."
+            echo "DSR status: FOUT — schedule guard or test failed."
             echo "## DSR status: FOUT" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-
           if [ "$SCHEDULE_RUN" != "true" ]; then
-            if [ "$EVENT_NAME" = "workflow_run" ] && [ "$UPSTREAM_CONCLUSION" != "success" ]; then
-              echo "DSR status: SKIPPED — upstream source workflow concluded $UPSTREAM_CONCLUSION."
-              echo "## DSR status: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
-              echo "Upstream source workflow was not successful; DSR calculations were not started." >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "DSR status: SKIPPED — non-matching seasonal cron."
-              echo "## DSR status: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
-              echo "The other seasonal 04:00 cron is intentionally ignored." >> "$GITHUB_STEP_SUMMARY"
-            fi
+            echo "DSR status: SKIPPED — non-matching seasonal cron or unsuccessful upstream workflow ($UPSTREAM_CONCLUSION)."
+            echo "## DSR status: SKIPPED" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-
-          required_failures=""
+          failed=false
           for item in \
             "HA calculation:$CALCULATE_OUTCOME" \
             "Market context:$MARKET_CONTEXT_OUTCOME" \
@@ -238,28 +228,22 @@ jobs:
             name="${item%%:*}"
             outcome="${item#*:}"
             if [ "$outcome" != "success" ]; then
-              required_failures="${required_failures}"
+              echo "FOUT — $name: $outcome"
+              echo "- FOUT — $name: $outcome" >> "$GITHUB_STEP_SUMMARY"
+              failed=true
             fi
           done
-
-          if [ -n "$required_failures" ]; then
-            echo "DSR status: FOUT — an essential calculation, report or save step failed."
-            printf '%s\n' "$required_failures"
-            {
-              echo "## DSR status: FOUT"
-              printf '%s\n' "$required_failures"
-            } >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-
-          if [ ! -s data/dsr_report.md ] || [ ! -s data/dsr_report_status.json ]; then
-            echo "DSR status: FOUT — the current run did not produce a DSR report and status file."
+          if [ "$failed" = "true" ]; then
             echo "## DSR status: FOUT" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-
+          if [ ! -s data/dsr_report.md ] || [ ! -s data/dsr_report_status.json ]; then
+            echo "DSR status: FOUT — current report files are missing."
+            echo "## DSR status: FOUT" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
           report_status="$(python -c 'import json; print(json.load(open("data/dsr_report_status.json", encoding="utf-8")).get("status", "UNKNOWN"))')"
-          optional_failures=""
+          optional_failed=false
           for item in \
             "Long fundamentals:$LONG_FUNDAMENTALS_OUTCOME" \
             "Simply Wall St:$SW_HEALTH_OUTCOME" \
@@ -268,145 +252,21 @@ jobs:
             name="${item%%:*}"
             outcome="${item#*:}"
             if [ "$outcome" = "failure" ]; then
-              optional_failures="${optional_failures}"
+              echo "PARTIAL — aanvullende controle niet beschikbaar: $name"
+              optional_failed=true
             fi
           done
-
-          if [ "$report_status" = "FULL" ] && [ -z "$optional_failures" ]; then
-            echo "DSR status: OK — essential calculations, report and save completed."
+          if [ "$report_status" = "FULL" ] && [ "$optional_failed" = "false" ]; then
+            echo "DSR status: OK"
             echo "## DSR status: OK" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "$report_status" = "PARTIAL" ] || [ -n "$optional_failures" ]; then
-            echo "DSR status: PARTIAL — report generated; one or more data or enrichment checks remain incomplete."
-            printf '%s\n' "$optional_failures"
-            {
-              echo "## DSR status: PARTIAL"
-              echo "The DSR report was generated and saved. Missing or incomplete checks are shown in the report/status files."
-              printf '%s\n' "$optional_failures"
-            } >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$report_status" = "PARTIAL" ]; then
+            echo "DSR status: PARTIAL — rapport gegenereerd; beperkingen staan in het rapport."
+            echo "## DSR status: PARTIAL" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "$report_status" = "FULL" ] && [ "$optional_failed" = "true" ]; then
+            echo "DSR status: PARTIAL — rapport is volledig, maar aanvullende controles ontbreken."
+            echo "## DSR status: PARTIAL" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "DSR status: FOUT — unexpected report status: $report_status"
-            echo "## DSR status: FOUT — unexpected report status: $report_status" >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-\n'"- $name: $outcome"
-            fi
-          done
-
-          if [ -n "$required_failures" ]; then
-            echo "DSR status: FOUT — an essential calculation, report or save step failed."
-            printf '%s\n' "$required_failures"
-            {
-              echo "## DSR status: FOUT"
-              printf '%s\n' "$required_failures"
-            } >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-
-          if [ ! -s data/dsr_report.md ] || [ ! -s data/dsr_report_status.json ]; then
-            echo "DSR status: FOUT — the current run did not produce a DSR report and status file."
+            echo "DSR status: FOUT — onverwachte rapportstatus: $report_status"
             echo "## DSR status: FOUT" >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-
-          report_status="$(python -c 'import json; print(json.load(open("data/dsr_report_status.json", encoding="utf-8")).get("status", "UNKNOWN"))')"
-          optional_failures=""
-          for item in \
-            "Long fundamentals:$LONG_FUNDAMENTALS_OUTCOME" \
-            "Simply Wall St:$SW_HEALTH_OUTCOME" \
-            "Short borrow:$SHORT_BORROW_OUTCOME" \
-            "News and candidate risk:$CANDIDATE_RISK_OUTCOME"; do
-            name="${item%%:*}"
-            outcome="${item#*:}"
-            if [ "$outcome" = "failure" ]; then
-              optional_failures="$optional_failures
-- $name: aanvullende controle niet beschikbaar"
-            fi
-          done
-
-          if [ "$report_status" = "FULL" ] && [ -z "$optional_failures" ]; then
-            echo "DSR status: OK — essential calculations, report and save completed."
-            echo "## DSR status: OK" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "$report_status" = "PARTIAL" ] || [ -n "$optional_failures" ]; then
-            echo "DSR status: PARTIAL — report generated; one or more data or enrichment checks remain incomplete."
-            printf '%s\n' "$optional_failures"
-            {
-              echo "## DSR status: PARTIAL"
-              echo "The DSR report was generated and saved. Missing or incomplete checks are shown in the report/status files."
-              printf '%s\n' "$optional_failures"
-            } >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "DSR status: FOUT — unexpected report status: $report_status"
-            echo "## DSR status: FOUT — unexpected report status: $report_status" >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-\n'"- $name: aanvullende controle niet beschikbaar"
-            fi
-          done
-
-          if [ "$report_status" = "FULL" ] && [ -z "$optional_failures" ]; then
-            echo "DSR status: OK — essential calculations, report and save completed."
-            echo "## DSR status: OK" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "$report_status" = "PARTIAL" ] || [ -n "$optional_failures" ]; then
-            echo "DSR status: PARTIAL — report generated; one or more data or enrichment checks remain incomplete."
-            printf '%s\n' "$optional_failures"
-            {
-              echo "## DSR status: PARTIAL"
-              echo "The DSR report was generated and saved. Missing or incomplete checks are shown in the report/status files."
-              printf '%s\n' "$optional_failures"
-            } >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "DSR status: FOUT — unexpected report status: $report_status"
-            echo "## DSR status: FOUT — unexpected report status: $report_status" >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-\n'"- $name: $outcome"
-            fi
-          done
-
-          if [ -n "$required_failures" ]; then
-            echo "DSR status: FOUT — an essential calculation, report or save step failed."
-            printf '%s\n' "$required_failures"
-            {
-              echo "## DSR status: FOUT"
-              printf '%s\n' "$required_failures"
-            } >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-
-          if [ ! -s data/dsr_report.md ] || [ ! -s data/dsr_report_status.json ]; then
-            echo "DSR status: FOUT — the current run did not produce a DSR report and status file."
-            echo "## DSR status: FOUT" >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-
-          report_status="$(python -c 'import json; print(json.load(open("data/dsr_report_status.json", encoding="utf-8")).get("status", "UNKNOWN"))')"
-          optional_failures=""
-          for item in \
-            "Long fundamentals:$LONG_FUNDAMENTALS_OUTCOME" \
-            "Simply Wall St:$SW_HEALTH_OUTCOME" \
-            "Short borrow:$SHORT_BORROW_OUTCOME" \
-            "News and candidate risk:$CANDIDATE_RISK_OUTCOME"; do
-            name="${item%%:*}"
-            outcome="${item#*:}"
-            if [ "$outcome" = "failure" ]; then
-              optional_failures="$optional_failures
-- $name: aanvullende controle niet beschikbaar"
-            fi
-          done
-
-          if [ "$report_status" = "FULL" ] && [ -z "$optional_failures" ]; then
-            echo "DSR status: OK — essential calculations, report and save completed."
-            echo "## DSR status: OK" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "$report_status" = "PARTIAL" ] || [ -n "$optional_failures" ]; then
-            echo "DSR status: PARTIAL — report generated; one or more data or enrichment checks remain incomplete."
-            printf '%s\n' "$optional_failures"
-            {
-              echo "## DSR status: PARTIAL"
-              echo "The DSR report was generated and saved. Missing or incomplete checks are shown in the report/status files."
-              printf '%s\n' "$optional_failures"
-            } >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "DSR status: FOUT — unexpected report status: $report_status"
-            echo "## DSR status: FOUT — unexpected report status: $report_status" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi

@@ -99,6 +99,10 @@ class TradingViewPartialRefreshTests(unittest.TestCase):
     def test_unrestricted_empty_screen_is_allowed(self):
         tv.ensure_results_visible("Simpel Monsters", "No symbols match your criteria")
 
+    def test_login_banner_does_not_reject_captured_results(self):
+        message = "Log in to see the results. This screen is using some filters for registered users only."
+        tv.ensure_results_visible("Follow Thrue", message, has_results=True)
+
 
     def test_storage_state_secret_is_loaded_without_logging_contents(self):
         browser = MagicMock()

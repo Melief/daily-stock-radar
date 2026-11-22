@@ -3,7 +3,7 @@
   "session_date": "2026-11-20",
   "technical_score_status": "FULL",
   "long_fundamental_status": "PARTIAL",
-  "long_fundamental_data_status": "CURRENT",
+  "long_fundamental_data_status": "STALE_FALLBACK",
   "fundamental_unknown_excluded_by_sw": [
     "MCK"
   ],
@@ -11,12 +11,12 @@
   "sw_financial_health_status": "PARTIAL",
   "short_borrow_status": "PARTIAL",
   "candidate_risk_news_status": "FULL",
-  "candidate_risk_unknown": 13,
-  "candidate_news_unknown": 0,
+  "candidate_risk_unknown": 23,
+  "candidate_news_unknown": 2,
   "history_pivot_unknown": 0,
   "entry_risk_status": "PARTIAL",
   "long_technical_candidates": 15,
-  "long_approved_candidates": 6,
+  "long_approved_candidates": 0,
   "short_technical_candidates": 27,
   "short_borrow_available": 23,
   "short_borrow_unknown": 4,
@@ -27,9 +27,9 @@
     "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
   ],
   "non_blocking_components": [
-    "Long fundamentals: CURRENT; PASS=9, FAIL=5, UNKNOWN=1.",
-    "Simply Wall St: status=PARTIAL, PASS=6, excluded=3, UNKNOWN=1.",
+    "Long fundamentals: STALE_FALLBACK; PASS=0, FAIL=0, UNKNOWN=15.",
+    "Simply Wall St: status=PARTIAL, PASS=0, excluded=3, UNKNOWN=12.",
     "IBKR borrow: status=PARTIAL, unknown=4.",
-    "News/event review en risicoverrijking: risk UNKNOWN=13, news UNKNOWN=0, REVIEW=13; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
+    "News/event review en risicoverrijking: risk UNKNOWN=23, news UNKNOWN=2, REVIEW=4; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
   ]
 }

@@ -62,11 +62,12 @@ def clean(value) -> str:
 
 def ema_summary(row: dict) -> str:
     status = clean(row.get("ema_momentum_status"))
+    ema8, ema21 = as_float(row.get("ema8")), as_float(row.get("ema21"))
     gap = as_float(row.get("ema_gap_pct"))
     direction = clean(row.get("ema_gap_direction"))
-    if status == "ONBEKEND" or gap is None or direction == "ONBEKEND":
+    if status == "ONBEKEND" or ema8 is None or ema21 is None or gap is None or direction == "ONBEKEND":
         return "ONBEKEND"
-    return f"{status} {gap:+.2f}% ({direction})"
+    return f"{ema8:.2f}/{ema21:.2f} · {status} {gap:+.2f}% {direction}"
 
 
 def proximity_bar(distance_to_high, kind: str) -> str:

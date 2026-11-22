@@ -11,7 +11,7 @@
   "sw_financial_health_status": "FULL",
   "short_borrow_status": "PARTIAL",
   "candidate_risk_news_status": "FULL",
-  "candidate_risk_unknown": 14,
+  "candidate_risk_unknown": 15,
   "candidate_news_unknown": 0,
   "history_pivot_unknown": 0,
   "entry_risk_status": "PARTIAL",
@@ -29,6 +29,6 @@
   "non_blocking_components": [
     "Long fundamentals: CURRENT; PASS=8, FAIL=3, UNKNOWN=1.",
     "IBKR borrow: status=PARTIAL, unknown=4.",
-    "News/event review en risicoverrijking: risk UNKNOWN=14, news UNKNOWN=0, REVIEW=13; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
+    "News/event review en risicoverrijking: risk UNKNOWN=15, news UNKNOWN=0, REVIEW=11; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
   ]
 }

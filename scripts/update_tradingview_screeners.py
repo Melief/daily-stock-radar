@@ -23,6 +23,10 @@ DATA_DIR = ROOT / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
 
+def has_screener_results(captured):
+    return any(isinstance(result, list) and bool(result) for result in captured)
+
+
 def ensure_results_visible(label, visible_text, has_results=False):
     text = str(visible_text or "").lower()
     restricted = (
@@ -168,7 +172,7 @@ def retrieve_screener(context, label, url):
             visible_text = f"body niet leesbaar: {exc}"
         print(f"TradingView page summary {label}: title={page.title()!r}; "
               f"url={urllib.parse.urlsplit(page.url).path}; body={visible_text[:1400]!r}")
-        ensure_results_visible(label, visible_text, has_results=bool(captured))
+        ensure_results_visible(label, visible_text, has_results=has_screener_results(captured))
         if not captured:
             try:
                 body_text = page.locator("body").inner_text(timeout=5000)

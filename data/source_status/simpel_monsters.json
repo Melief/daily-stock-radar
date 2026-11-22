@@ -1,7 +1,7 @@
 {
   "source_id": "simpel_monsters",
-  "last_attempt_status": "success",
-  "last_attempt_at": "2026-11-22T09:54:40+00:00",
-  "last_success_at": "2026-11-22T09:54:40+00:00",
-  "detail": "0 gevalideerde TradingView-tickers opgehaald."
+  "last_attempt_status": "failure",
+  "last_attempt_at": "2026-11-22T09:23:00+00:00",
+  "last_success_at": "2026-11-08T07:45:45+00:00",
+  "detail": "Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden."
 }

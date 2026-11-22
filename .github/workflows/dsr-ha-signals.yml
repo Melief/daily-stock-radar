@@ -245,12 +245,10 @@ jobs:
 
           if [ -n "$required_failures" ]; then
             echo "DSR status: FOUT — an essential calculation, report or save step failed."
-            printf '%b
-' "$required_failures"
+            printf '%s\n' "$required_failures"
             {
               echo "## DSR status: FOUT"
-              printf '%b
-' "$required_failures"
+              printf '%s\n' "$required_failures"
             } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
@@ -281,13 +279,11 @@ jobs:
             echo "## DSR status: OK" >> "$GITHUB_STEP_SUMMARY"
           elif [ "$report_status" = "PARTIAL" ] || [ -n "$optional_failures" ]; then
             echo "DSR status: PARTIAL — report generated; one or more data or enrichment checks remain incomplete."
-            printf '%b
-' "$optional_failures"
+            printf '%s\n' "$optional_failures"
             {
               echo "## DSR status: PARTIAL"
               echo "The DSR report was generated and saved. Missing or incomplete checks are shown in the report/status files."
-              printf '%b
-' "$optional_failures"
+              printf '%s\n' "$optional_failures"
             } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "DSR status: FOUT — unexpected report status: $report_status"

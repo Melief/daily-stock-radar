@@ -60,6 +60,15 @@ def clean(value) -> str:
     return text.replace("|", "/")
 
 
+def ema_summary(row: dict) -> str:
+    status = clean(row.get("ema_momentum_status"))
+    gap = as_float(row.get("ema_gap_pct"))
+    direction = clean(row.get("ema_gap_direction"))
+    if status == "ONBEKEND" or gap is None or direction == "ONBEKEND":
+        return "ONBEKEND"
+    return f"{status} {gap:+.2f}% ({direction})"
+
+
 def proximity_bar(distance_to_high, kind: str) -> str:
     distance = as_float(distance_to_high)
     if distance is None:
@@ -186,7 +195,7 @@ def build_report() -> tuple[str, dict]:
         long_table.append([
             ticker, candidate.get("sources", ""), candidate.get("sector", ""),
             candidate.get("industry", ""), ha.get("ha_day_type", tech.get("ha_day_type", "")),
-            candidate.get("technical_score", ""), f"{candidate.get('financial_health_score')}/6",
+            candidate.get("technical_score", ""), ema_summary(tech), f"{candidate.get('financial_health_score')}/6",
             entry.get("entry", tech.get("close_completed", "")), entry.get("stop", ""),
             entry.get("risk_pct", ""), entry.get("target_2r", ""),
             entry.get("target_feasibility", ""), *pivot_audit_cells(entry), entry.get("long_buy_zone_status", ""),
@@ -206,7 +215,7 @@ def build_report() -> tuple[str, dict]:
         short_table.append([
             ticker, candidate.get("sources", ""), candidate.get("sector", ""),
             candidate.get("industry", ""), ha.get("ha_day_type", candidate.get("ha_day_type", "")),
-            candidate.get("short_score", ""), "__EMPTY__",
+            candidate.get("short_score", ""), ema_summary(candidate), "__EMPTY__",
             entry.get("entry", candidate.get("close_completed", "")), entry.get("stop", ""),
             entry.get("risk_pct", ""), entry.get("target_2r", ""),
             entry.get("target_feasibility", ""), *pivot_audit_cells(entry), borrow.get("status", "ONBEKEND"), borrow.get("fee_rate_pct", ""),
@@ -381,12 +390,12 @@ def build_report() -> tuple[str, dict]:
         "",
         "## 3. Long",
         long_summary,
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Breakoutstatus", "Breakoutdatum", "Officieel slot", "HA-slot", "Volume", "Koopzone", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "EMA8/21", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Breakoutstatus", "Breakoutdatum", "Officieel slot", "HA-slot", "Volume", "Koopzone", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "RVOL 5/21", "Nieuws", "Actie"], long_table),
         "",
         "## 4. Short",
         f"Technisch gekwalificeerd: **{short_tech_count}**. IBKR beschikbaar: **{borrow_available}**; "
         f"IBKR onbekend: **{borrow_unknown}**.",
-        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Doorbraakstatus", "Doorbraakdatum", "Officieel slot", "HA-slot", "Volume", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "Nieuws", "Actie"], short_table),
+        _table(["Ticker", "Bron", "Sector", "Industry", "HA", "Score", "EMA8/21", "SW", "Entry", "Stop", "Risk %", "2R", "2R haalbaarheid", "Consolidatiepivot", "Pivotdatum", "Pivotstatus", "Doorbraakstatus", "Doorbraakdatum", "Officieel slot", "HA-slot", "Volume", "Borrow", "Fee %", "Shares", "Short float %", "DTC", "52w high (prior)", "Afstand %", "ATH (prior)", "Afstand %", "Nieuws", "Actie"], short_table),
         "",
         "## 5. HA-signalen",
         f"Long-signalen volgens HA 21/8 (HA Low=Open; slotkoers boven SMA20 en SMA50): **{len(ha_long)}**.",

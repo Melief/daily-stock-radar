@@ -1,19 +1,12 @@
 {
   "status": "PARTIAL",
-  "data_status": "STALE_FALLBACK",
+  "data_status": "CURRENT",
   "candidate_count": 15,
-  "passed": 0,
-  "failed": 0,
-  "unknown": 15,
-  "checked_at": "2026-11-22T10:08:01+00:00",
-  "last_success_at": "2026-11-22T09:57:18+00:00",
-  "last_known_counts": {
-    "passed": 9,
-    "failed": 5,
-    "unknown": 1
-  },
-  "fallback_used": true,
-  "errors": [
-    "Yahoo Finance quoteSummary returned no usable fundamental fields for any current Long candidate; the last validated values are retained as STALE_FALLBACK."
-  ]
+  "passed": 9,
+  "failed": 5,
+  "unknown": 1,
+  "checked_at": "2026-11-23T09:51:00+00:00",
+  "last_success_at": "2026-11-23T09:51:00+00:00",
+  "fallback_used": false,
+  "errors": []
 }

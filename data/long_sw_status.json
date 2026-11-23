@@ -1,9 +1,9 @@
 {
   "status": "PARTIAL",
-  "data_status": "STALE_FALLBACK",
+  "data_status": "CURRENT",
   "long_candidates": 15,
-  "passed": 0,
+  "passed": 6,
   "excluded_sw": 3,
-  "unknown": 12,
+  "unknown": 1,
   "manual_scores_available": 11
 }

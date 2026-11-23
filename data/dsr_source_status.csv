@@ -1,7 +1,7 @@
 source,source_id,status,last_attempt_at,last_success_at,age_hours,included,ticker_count,detail
 Sector Top Tickers,sector_top_tickers,MANUAL,,,,True,32,Handmatig beheerde bron; automatische actualiteit niet van toepassing.
-FV Momentum Darvas,fv_momentum_darvas,CURRENT,2026-11-21T17:47:50+00:00,2026-11-21T17:47:50+00:00,16.3,True,4,Finviz fetch step
-Simpel Monsters,simpel_monsters,STALE,2026-11-22T09:23:00+00:00,2026-11-08T07:45:45+00:00,338.3,False,0,Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
-Follow Thrue,follow_thrue,CURRENT,2026-11-22T09:54:59+00:00,2026-11-22T09:54:59+00:00,0.2,True,3,3 gevalideerde TradingView-tickers opgehaald.
-VYUS holdings,vyus_holdings,CURRENT,2026-11-21T17:50:25+00:00,2026-11-21T17:50:25+00:00,16.3,True,25,25 gevalideerde VYUS-tickers opgehaald.
-Blue Sky,blue_sky,CURRENT,2026-11-21T17:47:50+00:00,2026-11-21T17:47:50+00:00,16.3,True,9,Blue Sky fetch step
+FV Momentum Darvas,fv_momentum_darvas,CURRENT,2026-11-21T17:47:50+00:00,2026-11-21T17:47:50+00:00,40.0,True,4,Finviz fetch step
+Simpel Monsters,simpel_monsters,STALE,2026-11-22T10:06:52+00:00,2026-11-08T07:45:45+00:00,362.1,False,0,Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
+Follow Thrue,follow_thrue,CURRENT,2026-11-22T10:07:10+00:00,2026-11-22T10:07:10+00:00,23.7,True,3,3 gevalideerde TradingView-tickers opgehaald.
+VYUS holdings,vyus_holdings,CURRENT,2026-11-21T17:50:25+00:00,2026-11-21T17:50:25+00:00,40.0,True,25,25 gevalideerde VYUS-tickers opgehaald.
+Blue Sky,blue_sky,CURRENT,2026-11-21T17:47:50+00:00,2026-11-21T17:47:50+00:00,40.0,True,9,Blue Sky fetch step

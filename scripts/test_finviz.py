@@ -76,9 +76,16 @@ def parse_export(body):
         visible_text = re.sub(r"\s+", " ", visible_text).strip()
         markers = ("no results", "no stocks", "no data", "no matches", "0 results")
         result_markers = {marker: visible_text.lower().count(marker) for marker in markers}
+        contexts = {}
+        for marker in markers:
+            position = visible_text.lower().find(marker)
+            if position >= 0:
+                contexts[marker] = visible_text[max(0, position - 180):position + 260]
+        table_rows = len(re.findall(r"<tr\\b", body, re.I))
         detail += (
             f"; candidate links={parser.links!r}; extracted tickers={len(parser.tickers)}"
-            f"; result markers={result_markers!r}; visible text sample={visible_text[:900]!r}"
+            f"; result markers={result_markers!r}; marker contexts={contexts!r}"
+            f"; table rows={table_rows}; visible text sample={visible_text[:900]!r}"
         )
         if parser.tickers:
             return parser.tickers

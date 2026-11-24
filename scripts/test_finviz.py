@@ -89,6 +89,17 @@ def parse_export(body):
         )
         if parser.tickers:
             return parser.tickers
+
+        # Finviz returns this exact text on a successfully loaded empty screener.
+        # Require the real screener title too; Elite/login/error HTML must fail.
+        if (
+            title
+            and title.group(1).strip().lower().startswith("stock screener")
+            and re.search(r"\bNo stocks match the current screen\.", visible_text, re.I)
+        ):
+            print("Validated empty Finviz screener: No stocks match the current screen.")
+            return []
+
         raise ValueError("Finviz returned HTML, not CSV; " + detail)
 
     try:

@@ -73,7 +73,7 @@ def parse_export(body):
         parser.feed(body)
         detail = f"HTML title={title.group(1).strip()[:120]!r}" if title else "HTML title not found"
         visible_text = re.sub(r"<[^>]+>", " ", body)
-        visible_text = re.sub(r"\\s+", " ", visible_text).strip()
+        visible_text = re.sub(r"\s+", " ", visible_text).strip()
         markers = ("no results", "no stocks", "no data", "no matches", "0 results")
         result_markers = {marker: visible_text.lower().count(marker) for marker in markers}
         detail += (

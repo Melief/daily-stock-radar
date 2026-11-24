@@ -1,7 +1,7 @@
 {
   "status": "PARTIAL",
   "data_status": "CURRENT",
-  "long_candidates": 15,
+  "long_candidates": 16,
   "passed": 6,
   "excluded_sw": 3,
   "unknown": 1,

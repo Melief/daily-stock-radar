@@ -7,7 +7,7 @@
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
     "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
   ],
-  "generated_at": "2026-11-24T11:35:41+00:00",
+  "generated_at": "2026-11-24T11:38:34+00:00",
   "unique_tickers": 76,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
@@ -15,7 +15,7 @@
     "Simpel Monsters": "STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "source_warnings": {
-    "FV Momentum Darvas": "UNKNOWN: Ongeldige bronstatus; bestaand bestand alleen als fallback gebruikt: Extra data: line 7 column 2 (char 208)",
+    "FV Momentum Darvas": "STALE_FALLBACK: Finviz fetch step | Laatste refresh mislukte; vorige succesvolle data gebruikt.",
     "Simpel Monsters": "STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.",
     "Follow Thrue": "STALE_FALLBACK: Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste refresh mislukte; vorige succesvolle data gebruikt.",
     "Blue Sky": "STALE_FALLBACK: Blue Sky fetch step | Laatste refresh mislukte; vorige succesvolle data gebruikt."

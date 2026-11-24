@@ -1,7 +1,7 @@
 {
   "source_id": "blue_sky",
-  "last_attempt_status": "failure",
-  "last_attempt_at": "2026-11-24T11:29:19+00:00",
-  "last_success_at": "2026-11-24T11:28:34+00:00",
+  "last_attempt_status": "success",
+  "last_attempt_at": "2026-11-24T11:39:27+00:00",
+  "last_success_at": "2026-11-24T11:39:27+00:00",
   "detail": "Blue Sky fetch step"
 }

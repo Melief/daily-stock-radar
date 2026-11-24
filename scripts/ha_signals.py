@@ -131,7 +131,7 @@ def write_source_status(rows: list[dict]):
     ]).to_csv(SOURCE_STATUS_OUT, index=False)
 
 
-def read_source(path: Path, fmt: str) -> list[str]:
+def read_source(path: Path, fmt: str, allow_empty: bool = False) -> list[str]:
     if not path.exists():
         raise FileNotFoundError(f"Verplicht bronbestand ontbreekt: {path.relative_to(ROOT)}")
     content = path.read_text(encoding="utf-8-sig").strip()
@@ -157,6 +157,10 @@ def read_source(path: Path, fmt: str) -> list[str]:
         ]
 
     if not result:
+        # Only the Darvas source may legitimately be empty: Finviz confirmed
+        # "No stocks match the current screen" and writes a valid Ticker-only CSV.
+        if allow_empty and fmt == "csv" and "ticker" in fields:
+            return []
         raise ValueError(f"Bron bevat geen tickers: {path.relative_to(ROOT)}")
     return result
 
@@ -171,7 +175,9 @@ def load_universe(include_status: bool = False):
     for source_name, path, fmt in SOURCES:
         metadata = SOURCE_METADATA.get(source_name, {})
         try:
-            tickers = read_source(path, fmt)
+            tickers = read_source(
+                path, fmt, allow_empty=(source_name == "FV Momentum Darvas")
+            )
         except Exception as exc:
             source_errors[source_name] = str(exc)
             if include_status:

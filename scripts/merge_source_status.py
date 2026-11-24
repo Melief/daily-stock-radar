@@ -40,6 +40,7 @@ def main():
 
         with open(path, "w", encoding="utf-8") as output:
             json.dump(merged, output, indent=2)
+            # Keep merged status files as valid, consistently formatted JSON.
             output.write("\n")
         print(f"Merged concurrent status updates: {path}")
 

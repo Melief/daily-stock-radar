@@ -72,7 +72,14 @@ def parse_export(body):
         parser = ScreenerParser()
         parser.feed(body)
         detail = f"HTML title={title.group(1).strip()[:120]!r}" if title else "HTML title not found"
-        detail += f"; candidate links={parser.links!r}; extracted tickers={len(parser.tickers)}"
+        visible_text = re.sub(r"<[^>]+>", " ", body)
+        visible_text = re.sub(r"\\s+", " ", visible_text).strip()
+        markers = ("no results", "no stocks", "no data", "no matches", "0 results")
+        result_markers = {marker: visible_text.lower().count(marker) for marker in markers}
+        detail += (
+            f"; candidate links={parser.links!r}; extracted tickers={len(parser.tickers)}"
+            f"; result markers={result_markers!r}; visible text sample={visible_text[:900]!r}"
+        )
         if parser.tickers:
             return parser.tickers
         raise ValueError("Finviz returned HTML, not CSV; " + detail)

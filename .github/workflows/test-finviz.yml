@@ -121,7 +121,8 @@ jobs:
         run: python scripts/sync_finviz_to_sheets.py
 
       - name: Sync Blue Sky tickers to Google Sheets
-        if: steps.blue_sky.outcome == 'success'
+        # Keep this independent from a failure in the preceding Finviz Sheets sync.
+        if: always() && steps.blue_sky.outcome == 'success'
         env:
           GS_WEBAPP_URL: ${{ vars.GS_WEBAPP_URL }}
           GS_SECRET: ${{ secrets.GS_SECRET }}

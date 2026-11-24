@@ -78,7 +78,49 @@ jobs:
             # Other workflows may also update main; rebase before pushing.
             for attempt in 1 2 3; do
               git fetch origin main
-              git rebase origin/main
+              if ! git rebase origin/main; then
+                conflicts="$(git diff --name-only --diff-filter=U)"
+                if [ -z "$conflicts" ]; then
+                  echo "ERROR: Rebase failed without resolvable status-file conflicts."
+                  git rebase --abort
+                  exit 1
+                fi
+                while IFS= read -r file; do
+                  case "$file" in
+                    data/source_status/*.json) ;;
+                    *)
+                      echo "ERROR: Unexpected rebase conflict in $file; refusing automatic resolution."
+                      git rebase --abort
+                      exit 1
+                      ;;
+                  esac
+                done <<< "$conflicts"
+                python - <<'PY' $conflicts
+import json
+import subprocess
+import sys
+from datetime import datetime
+
+def stamp(value):
+    return datetime.fromisoformat(value.replace("Z", "+00:00")) if value else None
+
+for path in sys.argv[1:]:
+    upstream = json.loads(subprocess.check_output(["git", "show", f":2:{path}"], text=True))
+    local = json.loads(subprocess.check_output(["git", "show", f":3:{path}"], text=True))
+    if upstream.get("source_id") != local.get("source_id"):
+        raise SystemExit(f"Refusing to merge mismatched source IDs in {path}")
+    latest = max((upstream, local), key=lambda item: stamp(item["last_attempt_at"]))
+    successes = [item.get("last_success_at") for item in (upstream, local) if item.get("last_success_at")]
+    merged = dict(latest)
+    merged["last_success_at"] = max(successes, key=stamp) if successes else None
+    with open(path, "w", encoding="utf-8") as output:
+        json.dump(merged, output, indent=2)
+        output.write("\\n")
+    print(f"Merged concurrent status updates: {path}")
+PY
+                git add $conflicts
+                GIT_EDITOR=true git rebase --continue
+              fi
               if git push origin HEAD:main; then
                 break
               fi

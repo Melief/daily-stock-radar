@@ -4,14 +4,19 @@ CBOE,Blue Sky,Financial Services,Financial Data & Stock Exchanges,4,PASS,6,2026-
 CHD,Blue Sky,Consumer Defensive,Household & Personal Products,4,PASS,4,2026-11-21,https://simplywall.st/stocks/us/household/nyse-chd/church-dwight,PASS
 CRVL,Follow Thrue,Financial Services,Insurance Brokers,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 DGX,Blue Sky;FV Momentum Darvas,Healthcare,Diagnostics & Research,4,PASS,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-dgx/quest-diagnostics,EXCLUDED
+EXPD,Blue Sky,Industrials,Integrated Freight & Logistics,3,PASS,,,,ONBEKEND
 EXPO,Follow Thrue,Industrials,Engineering & Construction,4,PASS,,,,ONBEKEND
+GCT,Blue Sky,Technology,Software - Infrastructure,4,PASS,,,,ONBEKEND
 GEN,VYUS holdings,Technology,Software - Infrastructure,3,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 HG,Blue Sky,Financial Services,Insurance - Reinsurance,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
-KNSA,Blue Sky;FV Momentum Darvas,Healthcare,Drug Manufacturers - Specialty & Generic,4,PASS,6,2026-11-21,https://simplywall.st/stocks/us/pharmaceuticals-biotech/nasdaq-knsa/kiniksa-pharmaceuticals-international,PASS
+KNSA,FV Momentum Darvas,Healthcare,Drug Manufacturers - Specialty & Generic,4,PASS,6,2026-11-21,https://simplywall.st/stocks/us/pharmaceuticals-biotech/nasdaq-knsa/kiniksa-pharmaceuticals-international,PASS
 LH,Blue Sky;FV Momentum Darvas,Healthcare,Diagnostics & Research,4,PASS,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-lh/labcorp-holdings,EXCLUDED
 MCK,Sector Top Tickers,Healthcare,Medical Distribution,3,UNKNOWN,2,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-mck/mckesson/health,EXCLUDED
+OSW,Blue Sky,Consumer Cyclical,Leisure,3,PASS,,,,ONBEKEND
 PLGO,Blue Sky,Financial Services,Insurance - Diversified,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 PLMR,Follow Thrue,Financial Services,Insurance - Property & Casualty,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 PTC,VYUS holdings,Technology,Software - Application,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
+RGA,Blue Sky,Financial Services,Insurance - Reinsurance,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
+SN,Blue Sky,Consumer Cyclical,"Furnishings, Fixtures & Appliances",3,PASS,,,,ONBEKEND
 SPNT,Blue Sky,Financial Services,Insurance - Reinsurance,4,PASS,5,2026-11-21,https://simplywall.st/stocks/us/insurance/nyse-spnt/siriuspoint,PASS
 VLTO,FV Momentum Darvas,Industrials,Pollution & Treatment Controls,4,PASS,4,2026-11-21,https://simplywall.st/stocks/us/commercial-services/nyse-vlto/veralto,PASS

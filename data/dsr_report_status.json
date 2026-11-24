@@ -11,12 +11,12 @@
   "sw_financial_health_status": "PARTIAL",
   "short_borrow_status": "PARTIAL",
   "candidate_risk_news_status": "FULL",
-  "candidate_risk_unknown": 16,
-  "candidate_news_unknown": 0,
+  "candidate_risk_unknown": 14,
+  "candidate_news_unknown": 2,
   "history_pivot_unknown": 0,
   "entry_risk_status": "PARTIAL",
-  "long_technical_candidates": 21,
-  "long_approved_candidates": 6,
+  "long_technical_candidates": 18,
+  "long_approved_candidates": 4,
   "short_technical_candidates": 28,
   "short_borrow_available": 23,
   "short_borrow_unknown": 5,
@@ -27,9 +27,9 @@
     "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
   ],
   "non_blocking_components": [
-    "Long fundamentals: CURRENT; PASS=13, FAIL=7, UNKNOWN=1.",
-    "Simply Wall St: status=PARTIAL, PASS=6, excluded=3, UNKNOWN=5.",
+    "Long fundamentals: CURRENT; PASS=10, FAIL=7, UNKNOWN=1.",
+    "Simply Wall St: status=PARTIAL, PASS=4, excluded=2, UNKNOWN=5.",
     "IBKR borrow: status=PARTIAL, unknown=5.",
-    "News/event review en risicoverrijking: risk UNKNOWN=16, news UNKNOWN=0, REVIEW=13; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
+    "News/event review en risicoverrijking: risk UNKNOWN=14, news UNKNOWN=2, REVIEW=13; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
   ]
 }

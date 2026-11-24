@@ -1,7 +1,7 @@
 source,source_id,status,last_attempt_at,last_success_at,age_hours,included,ticker_count,detail
 Sector Top Tickers,sector_top_tickers,MANUAL,,,,True,32,Handmatig beheerde bron; automatische actualiteit niet van toepassing.
-FV Momentum Darvas,fv_momentum_darvas,STALE_FALLBACK,2026-11-24T11:43:33+00:00,2026-11-21T17:47:50+00:00,67.2,True,4,Finviz fetch step | Laatste refresh mislukte; vorige succesvolle data gebruikt.
-Simpel Monsters,simpel_monsters,STALE,2026-11-24T04:59:44+00:00,2026-11-08T07:45:45+00:00,389.2,False,0,Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
-Follow Thrue,follow_thrue,STALE_FALLBACK,2026-11-24T05:00:03+00:00,2026-11-22T10:07:10+00:00,50.8,True,3,Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste refresh mislukte; vorige succesvolle data gebruikt.
-VYUS holdings,vyus_holdings,CURRENT,2026-11-24T12:56:41+00:00,2026-11-24T12:56:41+00:00,0.0,True,25,25 gevalideerde VYUS-tickers opgehaald.
-Blue Sky,blue_sky,CURRENT,2026-11-24T11:43:33+00:00,2026-11-24T11:43:33+00:00,1.2,True,14,Blue Sky fetch step
+FV Momentum Darvas,fv_momentum_darvas,FILE_ERROR,,,,False,0,Bron bevat geen tickers: finviz_tickers.csv
+Simpel Monsters,simpel_monsters,STALE,2026-11-24T04:59:44+00:00,2026-11-08T07:45:45+00:00,389.3,False,0,Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
+Follow Thrue,follow_thrue,STALE_FALLBACK,2026-11-24T05:00:03+00:00,2026-11-22T10:07:10+00:00,50.9,True,3,Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste refresh mislukte; vorige succesvolle data gebruikt.
+VYUS holdings,vyus_holdings,CURRENT,2026-11-24T12:56:41+00:00,2026-11-24T12:56:41+00:00,0.1,True,25,25 gevalideerde VYUS-tickers opgehaald.
+Blue Sky,blue_sky,CURRENT,2026-11-24T12:58:33+00:00,2026-11-24T12:58:33+00:00,0.1,True,13,Blue Sky fetch step

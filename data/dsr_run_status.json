@@ -7,15 +7,15 @@
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
     "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
   ],
-  "generated_at": "2026-11-24T12:58:50+00:00",
-  "unique_tickers": 76,
+  "generated_at": "2026-11-24T13:05:23+00:00",
+  "unique_tickers": 73,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
   "source_errors": {
+    "FV Momentum Darvas": "Bron bevat geen tickers: finviz_tickers.csv",
     "Simpel Monsters": "STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "source_warnings": {
-    "FV Momentum Darvas": "STALE_FALLBACK: Finviz fetch step | Laatste refresh mislukte; vorige succesvolle data gebruikt.",
     "Simpel Monsters": "STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.",
     "Follow Thrue": "STALE_FALLBACK: Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste refresh mislukte; vorige succesvolle data gebruikt."
   },
@@ -32,9 +32,9 @@
     "entry_risk": "PARTIAL"
   },
   "non_blocking_components": [
-    "Long fundamentals: CURRENT; PASS=13, FAIL=7, UNKNOWN=1.",
-    "Simply Wall St: status=PARTIAL, PASS=6, excluded=3, UNKNOWN=5.",
+    "Long fundamentals: CURRENT; PASS=10, FAIL=7, UNKNOWN=1.",
+    "Simply Wall St: status=PARTIAL, PASS=4, excluded=2, UNKNOWN=5.",
     "IBKR borrow: status=PARTIAL, unknown=5.",
-    "News/event review en risicoverrijking: risk UNKNOWN=16, news UNKNOWN=0, REVIEW=13; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
+    "News/event review en risicoverrijking: risk UNKNOWN=14, news UNKNOWN=2, REVIEW=13; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
   ]
 }

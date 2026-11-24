@@ -2,6 +2,7 @@
 """Sync a ticker CSV to its configured Google Sheets worksheet."""
 
 import csv
+import html
 import json
 import os
 import re
@@ -86,10 +87,15 @@ def main():
         # Log response metadata and a short body excerpt, never request payload or secret.
         title = re.search(r"<title[^>]*>(.*?)</title>", result, re.I | re.S)
         title_text = re.sub(r"\\s+", " ", title.group(1)).strip()[:160] if title else "not found"
+        body_without_code = re.sub(
+            r"<(script|style)\\b[^>]*>.*?</\\1>", " ", result, flags=re.I | re.S
+        )
+        visible_text = html.unescape(re.sub(r"<[^>]+>", " ", body_without_code))
+        visible_text = re.sub(r"\\s+", " ", visible_text).strip()
         print(
             f"ERROR: Apps Script response was not OK; "
             f"response_status={response_status!r}; final_response_host={response_host!r}; "
-            f"response_title={title_text!r}; body_excerpt={result[:700]!r}"
+            f"response_title={title_text!r}; response_text={visible_text[:1200]!r}"
         )
         return 1
 

@@ -13,6 +13,7 @@ on:
       - "scripts/source_status.py"
       - "scripts/test_finviz.py"
       - "scripts/test_blue_sky.py"
+      - "scripts/merge_source_status.py"
       - "blue_sky_url.txt"
       - "finviz_url.txt"
       - "scripts/sync_finviz_to_sheets.py"

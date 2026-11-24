@@ -5,14 +5,13 @@
   "checked": 32,
   "unknown": 0,
   "history_pivot_unknown": 0,
-  "risk_unknown": 14,
-  "news_unknown": 2,
-  "review_required": 13,
+  "risk_unknown": 15,
+  "news_unknown": 1,
+  "review_required": 12,
   "long_candidates": 4,
   "short_candidates": 28,
   "errors": [
-    "MTCH: HTTP Error 429: Too Many Requests",
-    "OXY: HTTP Error 429: Too Many Requests"
+    "HUBS: HTTP Error 429: Too Many Requests"
   ],
   "limitations": [
     "NO_RESULTS betekent geen geïndexeerde Google News RSS-resultaten binnen 7 dagen; het bewijst niet dat er geen nieuws of gebeurtenisrisico bestaat.",

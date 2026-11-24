@@ -7,17 +7,18 @@
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
     "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
   ],
-  "generated_at": "2026-11-24T13:05:23+00:00",
+  "generated_at": "2026-11-24T13:11:08+00:00",
   "unique_tickers": 73,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
   "source_errors": {
-    "FV Momentum Darvas": "Bron bevat geen tickers: finviz_tickers.csv",
     "Simpel Monsters": "STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "source_warnings": {
+    "FV Momentum Darvas": "STALE_FALLBACK: Finviz fetch step | Laatste refresh mislukte; vorige succesvolle data gebruikt.",
     "Simpel Monsters": "STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.",
-    "Follow Thrue": "STALE_FALLBACK: Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste refresh mislukte; vorige succesvolle data gebruikt."
+    "Follow Thrue": "STALE_FALLBACK: Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste refresh mislukte; vorige succesvolle data gebruikt.",
+    "Blue Sky": "STALE_FALLBACK: Blue Sky fetch step | Laatste refresh mislukte; vorige succesvolle data gebruikt."
   },
   "missing_ha_rows": 0,
   "market_context_status": "FULL",
@@ -35,6 +36,6 @@
     "Long fundamentals: CURRENT; PASS=10, FAIL=7, UNKNOWN=1.",
     "Simply Wall St: status=PARTIAL, PASS=4, excluded=2, UNKNOWN=5.",
     "IBKR borrow: status=PARTIAL, unknown=5.",
-    "News/event review en risicoverrijking: risk UNKNOWN=14, news UNKNOWN=2, REVIEW=13; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
+    "News/event review en risicoverrijking: risk UNKNOWN=15, news UNKNOWN=1, REVIEW=12; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
   ]
 }

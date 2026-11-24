@@ -55,8 +55,7 @@ def main():
         return 1
 
     if not tickers:
-        print(f"ERROR: No valid tickers in {csv_file}. Google Sheets was not changed.")
-        return 1
+        print(f"INFO: {csv_file} contains a valid empty selection; sending an empty ticker list to Google Sheets.")
 
     payload = json.dumps({
         "secret": secret,

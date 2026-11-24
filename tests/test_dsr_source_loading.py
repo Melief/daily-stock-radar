@@ -50,10 +50,19 @@ class ReadSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Ticker/Symbol"):
             ha_signals.read_source(path, "csv")
 
-    def test_header_only_csv_is_rejected(self):
+    def test_header_only_csv_is_rejected_by_default(self):
         path = self.write("header_only.csv", "Ticker\n")
         with self.assertRaisesRegex(ValueError, "geen tickers"):
             ha_signals.read_source(path, "csv")
+
+    def test_valid_empty_darvas_csv_can_be_allowed_explicitly(self):
+        path = self.write("darvas_empty.csv", "Ticker\n")
+        self.assertEqual(ha_signals.read_source(path, "csv", allow_empty=True), [])
+
+    def test_empty_non_ticker_csv_is_still_rejected(self):
+        path = self.write("empty_symbols.csv", "Symbol\n")
+        with self.assertRaisesRegex(ValueError, "geen tickers"):
+            ha_signals.read_source(path, "csv", allow_empty=True)
 
 
 class LoadUniverseTests(unittest.TestCase):

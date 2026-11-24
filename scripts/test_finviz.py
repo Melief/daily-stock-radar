@@ -93,8 +93,8 @@ def parse_export(body):
                 tickers.append(ticker)
     except csv.Error as exc:
         raise ValueError(f"Could not parse Finviz CSV: {exc}") from exc
-    if not tickers:
-        raise ValueError("Finviz export contained no valid ticker rows.")
+    # An empty but valid CSV is a successful empty screener result.
+    # Keep transport/format errors separate so they never overwrite the last good CSV.
     return tickers
 
 
@@ -141,10 +141,10 @@ def main():
                 print(f"Attempt failed: {exc}")
                 if attempt < MAX_ATTEMPTS:
                     time.sleep(attempt * 2)
-        if tickers:
+        if tickers is not None:
             break
 
-    if not tickers:
+    if tickers is None:
         print("FAIL: Finviz retrieval failed; existing CSV left unchanged.")
         return 1
 

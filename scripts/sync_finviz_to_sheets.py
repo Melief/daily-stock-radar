@@ -70,8 +70,12 @@ def main():
         method="POST",
     )
 
+    response_status = None
+    response_host = "unknown"
     try:
         with urlopen(request, timeout=TIMEOUT) as response:
+            response_status = response.status
+            response_host = urlparse(response.geturl()).netloc or "unknown"
             result = response.read().decode("utf-8", errors="replace").strip()
     except (HTTPError, URLError, TimeoutError) as exc:
         print(f"ERROR: Google Sheets request failed: {exc}")
@@ -83,7 +87,7 @@ def main():
         title_text = re.sub(r"\\s+", " ", title.group(1)).strip()[:160] if title else "not found"
         print(
             f"ERROR: Apps Script response was not OK; "
-            f"final_url_host={Request(web_app_url).full_url.split('/')[2]!r}; "
+            f"response_status={response_status!r}; final_response_host={response_host!r}; "
             f"response_title={title_text!r}; body_excerpt={result[:700]!r}"
         )
         return 1

@@ -161,9 +161,24 @@ def main():
                 tickers = parse_export(body)
                 print(f"Validated {len(tickers)} unique tickers from {urlparse(url).path}.")
                 break
-            except (HTTPError, URLError, TimeoutError, OSError, ValueError) as exc:
+            except HTTPError as exc:
                 errors.append(f"{urlparse(url).path} attempt {attempt}: {exc}")
                 print(f"Attempt failed: {exc}")
+                # Authentication/permission errors will not improve by repeating
+                # the same request. Move directly to the alternate endpoint.
+                if 400 <= exc.code < 500 and exc.code != 429:
+                    print(f"HTTP {exc.code} is not retryable; trying the next endpoint.")
+                    break
+                if attempt < MAX_ATTEMPTS:
+                    time.sleep(attempt * 2)
+            except (URLError, TimeoutError, OSError, ValueError) as exc:
+                errors.append(f"{urlparse(url).path} attempt {attempt}: {exc}")
+                print(f"Attempt failed: {exc}")
+                # A deterministic invalid response (for example Finviz Elite HTML
+                # instead of CSV) should trigger the alternate endpoint, not repeat.
+                if isinstance(exc, ValueError):
+                    print("Invalid response format; trying the next endpoint.")
+                    break
                 if attempt < MAX_ATTEMPTS:
                     time.sleep(attempt * 2)
         if tickers is not None:

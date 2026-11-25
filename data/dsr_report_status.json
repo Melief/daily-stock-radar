@@ -13,8 +13,8 @@
   "sw_financial_health_status": "PARTIAL",
   "short_borrow_status": "PARTIAL",
   "candidate_risk_news_status": "FULL",
-  "candidate_risk_unknown": 23,
-  "candidate_news_unknown": 3,
+  "candidate_risk_unknown": 22,
+  "candidate_news_unknown": 0,
   "history_pivot_unknown": 0,
   "entry_risk_status": "PARTIAL",
   "long_technical_candidates": 26,
@@ -32,6 +32,6 @@
     "Long fundamentals: CURRENT; PASS=17, FAIL=7, UNKNOWN=2.",
     "Simply Wall St: status=PARTIAL, PASS=5, excluded=1, UNKNOWN=13.",
     "IBKR borrow: status=PARTIAL, unknown=5.",
-    "News/event review en risicoverrijking: risk UNKNOWN=23, news UNKNOWN=3, REVIEW=9; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
+    "News/event review en risicoverrijking: risk UNKNOWN=22, news UNKNOWN=0, REVIEW=11; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
   ]
 }

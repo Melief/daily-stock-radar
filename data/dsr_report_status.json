@@ -32,6 +32,6 @@
     "Long fundamentals: CURRENT; PASS=17, FAIL=7, UNKNOWN=2.",
     "Simply Wall St: status=PARTIAL, PASS=5, excluded=1, UNKNOWN=13.",
     "IBKR borrow: status=PARTIAL, unknown=5.",
-    "News/event review en risicoverrijking: risk UNKNOWN=22, news UNKNOWN=0, REVIEW=11; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
+    "News/event review en risicoverrijking: risk UNKNOWN=22, news UNKNOWN=0, REVIEW=10; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
   ]
 }

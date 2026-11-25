@@ -5,8 +5,8 @@
   "passed": 17,
   "failed": 7,
   "unknown": 2,
-  "checked_at": "2026-11-25T12:42:12+00:00",
-  "last_success_at": "2026-11-25T12:42:12+00:00",
+  "checked_at": "2026-11-25T12:45:03+00:00",
+  "last_success_at": "2026-11-25T12:45:03+00:00",
   "fallback_used": false,
   "errors": []
 }

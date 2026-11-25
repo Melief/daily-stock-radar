@@ -31,7 +31,12 @@ Sector Top Tickers,SBAC,True,OK
 Sector Top Tickers,TRMD,True,OK
 Sector Top Tickers,VLO,True,OK
 Sector Top Tickers,VST,True,OK
-FV Momentum Darvas,SLDE,True,OK
+FV Momentum Darvas,CTAS,True,OK
+FV Momentum Darvas,GMAB,True,OK
+FV Momentum Darvas,IBN,True,OK
+FV Momentum Darvas,SN,True,OK
+FV Momentum Darvas,VLTO,True,OK
+FV Momentum Darvas,WTW,True,OK
 Simpel Monsters,,False,BRONFOUT: STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
 Follow Thrue,CRVL,True,OK
 Follow Thrue,EXPO,True,OK
@@ -61,16 +66,17 @@ VYUS holdings,UHS,True,OK
 VYUS holdings,WDAY,True,OK
 VYUS holdings,ZBRA,True,OK
 VYUS holdings,ZM,True,OK
+Blue Sky,ASND,True,OK
 Blue Sky,ASO,True,OK
 Blue Sky,CBOE,True,OK
 Blue Sky,CHD,True,OK
 Blue Sky,EXPD,True,OK
-Blue Sky,GCT,True,OK
+Blue Sky,GMAB,True,OK
 Blue Sky,HG,True,OK
-Blue Sky,LH,True,OK
+Blue Sky,JNJ,True,OK
 Blue Sky,OSW,True,OK
 Blue Sky,PLGO,True,OK
 Blue Sky,RGA,True,OK
-Blue Sky,SLDE,True,OK
 Blue Sky,SN,True,OK
 Blue Sky,SPNT,True,OK
+Blue Sky,VRTX,True,OK

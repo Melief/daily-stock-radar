@@ -1,12 +1,12 @@
 {
   "status": "PARTIAL",
   "data_status": "CURRENT",
-  "candidate_count": 26,
-  "passed": 17,
-  "failed": 7,
-  "unknown": 2,
-  "checked_at": "2026-11-25T12:45:03+00:00",
-  "last_success_at": "2026-11-25T12:45:03+00:00",
+  "candidate_count": 29,
+  "passed": 16,
+  "failed": 9,
+  "unknown": 4,
+  "checked_at": "2026-11-25T23:00:24+00:00",
+  "last_success_at": "2026-11-25T23:00:24+00:00",
   "fallback_used": false,
   "errors": []
 }

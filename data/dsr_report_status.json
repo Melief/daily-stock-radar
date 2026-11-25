@@ -1,6 +1,6 @@
 {
   "status": "PARTIAL",
-  "session_date": "2026-11-24",
+  "session_date": "2026-11-25",
   "technical_score_status": "FULL",
   "long_fundamental_status": "PARTIAL",
   "long_fundamental_data_status": "CURRENT",
@@ -8,30 +8,31 @@
     "MCK"
   ],
   "unresolved_fundamental_unknown": [
-    "COKE"
+    "COKE",
+    "HCA",
+    "HPQ"
   ],
   "sw_financial_health_status": "PARTIAL",
   "short_borrow_status": "PARTIAL",
   "candidate_risk_news_status": "FULL",
-  "candidate_risk_unknown": 22,
-  "candidate_news_unknown": 0,
+  "candidate_risk_unknown": 17,
+  "candidate_news_unknown": 2,
   "history_pivot_unknown": 0,
-  "entry_risk_status": "PARTIAL",
-  "long_technical_candidates": 26,
-  "long_approved_candidates": 5,
-  "short_technical_candidates": 32,
-  "short_borrow_available": 27,
-  "short_borrow_unknown": 5,
-  "ha_long_signals": 1,
-  "ha_short_signals": 1,
+  "entry_risk_status": "FULL",
+  "long_technical_candidates": 29,
+  "long_approved_candidates": 4,
+  "short_technical_candidates": 27,
+  "short_borrow_available": 24,
+  "short_borrow_unknown": 3,
+  "ha_long_signals": 3,
+  "ha_short_signals": 0,
   "pending_components": [
-    "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
-    "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
+    "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen."
   ],
   "non_blocking_components": [
-    "Long fundamentals: CURRENT; PASS=17, FAIL=7, UNKNOWN=2.",
-    "Simply Wall St: status=PARTIAL, PASS=5, excluded=1, UNKNOWN=13.",
-    "IBKR borrow: status=PARTIAL, unknown=5.",
-    "News/event review en risicoverrijking: risk UNKNOWN=22, news UNKNOWN=0, REVIEW=10; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
+    "Long fundamentals: CURRENT; PASS=16, FAIL=9, UNKNOWN=4.",
+    "Simply Wall St: status=PARTIAL, PASS=4, excluded=1, UNKNOWN=15.",
+    "IBKR borrow: status=PARTIAL, unknown=3.",
+    "News/event review en risicoverrijking: risk UNKNOWN=17, news UNKNOWN=2, REVIEW=10; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
   ]
 }

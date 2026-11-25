@@ -1,7 +1,7 @@
 source,source_id,status,last_attempt_at,last_success_at,age_hours,included,ticker_count,detail
 Sector Top Tickers,sector_top_tickers,MANUAL,,,,True,32,Handmatig beheerde bron; automatische actualiteit niet van toepassing.
-FV Momentum Darvas,fv_momentum_darvas,CURRENT,2026-11-24T23:39:55+00:00,2026-11-24T23:39:55+00:00,13.1,True,6,Finviz fetch step
-Simpel Monsters,simpel_monsters,STALE,2026-11-25T03:45:59+00:00,2026-11-08T07:45:45+00:00,413.0,False,0,Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
-Follow Thrue,follow_thrue,STALE_FALLBACK,2026-11-25T03:46:17+00:00,2026-11-22T10:07:10+00:00,74.6,True,3,Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste refresh mislukte; vorige succesvolle data gebruikt.
-VYUS holdings,vyus_holdings,CURRENT,2026-11-25T11:44:23+00:00,2026-11-25T11:44:23+00:00,1.0,True,25,25 gevalideerde VYUS-tickers opgehaald.
-Blue Sky,blue_sky,CURRENT,2026-11-24T23:39:55+00:00,2026-11-24T23:39:55+00:00,13.1,True,14,Blue Sky fetch step
+FV Momentum Darvas,fv_momentum_darvas,CURRENT,2026-11-24T23:39:55+00:00,2026-11-24T23:39:55+00:00,23.3,True,6,Finviz fetch step
+Simpel Monsters,simpel_monsters,STALE,2026-11-25T03:45:59+00:00,2026-11-08T07:45:45+00:00,423.2,False,0,Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
+Follow Thrue,follow_thrue,STALE_FALLBACK,2026-11-25T03:46:17+00:00,2026-11-22T10:07:10+00:00,84.8,True,3,Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste refresh mislukte; vorige succesvolle data gebruikt.
+VYUS holdings,vyus_holdings,CURRENT,2026-11-25T11:44:23+00:00,2026-11-25T11:44:23+00:00,11.2,True,25,25 gevalideerde VYUS-tickers opgehaald.
+Blue Sky,blue_sky,CURRENT,2026-11-24T23:39:55+00:00,2026-11-24T23:39:55+00:00,23.3,True,14,Blue Sky fetch step

@@ -63,8 +63,10 @@ def _normalise_frame(frame: pd.DataFrame) -> pd.DataFrame:
 
 def ema_momentum_status(ema8: float, ema21: float, current_gap: float, previous_gap: float) -> str:
     """Classify EMA momentum using only completed daily closes."""
-    if ema8 == ema21 or current_gap <= previous_gap:
+    if ema8 == ema21:
         return "BEWARE"
+    if current_gap <= previous_gap:
+        return "BEAR-TRAP" if ema8 > ema21 else "BULL-TRAP"
     return "BULLISH" if ema8 > ema21 else "BEARISH"
 
 

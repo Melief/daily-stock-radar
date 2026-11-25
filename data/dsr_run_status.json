@@ -7,7 +7,7 @@
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
     "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
   ],
-  "generated_at": "2026-11-25T03:11:43+00:00",
+  "generated_at": "2026-11-25T10:32:14+00:00",
   "unique_tickers": 78,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
@@ -34,6 +34,6 @@
     "Long fundamentals: CURRENT; PASS=17, FAIL=7, UNKNOWN=2.",
     "Simply Wall St: status=PARTIAL, PASS=5, excluded=1, UNKNOWN=13.",
     "IBKR borrow: status=PARTIAL, unknown=5.",
-    "News/event review en risicoverrijking: risk UNKNOWN=21, news UNKNOWN=0, REVIEW=11; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
+    "News/event review en risicoverrijking: risk UNKNOWN=20, news UNKNOWN=0, REVIEW=13; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
   ]
 }

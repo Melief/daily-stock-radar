@@ -86,8 +86,10 @@ def analyse_price_history(frame: pd.DataFrame, expected_date: str) -> dict:
         else "NARROWING" if ema_gap < previous_ema_gap
         else "STABLE"
     )
-    if ema8 == ema21 or ema_gap <= previous_ema_gap:
+    if ema8 == ema21:
         ema_status = "BEWARE"
+    elif ema_gap <= previous_ema_gap:
+        ema_status = "BEAR-TRAP" if ema8 > ema21 else "BULL-TRAP"
     else:
         ema_status = "BULLISH" if ema8 > ema21 else "BEARISH"
     recent = data.tail(10)

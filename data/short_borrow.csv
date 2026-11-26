@@ -1,28 +1,28 @@
 ticker,available_shares,fee_rate_pct,rebate_rate_pct,feed_timestamp,status,detail
-ADBE,5600000,0.25,3.63,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-BNO,1000000,2.6823,1.1977,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-CRM,5100000,0.2803,3.5997,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-CTVA,9700000,0.25,3.63,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-DELL,3600000,0.4081,3.4719,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-DINO,2900000,0.2524,3.6276,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-ECO,350000,3.016,0.864,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-EQT,4600000,0.2782,3.6018,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-HPE,,,,2026-11-26T04:58:24-05:00,ONBEKEND,Ticker ontbreekt in IBKR-bestand.
-HUBS,1400000,0.25,3.63,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-IT,850000,0.3937,3.4863,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-MPC,2600000,0.3471,3.5329,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-OSCR,6100000,0.2782,3.6018,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-OXY,,,,2026-11-26T04:58:24-05:00,ONBEKEND,Ticker ontbreekt in IBKR-bestand.
-P,4900000,0.2513,3.6287,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-PARR,1100000,0.4133,3.4667,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-PBF,3800000,0.25,3.63,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-PLTR,,,,2026-11-26T04:58:24-05:00,ONBEKEND,Ticker ontbreekt in IBKR-bestand.
-PSX,5600000,0.25,3.63,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-RELY,5800000,0.2806,3.5994,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-TEAM,4900000,0.25,3.63,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-TRMD,2200000,0.5489,3.3312,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-VLO,3000000,0.3075,3.5725,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-VST,4700000,0.25,3.63,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-WDAY,1700000,0.4287,3.4513,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-ZBRA,550000,0.25,3.63,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
-ZM,4300000,0.4081,3.4719,2026-11-26T04:58:24-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+ADBE,5600000,0.25,3.63,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+BNO,1000000,2.6823,1.1977,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+CRM,5100000,0.2803,3.5997,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+CTVA,,,,2026-11-26T06:17:02-05:00,ONBEKEND,Ticker ontbreekt in IBKR-bestand.
+DELL,3700000,0.4081,3.4719,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+DINO,2900000,0.2524,3.6276,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+ECO,350000,3.016,0.864,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+EQT,3500000,0.2782,3.6018,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+HPE,,,,2026-11-26T06:17:02-05:00,ONBEKEND,Ticker ontbreekt in IBKR-bestand.
+HUBS,1400000,0.25,3.63,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+IT,850000,0.3937,3.4863,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+MPC,2600000,0.3471,3.5329,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+OSCR,6100000,0.2782,3.6018,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+OXY,,,,2026-11-26T06:17:02-05:00,ONBEKEND,Ticker ontbreekt in IBKR-bestand.
+P,5000000,0.2513,3.6287,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+PARR,1100000,0.4133,3.4667,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+PBF,3900000,0.25,3.63,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+PLTR,,,,2026-11-26T06:17:02-05:00,ONBEKEND,Ticker ontbreekt in IBKR-bestand.
+PSX,5700000,0.25,3.63,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+RELY,5800000,0.2806,3.5994,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+TEAM,4800000,0.25,3.63,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+TRMD,2200000,0.5489,3.3312,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+VLO,3100000,0.3075,3.5725,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+VST,4800000,0.25,3.63,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+WDAY,1700000,0.4287,3.4513,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+ZBRA,550000,0.25,3.63,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.
+ZM,4300000,0.4081,3.4719,2026-11-26T06:17:02-05:00,AVAILABLE,Indicatieve IBKR-inventaris; geen garantie op persoonlijke locate.

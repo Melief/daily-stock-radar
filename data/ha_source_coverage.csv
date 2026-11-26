@@ -42,9 +42,7 @@ FV Momentum Darvas,V,True,OK
 FV Momentum Darvas,VLTO,True,OK
 FV Momentum Darvas,WTW,True,OK
 Simpel Monsters,,False,BRONFOUT: STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
-Follow Thrue,CRVL,True,OK
-Follow Thrue,EXPO,True,OK
-Follow Thrue,PLMR,True,OK
+Follow Thrue,,False,BRONFOUT: STALE: Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
 VYUS holdings,ADBE,True,OK
 VYUS holdings,CART,True,OK
 VYUS holdings,COKE,True,OK

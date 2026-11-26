@@ -7,16 +7,17 @@
     "Bronverversing/dekking bevat waarschuwingen of verouderde bronnen.",
     "Entry, HA-stop, risico%, 2R of technische doelhaalbaarheid is onvolledig."
   ],
-  "generated_at": "2026-11-26T10:05:04+00:00",
-  "unique_tickers": 80,
+  "generated_at": "2026-11-26T11:32:07+00:00",
+  "unique_tickers": 77,
   "unknown_market_data_tickers": 0,
   "source_count": 6,
   "source_errors": {
-    "Simpel Monsters": "STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur."
+    "Simpel Monsters": "STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.",
+    "Follow Thrue": "STALE: Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "source_warnings": {
     "Simpel Monsters": "STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.",
-    "Follow Thrue": "STALE_FALLBACK: Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste refresh mislukte; vorige succesvolle data gebruikt."
+    "Follow Thrue": "STALE: Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur."
   },
   "missing_ha_rows": 0,
   "market_context_status": "FULL",
@@ -31,9 +32,9 @@
     "entry_risk": "PARTIAL"
   },
   "non_blocking_components": [
-    "Long fundamentals: CURRENT; PASS=21, FAIL=9, UNKNOWN=3.",
-    "Simply Wall St: status=PARTIAL, PASS=4, excluded=3, UNKNOWN=17.",
-    "IBKR borrow: status=PARTIAL, unknown=3.",
-    "News/event review en risicoverrijking: risk UNKNOWN=21, news UNKNOWN=3, REVIEW=5; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
+    "Long fundamentals: CURRENT; PASS=20, FAIL=7, UNKNOWN=3.",
+    "Simply Wall St: status=PARTIAL, PASS=4, excluded=3, UNKNOWN=16.",
+    "IBKR borrow: status=PARTIAL, unknown=4.",
+    "News/event review en risicoverrijking: risk UNKNOWN=18, news UNKNOWN=0, REVIEW=8; deze optionele gegevens worden niet als PASS behandeld en blokkeren de historische/pivotcontrole niet."
   ]
 }

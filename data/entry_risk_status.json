@@ -1,10 +1,10 @@
 {
-  "status": "FULL",
+  "status": "PARTIAL",
   "candidate_count": 31,
   "stop_2r_calculated": 18,
-  "target_feasibility_unknown": 0,
-  "unknown": 0,
+  "target_feasibility_unknown": 1,
+  "unknown": 1,
   "invalid_stop_or_2r": 13,
-  "unknown_or_invalid": 13,
+  "unknown_or_invalid": 14,
   "note": "Consolidation pivot is calculated from completed-session regular OHLC candles; official close and volume confirm breakout/breakdown. HA close is supplemental audit data."
 }

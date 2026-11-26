@@ -1,4 +1,6 @@
 ticker,sources,sector,industry,technical_score,fundamental_status,financial_health_score,checked_at,source_url,sw_status
+A,FV Momentum Darvas,Healthcare,Diagnostics & Research,3,PASS,,,,ONBEKEND
+ALL,FV Momentum Darvas,Financial Services,Insurance - Property & Casualty,3,PASS,,,,ONBEKEND
 ANF,Sector Top Tickers,Consumer Cyclical,Apparel Retail,4,PASS,,,,ONBEKEND
 ASND,Blue Sky,Healthcare,Biotechnology,4,PASS,,,,ONBEKEND
 ASO,Blue Sky,Consumer Cyclical,Specialty Retail,4,PASS,5,2026-11-21,https://simplywall.st/stocks/us/retail/nasdaq-aso/academy-sports-and-outdoors,PASS
@@ -7,24 +9,26 @@ COKE,VYUS holdings,Consumer Defensive,Beverages - Non-Alcoholic,3,UNKNOWN,,,,ONB
 CRVL,Follow Thrue,Financial Services,Insurance Brokers,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 CSGP,Sector Top Tickers,Real Estate,Real Estate Services,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 CTAS,FV Momentum Darvas,Industrials,Specialty Business Services,3,PASS,,,,ONBEKEND
+DGX,Blue Sky;FV Momentum Darvas,Healthcare,Diagnostics & Research,4,PASS,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-dgx/quest-diagnostics,EXCLUDED
 EXPO,Follow Thrue,Industrials,Engineering & Construction,4,PASS,,,,ONBEKEND
+GCT,Blue Sky;FV Momentum Darvas,Technology,Software - Infrastructure,4,PASS,,,,ONBEKEND
 GEN,VYUS holdings,Technology,Software - Infrastructure,3,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
-GMAB,Blue Sky;FV Momentum Darvas,Healthcare,Biotechnology,3,PASS,,,,ONBEKEND
+GMAB,Blue Sky,Healthcare,Biotechnology,3,PASS,,,,ONBEKEND
 HCA,VYUS holdings,Healthcare,Medical Care Facilities,3,UNKNOWN,,,,ONBEKEND_FUNDAMENTALS
 HG,Blue Sky,Financial Services,Insurance - Reinsurance,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 HPQ,VYUS holdings,Technology,Computer Hardware,3,UNKNOWN,,,,ONBEKEND_FUNDAMENTALS
-IBN,FV Momentum Darvas,Financial Services,Banks - Regional,4,PASS,,,,ONBEKEND
+KNSA,Blue Sky,Healthcare,Drug Manufacturers - Specialty & Generic,4,PASS,6,2026-11-21,https://simplywall.st/stocks/us/pharmaceuticals-biotech/nasdaq-knsa/kiniksa-pharmaceuticals-international,PASS
+LH,Blue Sky;FV Momentum Darvas,Healthcare,Diagnostics & Research,4,PASS,3,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-lh/labcorp-holdings,EXCLUDED
 MCK,Sector Top Tickers,Healthcare,Medical Distribution,3,UNKNOWN,2,2026-11-21,https://simplywall.st/stocks/us/healthcare/nyse-mck/mckesson/health,EXCLUDED
 OSW,Blue Sky,Consumer Cyclical,Leisure,3,PASS,,,,ONBEKEND
 PLGO,Blue Sky,Financial Services,Insurance - Diversified,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 PLMR,Follow Thrue,Financial Services,Insurance - Property & Casualty,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 PTC,VYUS holdings,Technology,Software - Application,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
-RGA,Blue Sky,Financial Services,Insurance - Reinsurance,4,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 ROP,VYUS holdings,Technology,Software - Application,3,PASS,,,,ONBEKEND
 SN,Blue Sky;FV Momentum Darvas,Consumer Cyclical,"Furnishings, Fixtures & Appliances",4,PASS,,,,ONBEKEND
-SPNT,Blue Sky,Financial Services,Insurance - Reinsurance,3,PASS,5,2026-11-21,https://simplywall.st/stocks/us/insurance/nyse-spnt/siriuspoint,PASS
 THC,VYUS holdings,Healthcare,Medical Care Facilities,3,FAIL,,,,NIET_BEOORDEELD_FUNDAMENTEEL_UITGESLOTEN
 UHS,VYUS holdings,Healthcare,Medical Care Facilities,3,PASS,,,,ONBEKEND
+V,FV Momentum Darvas,Financial Services,Credit Services,3,PASS,,,,ONBEKEND
 VLTO,FV Momentum Darvas,Industrials,Pollution & Treatment Controls,4,PASS,4,2026-11-21,https://simplywall.st/stocks/us/commercial-services/nyse-vlto/veralto,PASS
 VRTX,Blue Sky,Healthcare,Biotechnology,3,PASS,,,,ONBEKEND
 WTW,FV Momentum Darvas,Financial Services,Insurance Brokers,4,PASS,,,,ONBEKEND

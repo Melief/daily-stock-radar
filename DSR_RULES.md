@@ -95,6 +95,9 @@ Gebruik voor HA-condities uitsluitend Heikin-Ashi-OHLC; gebruik gewone slotkoers
 - Toon in de HA-lijst uitsluitend signalen die aan alle voorwaarden voldoen.
 - Sorteer UP- en DOWN-signalen afzonderlijk oplopend op afstand tot HA Low/HA High volgens de bestaande afgesproken afstandsmaatstaf. Toon afstand op één decimaal en signaalleeftijd.
 - Maak HA UP/DOWN en HA Low=Open/HA High=Open expliciet zichtbaar. Verwar gewone candles niet met HA-candles.
+- HA Long krijgt binnen de Long-rapportage de hoogste prioriteit en wordt vóór de overige Long-kandidaten getoond.
+- Volume en RVOL spelen bij HA Long geen rol in selectie, score, rangschikking of uitsluiting. Een teruglopend volume tijdens consolidatie is geen negatief signaal en mag de HA-beoordeling niet verlagen; het kan passen bij opdrogende verkoopdruk.
+- De bestaande HA-voorwaarden, afstands- en leeftijdscriteria en verplichte fundamentele/SW-controles blijven ongewijzigd. De algemene technische volumescore voor overige Long- en Short-kandidaten blijft eveneens ongewijzigd.
 - Een HA-signaal alleen is geen koop- of shortadvies.
 
 ## 5. Long-selectie — verplicht
@@ -200,9 +203,9 @@ Rapporteer compact en conclusiegericht, in deze volgorde:
 
 1. Datum van gegevens en marktconclusie (SPX/QQQ).
 2. Brondekking en eventuele beperkingen.
-3. Long-conclusie en Long-tabel.
+3. Long-conclusie en Long-tabel: toon eerst de HA Long-prioriteitslijst en daarna de overige Long-kandidaten.
 4. Short-conclusie en Short-tabel.
-5. HA-signalen die aan de afgesproken regels voldoen.
+5. Overige HA-signalen die aan de afgesproken regels voldoen.
 6. Concrete acties, instapniveaus, stops en doelen waar volledig geverifieerd.
 7. Wat ontbreekt of nog niet gecontroleerd kon worden.
 

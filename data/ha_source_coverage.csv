@@ -1,84 +1,82 @@
 source,ticker,ha_row_present,ha_status
-Sector Top Tickers,ACN,True,OK
-Sector Top Tickers,ANF,True,OK
-Sector Top Tickers,BNO,True,OK
-Sector Top Tickers,CCI,True,OK
-Sector Top Tickers,CEG,True,OK
-Sector Top Tickers,COP,True,OK
-Sector Top Tickers,CSGP,True,OK
-Sector Top Tickers,CTVA,True,OK
-Sector Top Tickers,DHT,True,OK
-Sector Top Tickers,DINO,True,OK
-Sector Top Tickers,ECO,True,OK
-Sector Top Tickers,EQT,True,OK
-Sector Top Tickers,FIGS,True,OK
-Sector Top Tickers,FRO,True,OK
-Sector Top Tickers,HNGE,True,OK
-Sector Top Tickers,HPE,True,OK
-Sector Top Tickers,INSW,True,OK
-Sector Top Tickers,MCK,True,OK
-Sector Top Tickers,MPC,True,OK
-Sector Top Tickers,NXT,True,OK
-Sector Top Tickers,OSCR,True,OK
-Sector Top Tickers,OXY,True,OK
-Sector Top Tickers,P,True,OK
-Sector Top Tickers,PARR,True,OK
-Sector Top Tickers,PBF,True,OK
-Sector Top Tickers,PLTR,True,OK
-Sector Top Tickers,PSX,True,OK
-Sector Top Tickers,RELY,True,OK
-Sector Top Tickers,SBAC,True,OK
-Sector Top Tickers,TRMD,True,OK
-Sector Top Tickers,VLO,True,OK
-Sector Top Tickers,VST,True,OK
-FV Momentum Darvas,A,True,OK
-FV Momentum Darvas,ALL,True,OK
-FV Momentum Darvas,CTAS,True,OK
-FV Momentum Darvas,DGX,True,OK
-FV Momentum Darvas,GCT,True,OK
-FV Momentum Darvas,LH,True,OK
-FV Momentum Darvas,SN,True,OK
-FV Momentum Darvas,V,True,OK
-FV Momentum Darvas,VLTO,True,OK
-FV Momentum Darvas,WTW,True,OK
+Sector Top Tickers,ACN,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,ANF,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,BNO,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,CCI,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,CEG,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,COP,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,CSGP,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,CTVA,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,DHT,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,DINO,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,ECO,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,EQT,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,FIGS,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,FRO,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,HNGE,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,HPE,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,INSW,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,MCK,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,MPC,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,NXT,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,OSCR,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,OXY,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,P,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,PARR,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,PBF,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,PLTR,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,PSX,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,RELY,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,SBAC,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,TRMD,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,VLO,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Sector Top Tickers,VST,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+FV Momentum Darvas,ANF,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+FV Momentum Darvas,IBN,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
 Simpel Monsters,,False,BRONFOUT: STALE: Simpel Monsters: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
 Follow Thrue,,False,BRONFOUT: STALE: Follow Thrue: TradingView verbergt screenerresultaten achter een login; laatste gevalideerde CSV blijft behouden. | Laatste succesvolle refresh ouder dan 96 uur.
-VYUS holdings,ADBE,True,OK
-VYUS holdings,CART,True,OK
-VYUS holdings,COKE,True,OK
-VYUS holdings,CRM,True,OK
-VYUS holdings,DELL,True,OK
-VYUS holdings,DOCU,True,OK
-VYUS holdings,GDDY,True,OK
-VYUS holdings,GEN,True,OK
-VYUS holdings,HCA,True,OK
-VYUS holdings,HPQ,True,OK
-VYUS holdings,HUBS,True,OK
-VYUS holdings,INTU,True,OK
-VYUS holdings,IT,True,OK
-VYUS holdings,MTCH,True,OK
-VYUS holdings,PAYC,True,OK
-VYUS holdings,PTC,True,OK
-VYUS holdings,REXR,True,OK
-VYUS holdings,ROP,True,OK
-VYUS holdings,SWKS,True,OK
-VYUS holdings,TEAM,True,OK
-VYUS holdings,THC,True,OK
-VYUS holdings,UHS,True,OK
-VYUS holdings,WDAY,True,OK
-VYUS holdings,ZBRA,True,OK
-VYUS holdings,ZM,True,OK
-Blue Sky,ASND,True,OK
-Blue Sky,ASO,True,OK
-Blue Sky,CHD,True,OK
-Blue Sky,DGX,True,OK
-Blue Sky,EXPD,True,OK
-Blue Sky,GCT,True,OK
-Blue Sky,GMAB,True,OK
-Blue Sky,HG,True,OK
-Blue Sky,KNSA,True,OK
-Blue Sky,LH,True,OK
-Blue Sky,OSW,True,OK
-Blue Sky,PLGO,True,OK
-Blue Sky,SN,True,OK
-Blue Sky,VRTX,True,OK
+VYUS holdings,ADBE,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,CART,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,COKE,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,CRM,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,DELL,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,DOCU,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,GDDY,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,GEN,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,HCA,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,HPQ,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,HUBS,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,INTU,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,IT,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,MTCH,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,PAYC,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,PTC,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,REXR,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,ROP,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,SWKS,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,TEAM,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,THC,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,UHS,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,WDAY,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,ZBRA,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+VYUS holdings,ZM,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,ANF,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,ASO,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,CHD,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,DGX,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,EXPD,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,GCT,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,GMAB,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,GRMN,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,HG,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,KNSA,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,LH,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,LIN,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,MET,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,OSW,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,PBA,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,PLGO,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,RGA,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,TTC,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,VCTR,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"
+Blue Sky,WAB,True,"ONBEKEND: dagdata niet bijgewerkt tot de laatste afgeronde NYSE-sessie: verwacht 2026-11-27, ontvangen 2026-11-25"

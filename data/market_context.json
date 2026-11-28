@@ -1,6 +1,6 @@
 {
-  "status": "FULL",
-  "data_status": "FULL",
+  "status": "PARTIAL",
+  "data_status": "PARTIAL",
   "session_date": "2026-11-27",
   "symbols": {
     "SPX": {
@@ -27,36 +27,13 @@
       "support_resistance_method": "confirmed 5-session swing pivots; 126-session lookback",
       "support_resistance": "Steun 7294.18 (2026-06-26) | Weerstand 7415.64 (2026-11-19)",
       "status": "OK"
-    },
-    "QQQ": {
-      "symbol": "QQQ",
-      "date": "2026-11-27",
-      "close": 650.99,
-      "sma20": 663.513,
-      "sma50": 705.731,
-      "ema8": 646.7063,
-      "ema21": 665.4022,
-      "ema_gap_pct": -2.81,
-      "ema_gap_direction": "NARROWING",
-      "ema_momentum_status": "BULL-TRAP",
-      "close_above_sma20": false,
-      "close_above_sma50": false,
-      "position": "ONDER_BEIDE",
-      "sma_alignment": "BEARISH",
-      "momentum_5d_pct": 0.92,
-      "momentum_21d_pct": -10.28,
-      "support": 647.05,
-      "support_date": "2026-11-05",
-      "resistance": 676.49,
-      "resistance_date": "2026-11-19",
-      "support_resistance_method": "confirmed 5-session swing pivots; 126-session lookback",
-      "support_resistance": "Steun 647.05 (2026-11-05) | Weerstand 676.49 (2026-11-19)",
-      "status": "OK"
     }
   },
-  "qqq_minus_spx_momentum_21d_pct": -4.51,
-  "market_regime": "RISK-OFF",
-  "errors": {},
+  "qqq_minus_spx_momentum_21d_pct": null,
+  "market_regime": "ONBEKEND",
+  "errors": {
+    "QQQ": "koersdata loopt achter: verwacht 2026-11-27, ontvangen 2026-11-25"
+  },
   "limitations": [
     "Steun en weerstand zijn afgeleid van bevestigde vijf-sessie swing-pivots; het zijn referentieniveaus, geen automatische entrysignalen.",
     "Marktregime is bepaald op basis van SPX en QQQ ten opzichte van SMA20 en SMA50."
